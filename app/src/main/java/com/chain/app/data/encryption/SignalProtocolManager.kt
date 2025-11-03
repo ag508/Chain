@@ -6,6 +6,9 @@ import com.chain.app.domain.model.MessageType
 import com.chain.app.domain.model.PreKeyBundle
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.signal.libsignal.protocol.*
+import org.signal.libsignal.protocol.message.CiphertextMessage
+import org.signal.libsignal.protocol.message.PreKeySignalMessage
+import org.signal.libsignal.protocol.message.SignalMessage
 import org.signal.libsignal.protocol.state.PreKeyBundle as SignalPreKeyBundle
 import org.signal.libsignal.protocol.state.PreKeyRecord
 import org.signal.libsignal.protocol.state.SignedPreKeyRecord
@@ -99,7 +102,7 @@ class SignalProtocolManager @Inject constructor(
                 sessionCipher.decrypt(signalMessage)
             }
 
-            Result.success(String(plaintext))
+            Result.success(plaintext.decodeToString())
         } catch (e: Exception) {
             Result.failure(e)
         }

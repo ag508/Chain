@@ -18,7 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class SignalProtocolStore @Inject constructor(
     @ApplicationContext private val context: Context
-) : IdentityKeyStore, PreKeyStore, SessionStore, SignedPreKeyStore {
+) : org.signal.libsignal.protocol.state.SignalProtocolStore {
 
     private val gson = Gson()
     private val sharedPrefs: SharedPreferences

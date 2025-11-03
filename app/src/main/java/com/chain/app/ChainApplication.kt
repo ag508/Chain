@@ -19,6 +19,11 @@ class ChainApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
+
     override fun onCreate() {
         super.onCreate()
 
@@ -27,12 +32,6 @@ class ChainApplication : Application(), Configuration.Provider {
 
         // Initialize crash reporting and analytics (if needed in future)
         // initializeCrashReporting()
-    }
-
-    override fun getWorkManagerConfiguration(): Configuration {
-        return Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
     }
 
     private fun createNotificationChannels() {
