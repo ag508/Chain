@@ -67,9 +67,7 @@ android {
         viewBinding = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
-    }
+    // Kotlin 2.0 uses built-in Compose compiler, no need for kotlinCompilerExtensionVersion
 
     packaging {
         resources {
