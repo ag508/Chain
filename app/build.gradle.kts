@@ -125,7 +125,7 @@ dependencies {
     // Cloud Storage SDKs
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.google.api-client:google-api-client-android:2.2.0")
-    implementation("com.google.apis:google-api-services-drive:v3-rev20231024-2.0.0")
+    implementation("com.google.apis:google-api-services-drive:v3-rev20251019-2.0.0")
     implementation("com.microsoft.graph:microsoft-graph:5.77.0")
     implementation("com.dropbox.core:dropbox-core-sdk:5.4.5")
 

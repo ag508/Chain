@@ -12,7 +12,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
-        maven { url = uri("https://maven.signal.org") }
+        maven { url = uri("https://maven.googleapis.com/artifactregistry/googleapis") }
     }
 }
 
