@@ -6,6 +6,12 @@ plugins {
     kotlin("kapt")
 }
 
+// Force Java 17 toolchain (required for KAPT compatibility)
+// This ensures Java 17 is used for compilation even if system has Java 21+
+kotlin {
+    jvmToolchain(17)
+}
+
 android {
     namespace = "com.chain.app"
     compileSdk = 34
