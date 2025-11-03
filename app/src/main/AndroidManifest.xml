@@ -64,19 +64,24 @@
             </intent-filter>
         </activity>
 
+        <!-- TODO: Implement these services later -->
         <!-- Blockchain Node Service -->
+        <!--
         <service
             android:name=".data.blockchain.BlockchainNodeService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        -->
 
         <!-- WebRTC Call Service -->
+        <!--
         <service
             android:name=".data.webrtc.CallService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="phoneCall" />
+        -->
 
         <!-- Message Sync Worker -->
         <provider
