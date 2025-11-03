@@ -1,0 +1,50 @@
+package com.chain.app.data.local.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.chain.app.domain.model.User
+import com.chain.app.domain.model.UserStatus
+import java.util.Date
+
+/**
+ * Room entity for User.
+ */
+@Entity(tableName = "users")
+data class UserEntity(
+    @PrimaryKey
+    val id: String,
+    val publicKey: String,
+    val displayName: String,
+    val avatar: String?,
+    val status: String,
+    val lastSeen: Long,
+    val isContact: Boolean = false,
+    val isBlocked: Boolean = false
+)
+
+/**
+ * Convert UserEntity to domain User model.
+ */
+fun UserEntity.toDomain(): User = User(
+    id = id,
+    publicKey = publicKey,
+    displayName = displayName,
+    avatar = avatar,
+    status = UserStatus.valueOf(status),
+    lastSeen = Date(lastSeen),
+    devices = emptyList() // Devices would be loaded separately if needed
+)
+
+/**
+ * Convert domain User to UserEntity.
+ */
+fun User.toEntity(isContact: Boolean = false, isBlocked: Boolean = false): UserEntity = UserEntity(
+    id = id,
+    publicKey = publicKey,
+    displayName = displayName,
+    avatar = avatar,
+    status = status.name,
+    lastSeen = lastSeen.time,
+    isContact = isContact,
+    isBlocked = isBlocked
+)
