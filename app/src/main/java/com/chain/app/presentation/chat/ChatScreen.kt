@@ -16,6 +16,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.Chat
 
 /**
+ * Simple wrapper for the chat list screen.
+ */
+@Composable
+fun ChatScreen() {
+    ChatListScreen()
+}
+
+/**
  * Chat list screen composable.
  * Demonstrates UI layer with Jetpack Compose and MVVM.
  */
