@@ -103,7 +103,8 @@ dependencies {
     implementation("org.signal:libsignal-android:0.41.0")
 
     // Cryptography
-    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+    // Using newer version to avoid conflicts with Web3j dependencies
+    implementation("org.bouncycastle:bcprov-jdk18on:1.73")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Networking
@@ -162,6 +163,13 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+// Resolve BouncyCastle version conflicts
+configurations.all {
+    resolutionStrategy {
+        force("org.bouncycastle:bcprov-jdk18on:1.73")
+    }
 }
 
 // Allow references to generated code
