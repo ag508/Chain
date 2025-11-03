@@ -270,6 +270,7 @@ class SignalProtocolStore @Inject constructor(
     }
 
     private fun deserializeIdentityKeyPair(serialized: String): IdentityKeyPair {
+        @Suppress("UNCHECKED_CAST")
         val map = gson.fromJson(serialized, Map::class.java) as Map<String, String>
         val publicKey = IdentityKey(android.util.Base64.decode(map["public"], android.util.Base64.NO_WRAP), 0)
         val privateKey = org.signal.libsignal.protocol.ecc.Curve.decodePrivatePoint(

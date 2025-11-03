@@ -19,7 +19,7 @@ import com.chain.app.data.local.entity.*
         ReactionEntity::class,
         CallEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(StringListConverter::class)
