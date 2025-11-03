@@ -18,9 +18,11 @@ class UserPreferences(private val context: Context) {
 
     companion object {
         private val USER_ID = stringPreferencesKey("user_id")
+        private val PHONE_NUMBER = stringPreferencesKey("phone_number")
         private val DISPLAY_NAME = stringPreferencesKey("display_name")
         private val PUBLIC_KEY = stringPreferencesKey("public_key")
         private val IS_AUTHENTICATED = booleanPreferencesKey("is_authenticated")
+        private val BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
         private val THEME_MODE = stringPreferencesKey("theme_mode")
         private val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
     }
@@ -61,10 +63,36 @@ class UserPreferences(private val context: Context) {
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data
         .map { it[NOTIFICATIONS_ENABLED] ?: true }
 
+    suspend fun getUserId(): String? {
+        var result: String? = null
+        context.dataStore.data.map { it[USER_ID] }.collect { result = it }
+        return result
+    }
+
     suspend fun setUserId(userId: String) {
         context.dataStore.edit { preferences ->
             preferences[USER_ID] = userId
         }
+    }
+
+    suspend fun saveUserId(userId: String) = setUserId(userId)
+
+    suspend fun savePhoneNumber(phoneNumber: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PHONE_NUMBER] = phoneNumber
+        }
+    }
+
+    suspend fun setBiometricEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[BIOMETRIC_ENABLED] = enabled
+        }
+    }
+
+    suspend fun isBiometricEnabled(): Boolean {
+        var result = false
+        context.dataStore.data.map { it[BIOMETRIC_ENABLED] ?: false }.collect { result = it }
+        return result
     }
 
     suspend fun setDisplayName(displayName: String) {
@@ -100,4 +128,6 @@ class UserPreferences(private val context: Context) {
     suspend fun clearAll() {
         context.dataStore.edit { it.clear() }
     }
+
+    suspend fun clear() = clearAll()
 }
