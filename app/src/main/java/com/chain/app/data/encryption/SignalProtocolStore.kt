@@ -193,6 +193,21 @@ class SignalProtocolStore @Inject constructor(
         editor.apply()
     }
 
+    // SenderKeyStore implementation
+    override fun storeSenderKey(sender: SignalProtocolAddress, distributionId: java.util.UUID, record: org.signal.libsignal.protocol.groups.state.SenderKeyRecord) {
+        val key = "senderkey_${sender.name}_${sender.deviceId}_$distributionId"
+        val serialized = android.util.Base64.encodeToString(record.serialize(), android.util.Base64.NO_WRAP)
+        sharedPrefs.edit().putString(key, serialized).apply()
+    }
+
+    override fun loadSenderKey(sender: SignalProtocolAddress, distributionId: java.util.UUID): org.signal.libsignal.protocol.groups.state.SenderKeyRecord? {
+        val key = "senderkey_${sender.name}_${sender.deviceId}_$distributionId"
+        val serialized = sharedPrefs.getString(key, null) ?: return null
+        return org.signal.libsignal.protocol.groups.state.SenderKeyRecord(
+            android.util.Base64.decode(serialized, android.util.Base64.NO_WRAP)
+        )
+    }
+
     // Helper methods
     private fun generateIdentityKeyPair(): IdentityKeyPair {
         val keyPair = org.signal.libsignal.protocol.ecc.Curve.generateKeyPair()
