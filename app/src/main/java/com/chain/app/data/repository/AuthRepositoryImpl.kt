@@ -103,7 +103,7 @@ class AuthRepositoryImpl @Inject constructor(
                 displayName = displayName,
                 avatar = avatar,
                 publicKey = null, // Will be set during encryption initialization
-                status = UserStatus.AVAILABLE.name,
+                status = UserStatus.ONLINE.name,
                 lastSeen = System.currentTimeMillis(),
                 createdAt = System.currentTimeMillis()
             )
@@ -125,9 +125,8 @@ class AuthRepositoryImpl @Inject constructor(
                 displayName = displayName,
                 avatar = avatar,
                 publicKey = null,
-                status = UserStatus.AVAILABLE,
-                lastSeen = System.currentTimeMillis(),
-                devices = emptyList()
+                status = UserStatus.ONLINE,
+                lastSeen = java.util.Date()
             )
 
             Result.success(user)
@@ -154,7 +153,7 @@ class AuthRepositoryImpl @Inject constructor(
             val preKeyBundle = preKeyBundleResult.getOrNull()!!
 
             // Update user with public key
-            val userEntity = userDao.getUserById(userId)
+            val userEntity = userDao.getUser(userId)
             if (userEntity != null) {
                 val updatedUser = userEntity.copy(
                     publicKey = android.util.Base64.encodeToString(
@@ -162,7 +161,7 @@ class AuthRepositoryImpl @Inject constructor(
                         android.util.Base64.NO_WRAP
                     )
                 )
-                userDao.updateUser(updatedUser)
+                userDao.insertUser(updatedUser)
             }
 
             Result.success(Unit)

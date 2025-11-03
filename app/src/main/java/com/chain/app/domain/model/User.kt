@@ -7,9 +7,10 @@ import java.util.Date
  */
 data class User(
     val id: String,
-    val publicKey: String,
+    val phoneNumber: String,
     val displayName: String,
     val avatar: String? = null,
+    val publicKey: String? = null,
     val status: UserStatus = UserStatus.OFFLINE,
     val lastSeen: Date = Date(),
     val devices: List<Device> = emptyList()

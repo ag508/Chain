@@ -13,11 +13,13 @@ import java.util.Date
 data class UserEntity(
     @PrimaryKey
     val id: String,
-    val publicKey: String,
+    val phoneNumber: String,
     val displayName: String,
     val avatar: String?,
+    val publicKey: String?,
     val status: String,
     val lastSeen: Long,
+    val createdAt: Long,
     val isContact: Boolean = false,
     val isBlocked: Boolean = false
 )
@@ -27,6 +29,7 @@ data class UserEntity(
  */
 fun UserEntity.toDomain(): User = User(
     id = id,
+    phoneNumber = phoneNumber,
     publicKey = publicKey,
     displayName = displayName,
     avatar = avatar,
@@ -40,11 +43,13 @@ fun UserEntity.toDomain(): User = User(
  */
 fun User.toEntity(isContact: Boolean = false, isBlocked: Boolean = false): UserEntity = UserEntity(
     id = id,
+    phoneNumber = phoneNumber,
     publicKey = publicKey,
     displayName = displayName,
     avatar = avatar,
     status = status.name,
     lastSeen = lastSeen.time,
+    createdAt = System.currentTimeMillis(),
     isContact = isContact,
     isBlocked = isBlocked
 )
