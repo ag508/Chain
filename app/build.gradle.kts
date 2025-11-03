@@ -99,8 +99,8 @@ dependencies {
     implementation("net.zetetic:android-database-sqlcipher:4.5.4")
     implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
-    // Signal Protocol (libsignal)
-    implementation("org.signal:libsignal-client:0.42.1")
+    // Signal Protocol (libsignal) - Using Android library
+    implementation("org.signal:libsignal-android:0.41.0")
 
     // Cryptography
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
@@ -112,11 +112,12 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    // WebRTC
-    implementation("org.webrtc:google-webrtc:1.0.32006")
+    // WebRTC - Using Stream's distribution (more reliable)
+    implementation("io.getstream:stream-webrtc-android:1.1.0")
 
-    // P2P Networking (libp2p alternative for Android)
-    implementation("io.github.libp2p:jvm-libp2p-minimal:0.10.0-RELEASE")
+    // P2P Networking - TODO: Implement custom P2P or use alternative
+    // Commenting out for now as libp2p-jvm doesn't have stable Android releases
+    // implementation("io.github.libp2p:jvm-libp2p-minimal:0.10.0-RELEASE")
 
     // Blockchain (Web3j for Ethereum-compatible chains)
     implementation("org.web3j:core:4.10.3")
