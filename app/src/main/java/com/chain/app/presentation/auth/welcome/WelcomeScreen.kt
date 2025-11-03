@@ -1,7 +1,7 @@
 package com.chain.app.presentation.auth.welcome
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,11 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.chain.app.R
 import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.components.ChainTextButton
 
@@ -82,13 +80,23 @@ fun WelcomeScreen(
                     .alpha(contentAlpha)
                     .offset(y = contentOffset)
             ) {
-                Image(
-                    painter = painterResource(id = R.mipmap.Chain),
-                    contentDescription = "Chain Logo",
+                // Logo - Using Box with emoji since mipmap icons don't work with painterResource
+                Box(
                     modifier = Modifier
                         .size(120.dp)
                         .scale(logoScale)
-                )
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            shape = androidx.compose.foundation.shape.CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "⛓️",
+                        style = MaterialTheme.typography.displayLarge,
+                        fontSize = MaterialTheme.typography.displayLarge.fontSize * 1.5f
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(32.dp))
 
