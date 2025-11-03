@@ -208,6 +208,46 @@ class SignalProtocolStore @Inject constructor(
         )
     }
 
+    // KyberPreKeyStore implementation (post-quantum cryptography support)
+    override fun loadKyberPreKey(kyberPreKeyId: Int): org.signal.libsignal.protocol.state.KyberPreKeyRecord {
+        val key = "kyber_prekey_$kyberPreKeyId"
+        val serialized = sharedPrefs.getString(key, null)
+            ?: throw InvalidKeyIdException("No Kyber pre-key found for ID: $kyberPreKeyId")
+        return org.signal.libsignal.protocol.state.KyberPreKeyRecord(
+            android.util.Base64.decode(serialized, android.util.Base64.NO_WRAP)
+        )
+    }
+
+    override fun loadKyberPreKeys(): MutableList<org.signal.libsignal.protocol.state.KyberPreKeyRecord> {
+        val records = mutableListOf<org.signal.libsignal.protocol.state.KyberPreKeyRecord>()
+        sharedPrefs.all.forEach { (key, value) ->
+            if (key.startsWith("kyber_prekey_") && value is String) {
+                records.add(
+                    org.signal.libsignal.protocol.state.KyberPreKeyRecord(
+                        android.util.Base64.decode(value, android.util.Base64.NO_WRAP)
+                    )
+                )
+            }
+        }
+        return records
+    }
+
+    override fun storeKyberPreKey(kyberPreKeyId: Int, record: org.signal.libsignal.protocol.state.KyberPreKeyRecord) {
+        val key = "kyber_prekey_$kyberPreKeyId"
+        val serialized = android.util.Base64.encodeToString(record.serialize(), android.util.Base64.NO_WRAP)
+        sharedPrefs.edit().putString(key, serialized).apply()
+    }
+
+    override fun containsKyberPreKey(kyberPreKeyId: Int): Boolean {
+        return sharedPrefs.contains("kyber_prekey_$kyberPreKeyId")
+    }
+
+    override fun markKyberPreKeyUsed(kyberPreKeyId: Int) {
+        // Mark the key as used - could set a flag or timestamp
+        val key = "kyber_prekey_used_$kyberPreKeyId"
+        sharedPrefs.edit().putBoolean(key, true).apply()
+    }
+
     // Helper methods
     private fun generateIdentityKeyPair(): IdentityKeyPair {
         val keyPair = org.signal.libsignal.protocol.ecc.Curve.generateKeyPair()
