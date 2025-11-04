@@ -10,9 +10,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.chain.app.presentation.theme.*
 
 /**
- * Custom Chain text field component with error handling.
+ * Custom Chain text field with modern glassmorphic design.
+ * Features smooth animations and high-contrast colors for accessibility.
  */
 @Composable
 fun ChainTextField(
@@ -38,10 +40,21 @@ fun ChainTextField(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             label = if (label != null) {
-                { Text(label) }
+                {
+                    Text(
+                        text = label,
+                        color = if (isError) ChainError else ChainLightGray
+                    )
+                }
             } else null,
             placeholder = if (placeholder != null) {
-                { Text(placeholder, style = MaterialTheme.typography.bodyLarge) }
+                {
+                    Text(
+                        text = placeholder,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = ChainMediumGray
+                    )
+                }
             } else null,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
@@ -52,16 +65,40 @@ fun ChainTextField(
             singleLine = singleLine,
             maxLines = maxLines,
             enabled = enabled,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(14.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                errorBorderColor = MaterialTheme.colorScheme.error
+                // Text colors
+                focusedTextColor = ChainWhite,
+                unfocusedTextColor = ChainWhite,
+                disabledTextColor = ChainMediumGray,
+                errorTextColor = ChainWhite,
+
+                // Border colors
+                focusedBorderColor = ChainAccent,
+                unfocusedBorderColor = GlassWhite20,
+                disabledBorderColor = GlassWhite10,
+                errorBorderColor = ChainError,
+
+                // Container colors
+                focusedContainerColor = GlassWhite5,
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                disabledContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                errorContainerColor = GlassWhite5,
+
+                // Cursor color
+                cursorColor = ChainAccent,
+                errorCursorColor = ChainError,
+
+                // Label colors (focused/unfocused)
+                focusedLabelColor = ChainAccent,
+                unfocusedLabelColor = ChainLightGray,
+                disabledLabelColor = ChainMediumGray,
+                errorLabelColor = ChainError
             ),
             textStyle = MaterialTheme.typography.bodyLarge
         )
 
-        // Error message with animation
+        // Error message with smooth animation
         AnimatedVisibility(
             visible = errorMessage != null,
             enter = expandVertically() + fadeIn(),
@@ -69,9 +106,9 @@ fun ChainTextField(
         ) {
             Text(
                 text = errorMessage ?: "",
-                color = MaterialTheme.colorScheme.error,
+                color = ChainError,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                modifier = Modifier.padding(start = 16.dp, top = 6.dp)
             )
         }
     }

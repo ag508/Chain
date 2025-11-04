@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,6 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -25,9 +29,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.components.ChainTextButton
+import com.chain.app.presentation.theme.*
 
 /**
- * OTP verification screen with modern PIN-style input.
+ * OTP verification screen with premium PIN input design and glassmorphism.
+ * Features animated PIN cells and gradient background for a modern look.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,78 +60,186 @@ fun OtpScreen(
 
     val contentAlpha by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(durationMillis = 600),
+        animationSpec = tween(durationMillis = 800),
         label = "content_alpha"
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Verification") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
+    val contentOffset by animateDpAsState(
+        targetValue = if (isVisible) 0.dp else 30.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "content_offset"
+    )
+
+    // Floating animation for background
+    val infiniteTransition = rememberInfiniteTransition(label = "background_animation")
+    val floatOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 20f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "float_offset"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        GradientDarkStart,
+                        GradientDarkEnd
+                    )
+                )
             )
-        }
-    ) { paddingValues ->
+    ) {
+        // Decorative background elements
         Box(
             modifier = Modifier
+                .size(280.dp)
+                .offset(x = (-70).dp, y = (150 + floatOffset).dp)
+                .background(
+                    color = GlassWhite5,
+                    shape = CircleShape
+                )
+                .blur(55.dp)
+        )
+
+        Box(
+            modifier = Modifier
+                .size(220.dp)
+                .offset(x = 200.dp, y = (450 - floatOffset).dp)
+                .background(
+                    color = GlassWhite5,
+                    shape = CircleShape
+                )
+                .blur(55.dp)
+        )
+
+        Column(
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .statusBarsPadding()
         ) {
+            // Custom top bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = ChainWhite
+                    )
+                }
+                Text(
+                    text = "Verification",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ChainWhite,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp)
-                    .alpha(contentAlpha),
+                    .padding(32.dp)
+                    .alpha(contentAlpha)
+                    .offset(y = contentOffset),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
-                Text(
-                    text = "🔐",
-                    style = MaterialTheme.typography.displayLarge
-                )
+                // Security icon in glassmorphic container
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(
+                            color = GlassWhite10,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "🔐",
+                        style = MaterialTheme.typography.displayMedium
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 Text(
                     text = "Enter verification code",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
+                    color = ChainWhite,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "We've sent a 6-digit code to\n$phoneNumber",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = "We've sent a 6-digit code to",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ChainLightGray,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-                // OTP Input
-                OtpInput(
-                    otp = state.otp,
-                    onOtpChange = viewModel::onOtpChanged,
-                    isError = state.otpError != null
+                Text(
+                    text = phoneNumber,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ChainWhite,
+                    textAlign = TextAlign.Center
                 )
 
-                if (state.otpError != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = state.otpError!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                Spacer(modifier = Modifier.height(56.dp))
+
+                // OTP Input - Premium PIN style
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    color = GlassWhite10
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Verification Code",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = ChainWhite,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        OtpInput(
+                            otp = state.otp,
+                            onOtpChange = viewModel::onOtpChanged,
+                            isError = state.otpError != null
+                        )
+
+                        if (state.otpError != null) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = state.otpError!!,
+                                color = ChainError,
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -139,8 +253,9 @@ fun OtpScreen(
                     Text(
                         text = "Didn't receive the code?",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = ChainLightGray
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     ChainTextButton(
                         text = "Resend",
                         onClick = viewModel::onResendClick,
@@ -149,31 +264,37 @@ fun OtpScreen(
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 // Verify button
                 ChainButton(
-                    text = "Verify",
+                    text = if (state.isLoading) "Verifying..." else "Verify",
                     onClick = viewModel::onVerifyClick,
-                    enabled = state.otp.length == 6,
+                    enabled = state.otp.length == 6 && !state.isLoading,
                     isLoading = state.isLoading
                 )
-            }
 
-            // Error snackbar
-            if (state.error != null) {
-                Snackbar(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp),
-                    action = {
-                        TextButton(onClick = { viewModel.clearError() }) {
-                            Text("Dismiss")
-                        }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // Error snackbar
+        if (state.error != null) {
+            Snackbar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(24.dp)
+                    .navigationBarsPadding(),
+                containerColor = ChainError,
+                contentColor = ChainWhite,
+                shape = RoundedCornerShape(16.dp),
+                action = {
+                    TextButton(onClick = { viewModel.clearError() }) {
+                        Text("Dismiss", color = ChainWhite)
                     }
-                ) {
-                    Text(state.error!!)
                 }
+            ) {
+                Text(state.error!!)
             }
         }
     }
@@ -227,38 +348,71 @@ private fun OtpCell(
     isError: Boolean,
     modifier: Modifier = Modifier
 ) {
+    // Animated scale for focus state
+    val scale by animateFloatAsState(
+        targetValue = if (isFocused) 1.05f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "cell_scale"
+    )
+
     val borderColor = when {
-        isError -> MaterialTheme.colorScheme.error
-        isFocused -> MaterialTheme.colorScheme.primary
-        char.isNotEmpty() -> MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        isError -> ChainError
+        isFocused -> ChainAccent
+        char.isNotEmpty() -> ChainWhite.copy(alpha = 0.5f)
+        else -> GlassWhite20
     }
 
     val backgroundColor = when {
-        isFocused -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
-        else -> MaterialTheme.colorScheme.surface
+        isFocused -> ChainAccent.copy(alpha = 0.15f)
+        char.isNotEmpty() -> GlassWhite20
+        else -> GlassWhite10
     }
 
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .background(backgroundColor, RoundedCornerShape(12.dp))
+            .scale(scale)
+            .background(backgroundColor, RoundedCornerShape(16.dp))
             .border(
-                width = if (isFocused) 2.dp else 1.dp,
+                width = if (isFocused) 2.5.dp else 1.5.dp,
                 color = borderColor,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(16.dp)
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = char,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = if (isError) {
-                MaterialTheme.colorScheme.error
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
-        )
+        // Pulsing cursor for focused empty cell
+        if (isFocused && char.isEmpty()) {
+            val cursorAlpha by rememberInfiniteTransition(label = "cursor_transition")
+                .animateFloat(
+                    initialValue = 0.3f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(800, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "cursor_alpha"
+                )
+
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(24.dp)
+                    .alpha(cursorAlpha)
+                    .background(ChainAccent, RoundedCornerShape(1.dp))
+            )
+        }
+
+        // Display character when present
+        if (char.isNotEmpty()) {
+            Text(
+                text = char,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (isError) ChainError else ChainWhite
+            )
+        }
     }
 }

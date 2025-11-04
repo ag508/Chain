@@ -15,20 +15,88 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+/**
+ * Dark color scheme - Black background with white accents (matches app icon)
+ * Designed for OLED displays with pure black for battery efficiency
+ */
 private val DarkColorScheme = darkColorScheme(
-    primary = ChainPrimary,
-    secondary = ChainSecondary,
-    background = ChainBackgroundDark,
-    surface = ChainSurfaceDark,
-    error = ErrorColor
+    // Primary colors - White for emphasis on dark background
+    primary = ChainWhite,
+    onPrimary = ChainBlack,
+    primaryContainer = ChainMediumGray,
+    onPrimaryContainer = ChainWhite,
+
+    // Secondary colors - Accent for CTAs
+    secondary = ChainAccent,
+    onSecondary = ChainWhite,
+    secondaryContainer = ChainDarkGray,
+    onSecondaryContainer = ChainAccent,
+
+    // Tertiary colors
+    tertiary = ChainLightGray,
+    onTertiary = ChainBlack,
+    tertiaryContainer = ChainMediumGray,
+    onTertiaryContainer = ChainLightGray,
+
+    // Background and Surface - Gradient dark theme
+    background = GradientDarkStart,
+    onBackground = ChainWhite,
+    surface = ChainDarkGray,
+    onSurface = ChainWhite,
+    surfaceVariant = ChainMediumGray,
+    onSurfaceVariant = ChainLightGray,
+
+    // Outline and borders
+    outline = ChainMediumGray,
+    outlineVariant = ChainDarkGray,
+
+    // Status colors
+    error = ChainError,
+    onError = ChainWhite,
+    errorContainer = ChainDarkGray,
+    onErrorContainer = ChainError
 )
 
+/**
+ * Light color scheme - White background with black accents
+ * High contrast for readability and accessibility
+ */
 private val LightColorScheme = lightColorScheme(
-    primary = ChainPrimary,
-    secondary = ChainSecondary,
-    background = ChainBackground,
-    surface = ChainSurface,
-    error = ErrorColor
+    // Primary colors - Black for emphasis on light background
+    primary = ChainBlack,
+    onPrimary = ChainWhite,
+    primaryContainer = ChainLightGray,
+    onPrimaryContainer = ChainBlack,
+
+    // Secondary colors - Accent for CTAs
+    secondary = ChainAccent,
+    onSecondary = ChainWhite,
+    secondaryContainer = ChainLightestGray,
+    onSecondaryContainer = ChainAccent,
+
+    // Tertiary colors
+    tertiary = ChainMediumGray,
+    onTertiary = ChainWhite,
+    tertiaryContainer = ChainLightGray,
+    onTertiaryContainer = ChainBlack,
+
+    // Background and Surface - Gradient light theme
+    background = GradientLightStart,
+    onBackground = ChainBlack,
+    surface = ChainWhite,
+    onSurface = ChainBlack,
+    surfaceVariant = ChainLightestGray,
+    onSurfaceVariant = ChainMediumGray,
+
+    // Outline and borders
+    outline = ChainLightGray,
+    outlineVariant = ChainLightestGray,
+
+    // Status colors
+    error = ChainError,
+    onError = ChainWhite,
+    errorContainer = ChainLightestGray,
+    onErrorContainer = ChainError
 )
 
 @Composable
@@ -50,8 +118,14 @@ fun ChainTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            // Use background color for immersive edge-to-edge experience
+            window.statusBarColor = colorScheme.background.toArgb()
+            window.navigationBarColor = colorScheme.background.toArgb()
+
+            // Configure status bar icons color based on theme
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !darkTheme
+            insetsController.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 
