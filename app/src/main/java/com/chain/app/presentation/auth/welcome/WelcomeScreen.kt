@@ -2,19 +2,18 @@ package com.chain.app.presentation.auth.welcome
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,14 +22,22 @@ import com.chain.app.presentation.components.ChainTextButton
 import com.chain.app.presentation.theme.*
 
 /**
- * Welcome/Onboarding screen with glassmorphism and modern minimalist design.
- * Features black/white gradient background matching app icon aesthetic.
+ * Neomorphic Welcome/Splash screen for Chain app.
+ * Clean, minimalist design with soft shadows and "Chain" branding.
+ * Tagline: "Decentralized. Secure. Yours."
  */
 @Composable
 fun WelcomeScreen(
     onGetStartedClick: () -> Unit,
     onSignInClick: () -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
+    val surfaceColor = if (isDark) NeoDarkSurface else NeoLightSurface
+    val lightShadow = if (isDark) NeoDarkLightShadow else NeoLightLightShadow
+    val darkShadow = if (isDark) NeoDarkDarkShadow else NeoLightDarkShadow
+    val textColor = if (isDark) NeoDarkTextPrimary else NeoLightTextPrimary
+    val secondaryTextColor = if (isDark) NeoDarkTextSecondary else NeoLightTextSecondary
+
     // Animations
     val infiniteTransition = rememberInfiniteTransition(label = "logo_animation")
 
@@ -38,21 +45,10 @@ fun WelcomeScreen(
         initialValue = 1f,
         targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = FastOutSlowInEasing),
+            animation = tween(2500, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "logo_scale"
-    )
-
-    // Floating animation for background elements
-    val floatOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 20f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float_offset"
     )
 
     var isVisible by remember { mutableStateOf(false) }
@@ -63,166 +59,120 @@ fun WelcomeScreen(
 
     val contentAlpha by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(durationMillis = 1200),
+        animationSpec = tween(durationMillis = 1000),
         label = "content_alpha"
     )
 
-    val contentOffset by animateDpAsState(
-        targetValue = if (isVisible) 0.dp else 40.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "content_offset"
-    )
-
+    // Main container with neomorphic surface
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        GradientDarkStart,
-                        GradientDarkEnd
-                    )
-                )
-            )
+            .background(surfaceColor)
     ) {
-        // Decorative floating circles for depth (glassmorphism effect)
-        Box(
-            modifier = Modifier
-                .size(300.dp)
-                .offset(x = (-50).dp, y = (100 + floatOffset).dp)
-                .background(
-                    color = GlassWhite5,
-                    shape = CircleShape
-                )
-                .blur(50.dp)
-        )
-
-        Box(
-            modifier = Modifier
-                .size(250.dp)
-                .offset(x = 200.dp, y = (400 - floatOffset).dp)
-                .background(
-                    color = GlassWhite5,
-                    shape = CircleShape
-                )
-                .blur(60.dp)
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(32.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .alpha(contentAlpha),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Spacer(modifier = Modifier.height(80.dp))
 
-            // Logo and branding
+            // Logo and branding section
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .alpha(contentAlpha)
-                    .offset(y = contentOffset)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo with glassmorphic container
+                // Logo - neomorphic extruded circle
                 Box(
                     modifier = Modifier
-                        .size(140.dp)
+                        .size(120.dp)
                         .scale(logoScale)
-                        .background(
-                            color = GlassWhite10,
-                            shape = CircleShape
+                        .clip(CircleShape)
+                        .background(surfaceColor)
+                        .neomorphicExtruded(
+                            lightShadow = lightShadow,
+                            darkShadow = darkShadow,
+                            cornerRadius = 60.dp,
+                            shadowBlur = 15.dp,
+                            shadowOffset = 8.dp
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "⛓️",
                         style = MaterialTheme.typography.displayLarge,
-                        fontSize = MaterialTheme.typography.displayLarge.fontSize * 1.8f
+                        fontSize = MaterialTheme.typography.displayLarge.fontSize * 1.2f
                     )
                 }
 
                 Spacer(modifier = Modifier.height(40.dp))
 
+                // App Name - "Chain" in Zen Dots font (TODO: add custom font)
                 Text(
                     text = "Chain",
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = ChainWhite,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = textColor,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
+                // Tagline
                 Text(
-                    text = "Decentralized Messaging",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = ChainLightGray,
-                    fontWeight = FontWeight.Normal,
+                    text = "Decentralized. Secure. Yours.",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = secondaryTextColor,
                     textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(64.dp))
 
-                // Feature highlights in glassmorphic card
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    color = GlassWhite10
+                // Feature highlights - simple text, no cards
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        FeatureItem(
-                            icon = "🔒",
-                            title = "End-to-End Encrypted",
-                            description = "Signal Protocol security"
-                        )
+                    FeatureItem(
+                        icon = "🔒",
+                        title = "End-to-End Encrypted",
+                        description = "Your messages stay private with Signal Protocol",
+                        textColor = textColor,
+                        secondaryColor = secondaryTextColor
+                    )
 
-                        Divider(
-                            color = GlassWhite10,
-                            thickness = 1.dp
-                        )
+                    FeatureItem(
+                        icon = "🌐",
+                        title = "Decentralized Network",
+                        description = "No central servers, true peer-to-peer messaging",
+                        textColor = textColor,
+                        secondaryColor = secondaryTextColor
+                    )
 
-                        FeatureItem(
-                            icon = "🌐",
-                            title = "Decentralized",
-                            description = "True peer-to-peer messaging"
-                        )
-
-                        Divider(
-                            color = GlassWhite10,
-                            thickness = 1.dp
-                        )
-
-                        FeatureItem(
-                            icon = "⛓️",
-                            title = "Blockchain Verified",
-                            description = "Authenticated on-chain"
-                        )
-                    }
+                    FeatureItem(
+                        icon = "⛓️",
+                        title = "Blockchain Verified",
+                        description = "Messages authenticated on-chain for trust",
+                        textColor = textColor,
+                        secondaryColor = secondaryTextColor
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(40.dp))
 
             // Action buttons
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(contentAlpha)
-                    .offset(y = -contentOffset),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 ChainButton(
                     text = "Get Started",
-                    onClick = onGetStartedClick
+                    onClick = onGetStartedClick,
+                    isAccent = true
                 )
 
                 Row(
@@ -233,7 +183,7 @@ fun WelcomeScreen(
                     Text(
                         text = "Already have an account?",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = ChainLightGray
+                        color = secondaryTextColor
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     ChainTextButton(
@@ -242,12 +192,12 @@ fun WelcomeScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = "By continuing, you agree to our Terms of Service\nand Privacy Policy",
                     style = MaterialTheme.typography.labelSmall,
-                    color = ChainMediumGray,
+                    color = secondaryTextColor.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -262,43 +212,33 @@ fun WelcomeScreen(
 private fun FeatureItem(
     icon: String,
     title: String,
-    description: String
+    description: String,
+    textColor: androidx.compose.ui.graphics.Color,
+    secondaryColor: androidx.compose.ui.graphics.Color
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.Top
     ) {
-        // Icon container
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = GlassWhite10,
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = icon,
-                style = MaterialTheme.typography.headlineSmall
-            )
-        }
+        Text(
+            text = icon,
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(end = 16.dp)
+        )
 
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
+        Column {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = ChainWhite
+                color = textColor
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = ChainLightGray
+                color = secondaryColor
             )
         }
     }
