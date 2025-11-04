@@ -12,9 +12,10 @@ import androidx.compose.ui.graphics.Color
 val ChainBlack = Color(0xFF000000)
 val ChainDarkGray = Color(0xFF1A1A1A)
 val ChainMediumGray = Color(0xFF2D2D2D)
-val ChainLightGray = Color(0xFF404040)
-val ChainSilver = Color(0xFF808080)
-val ChainLightSilver = Color(0xFFB8B8B8)
+val ChainLightGray = Color(0xFF757575)
+val ChainLightestGray = Color(0xFFE0E0E0)
+val ChainSilver = Color(0xFF9E9E9E)
+val ChainLightSilver = Color(0xFFBDBDBD)
 val ChainOffWhite = Color(0xFFF5F5F5)
 val ChainWhite = Color(0xFFFFFFFF)
 
@@ -36,11 +37,13 @@ val GradientLightMiddle = Color(0xFFF5F5F5)
 val GradientLightEnd = Color(0xFFE8E8E8)
 
 // === GLASSMORPHISM OVERLAYS ===
+val GlassWhite5 = Color(0x0DFFFFFF) // 5% white - very subtle glass
 val GlassWhite10 = Color(0x1AFFFFFF) // 10% white - subtle glass
 val GlassWhite20 = Color(0x33FFFFFF) // 20% white - medium glass
 val GlassWhite30 = Color(0x4DFFFFFF) // 30% white - strong glass
 val GlassBlack10 = Color(0x1A000000) // 10% black - subtle shadow
 val GlassBlack20 = Color(0x33000000) // 20% black - medium shadow
+val GlassBlack30 = Color(0x4D000000) // 30% black - strong shadow
 
 // === BRAND COLORS (From app icon) ===
 val ChainLink = Color(0xFFFFFFFF) // White chain links
