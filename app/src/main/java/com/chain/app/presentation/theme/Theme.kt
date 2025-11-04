@@ -16,86 +16,86 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 /**
- * Dark color scheme - Black background with white accents (matches app icon)
- * Designed for OLED displays with pure black for battery efficiency
+ * Dark color scheme - Neomorphic soft UI (Primary)
+ * Single surface color with shadow-based depth
  */
 private val DarkColorScheme = darkColorScheme(
-    // Primary colors - White for emphasis on dark background
-    primary = ChainWhite,
-    onPrimary = ChainBlack,
-    primaryContainer = ChainMediumGray,
-    onPrimaryContainer = ChainWhite,
+    // Primary - Secure Green accent
+    primary = ChainSecureGreen,
+    onPrimary = NeoDarkTextPrimary,
+    primaryContainer = NeoDarkSurface,
+    onPrimaryContainer = ChainSecureGreen,
 
-    // Secondary colors - Accent for CTAs
-    secondary = ChainAccent,
-    onSecondary = ChainWhite,
-    secondaryContainer = ChainDarkGray,
-    onSecondaryContainer = ChainAccent,
+    // Secondary - Surface variations
+    secondary = NeoDarkLightShadow,
+    onSecondary = NeoDarkTextPrimary,
+    secondaryContainer = NeoDarkSurface,
+    onSecondaryContainer = NeoDarkTextSecondary,
 
-    // Tertiary colors
-    tertiary = ChainLightGray,
-    onTertiary = ChainBlack,
-    tertiaryContainer = ChainMediumGray,
-    onTertiaryContainer = ChainLightGray,
+    // Tertiary - Shadow variations
+    tertiary = NeoDarkDarkShadow,
+    onTertiary = NeoDarkTextPrimary,
+    tertiaryContainer = NeoDarkSurface,
+    onTertiaryContainer = NeoDarkTextSecondary,
 
-    // Background and Surface - Gradient dark theme
-    background = GradientDarkStart,
-    onBackground = ChainWhite,
-    surface = ChainDarkGray,
-    onSurface = ChainWhite,
-    surfaceVariant = ChainMediumGray,
-    onSurfaceVariant = ChainLightGray,
+    // Background and Surface - All use the same neomorphic base
+    background = NeoDarkSurface,
+    onBackground = NeoDarkTextPrimary,
+    surface = NeoDarkSurface,
+    onSurface = NeoDarkTextPrimary,
+    surfaceVariant = NeoDarkSurface,
+    onSurfaceVariant = NeoDarkTextSecondary,
 
-    // Outline and borders
-    outline = ChainMediumGray,
-    outlineVariant = ChainDarkGray,
+    // Outline - subtle for neomorphism
+    outline = NeoDarkDarkShadow,
+    outlineVariant = NeoDarkLightShadow,
 
     // Status colors
     error = ChainError,
-    onError = ChainWhite,
-    errorContainer = ChainDarkGray,
+    onError = NeoDarkTextPrimary,
+    errorContainer = NeoDarkSurface,
     onErrorContainer = ChainError
 )
 
 /**
- * Light color scheme - White background with black accents
- * High contrast for readability and accessibility
+ * Light color scheme - Neomorphic soft UI (Secondary)
+ * Single surface color with shadow-based depth
  */
 private val LightColorScheme = lightColorScheme(
-    // Primary colors - Black for emphasis on light background
-    primary = ChainBlack,
-    onPrimary = ChainWhite,
-    primaryContainer = ChainLightGray,
-    onPrimaryContainer = ChainBlack,
+    // Primary - Secure Green accent
+    primary = ChainSecureGreen,
+    onPrimary = NeoLightTextPrimary,
+    primaryContainer = NeoLightSurface,
+    onPrimaryContainer = ChainSecureGreen,
 
-    // Secondary colors - Accent for CTAs
-    secondary = ChainAccent,
-    onSecondary = ChainWhite,
-    secondaryContainer = ChainLightestGray,
-    onSecondaryContainer = ChainAccent,
+    // Secondary - Surface variations
+    secondary = NeoLightLightShadow,
+    onSecondary = NeoLightTextPrimary,
+    secondaryContainer = NeoLightSurface,
+    onSecondaryContainer = NeoLightTextSecondary,
 
-    // Tertiary colors
-    tertiary = ChainMediumGray,
-    onTertiary = ChainWhite,
-    tertiaryContainer = ChainLightGray,
-    onTertiaryContainer = ChainBlack,
+    // Tertiary - Shadow variations
+    tertiary = NeoLightDarkShadow,
+    onTertiary = NeoLightTextPrimary,
+    tertiaryContainer = NeoLightSurface,
+    onTertiaryContainer = NeoLightTextSecondary,
 
-    // Background and Surface - Gradient light theme
-    background = GradientLightStart,
-    onBackground = ChainBlack,
-    surface = ChainWhite,
-    onSurface = ChainBlack,
-    surfaceVariant = ChainLightestGray,
-    onSurfaceVariant = ChainMediumGray,
+    // Background and Surface - All use the same neomorphic base
+    background = NeoLightSurface,
+    onBackground = NeoLightTextPrimary,
+    surface = NeoLightSurface,
+    onSurface = NeoLightTextPrimary,
+    surfaceVariant = NeoLightSurface,
+    onSurfaceVariant = NeoLightTextSecondary,
 
-    // Outline and borders
-    outline = ChainLightGray,
-    outlineVariant = ChainLightestGray,
+    // Outline - subtle for neomorphism
+    outline = NeoLightDarkShadow,
+    outlineVariant = NeoLightLightShadow,
 
     // Status colors
     error = ChainError,
-    onError = ChainWhite,
-    errorContainer = ChainLightestGray,
+    onError = NeoLightTextPrimary,
+    errorContainer = NeoLightSurface,
     onErrorContainer = ChainError
 )
 
