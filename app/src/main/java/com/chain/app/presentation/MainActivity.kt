@@ -107,6 +107,10 @@ fun ChainApp(
                 phoneNumber = phoneNumber,
                 onBackClick = { navController.popBackStack() },
                 onVerified = { userId ->
+                    // Save userId and phoneNumber for ProfileSetup screen
+                    navController.currentBackStackEntry?.savedStateHandle?.set("userId", userId)
+                    navController.currentBackStackEntry?.savedStateHandle?.set("phoneNumber", phoneNumber)
+
                     navController.navigate(NavRoutes.ProfileSetup.route) {
                         // Clear back stack up to welcome
                         popUpTo(NavRoutes.Welcome.route) { inclusive = false }
@@ -117,10 +121,11 @@ fun ChainApp(
 
         // Profile setup screen
         composable(NavRoutes.ProfileSetup.route) {
-            // Get userId and phoneNumber from previous screen
-            val previousEntry = navController.previousBackStackEntry
-            val userId = previousEntry?.savedStateHandle?.get<String>("userId") ?: "temp_user"
-            val phoneNumber = previousEntry?.savedStateHandle?.get<String>("phoneNumber") ?: ""
+            // Get userId and phoneNumber from previous screen's savedStateHandle
+            val userId = navController.previousBackStackEntry
+                ?.savedStateHandle?.get<String>("userId") ?: "temp_user"
+            val phoneNumber = navController.previousBackStackEntry
+                ?.savedStateHandle?.get<String>("phoneNumber") ?: ""
 
             ProfileSetupScreen(
                 userId = userId,
