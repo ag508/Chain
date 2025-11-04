@@ -1,24 +1,27 @@
 package com.chain.app.presentation.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chain.app.presentation.theme.*
 
 /**
- * Custom Chain button with modern gradient design and glassmorphism.
- * Features smooth animations and loading states.
+ * Neomorphic Chain button with extruded (raised) effect.
+ * Animates to pressed state on interaction.
  */
 @Composable
 fun ChainButton(
@@ -27,11 +30,29 @@ fun ChainButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false,
-    containerColor: Color = ChainAccent,
-    contentColor: Color = ChainWhite
+    isAccent: Boolean = true // If true, uses secure green. If false, uses surface color
 ) {
+    val isDark = isSystemInDarkTheme()
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    // Colors based on theme and accent
+    val surfaceColor = if (isDark) NeoDarkSurface else NeoLightSurface
+    val lightShadow = if (isDark) NeoDarkLightShadow else NeoLightLightShadow
+    val darkShadow = if (isDark) NeoDarkDarkShadow else NeoLightDarkShadow
+    val textColor = if (isDark) NeoDarkTextPrimary else NeoLightTextPrimary
+
+    // For accent button (secure green)
+    val buttonColor = if (isAccent) ChainSecureGreen else surfaceColor
+    val buttonTextColor = if (isAccent) Color.White else textColor
+
+    // Scale animation
     val scale by animateFloatAsState(
-        targetValue = if (enabled && !isLoading) 1f else 0.96f,
+        targetValue = when {
+            !enabled -> 0.96f
+            isPressed -> 0.98f
+            else -> 1f
+        },
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
@@ -39,45 +60,62 @@ fun ChainButton(
         label = "button_scale"
     )
 
-    Button(
-        onClick = onClick,
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
-            .scale(scale),
-        enabled = enabled && !isLoading,
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor,
-            disabledContainerColor = containerColor.copy(alpha = 0.5f),
-            disabledContentColor = contentColor.copy(alpha = 0.5f)
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 0.dp,
-            disabledElevation = 0.dp
-        ),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(16.dp))
+            .background(buttonColor)
+            .then(
+                if (isPressed || !enabled) {
+                    // Pressed state - concave
+                    Modifier.neomorphicPressed(
+                        lightShadow = if (isAccent) ChainSecureGreenLight else lightShadow,
+                        darkShadow = if (isAccent) ChainSecureGreenDark else darkShadow,
+                        cornerRadius = 16.dp,
+                        shadowBlur = 6.dp,
+                        shadowOffset = 3.dp
+                    )
+                } else {
+                    // Default state - extruded
+                    Modifier.neomorphicExtruded(
+                        lightShadow = if (isAccent) ChainSecureGreenLight else lightShadow,
+                        darkShadow = if (isAccent) ChainSecureGreenDark else darkShadow,
+                        cornerRadius = 16.dp,
+                        shadowBlur = 10.dp,
+                        shadowOffset = 6.dp
+                    )
+                }
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled && !isLoading,
+                onClick = onClick
+            )
+            .padding(horizontal = 24.dp),
+        contentAlignment = Alignment.Center
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(22.dp),
-                color = contentColor,
+                modifier = Modifier.size(24.dp),
+                color = buttonTextColor,
                 strokeWidth = 2.5.dp
             )
         } else {
             Text(
                 text = text,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                color = buttonTextColor.copy(alpha = if (enabled) 1f else 0.5f)
             )
         }
     }
 }
 
 /**
- * Secondary variant with glassmorphic outline design.
+ * Neomorphic secondary button (surface color, not accent).
  */
 @Composable
 fun ChainSecondaryButton(
@@ -86,43 +124,18 @@ fun ChainSecondaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    val scale by animateFloatAsState(
-        targetValue = if (enabled) 1f else 0.96f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "button_scale"
-    )
-
-    OutlinedButton(
+    ChainButton(
+        text = text,
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .scale(scale),
+        modifier = modifier,
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.5.dp,
-            color = if (enabled) GlassWhite20 else GlassWhite10
-        ),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = ChainWhite,
-            disabledContentColor = ChainMediumGray
-        ),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium
-        )
-    }
+        isLoading = false,
+        isAccent = false // Uses surface color, not green
+    )
 }
 
 /**
- * Text button variant with accent color.
+ * Text button variant with accent color (for "Skip", "Sign In", etc.).
  */
 @Composable
 fun ChainTextButton(
@@ -136,8 +149,8 @@ fun ChainTextButton(
         modifier = modifier,
         enabled = enabled,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = ChainAccent,
-            disabledContentColor = ChainMediumGray
+            contentColor = ChainSecureGreen,
+            disabledContentColor = if (isSystemInDarkTheme()) NeoDarkTextSecondary else NeoLightTextSecondary
         )
     ) {
         Text(
