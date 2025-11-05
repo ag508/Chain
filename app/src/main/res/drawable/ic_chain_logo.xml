@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Chain Link 1 (Left) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00C781"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M35,40 Q25,40 25,50 Q25,60 35,60 L45,60 Q55,60 55,50 Q55,40 45,40 Z"/>
+
+    <!-- Chain Link 2 (Right) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00C781"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M65,60 Q75,60 75,70 Q75,80 65,80 L75,80 Q85,80 85,70 Q85,60 75,60 Z"/>
+
+    <!-- Connecting Link (Center) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00C781"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M50,50 Q55,50 55,55 L55,65 Q55,70 50,70 L50,50 Z"/>
+
+    <!-- Chain text circle background -->
+    <circle
+        android:fillColor="#00000000"
+        android:strokeColor="#00C781"
+        android:strokeWidth="3"
+        cx="60"
+        cy="60"
+        r="45"/>
+</vector>

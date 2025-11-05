@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.Font
@@ -125,7 +126,12 @@ private fun HeroSection(
                 .neomorphicExtruded(lightShadow, darkShadow),
             contentAlignment = Alignment.Center
         ) {
-            Text("⛓️", style = MaterialTheme.typography.displaySmall, color = ChainSecureGreen)
+            Icon(
+                painter = painterResource(id = R.drawable.ic_chain_logo),
+                contentDescription = "Chain Logo",
+                modifier = Modifier.size(80.dp),
+                tint = ChainSecureGreen
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))

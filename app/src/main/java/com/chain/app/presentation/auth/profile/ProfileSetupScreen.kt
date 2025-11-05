@@ -77,6 +77,9 @@ fun ProfileSetupScreen(
                     }
                 }
 
+                Spacer(Modifier.height(8.dp))
+                Text("Tap to add photo (optional)", style = MaterialTheme.typography.labelMedium, color = NeoDarkTextSecondary)
+
                 Spacer(Modifier.height(16.dp))
                 Text("Set up your Chain identity", style = MaterialTheme.typography.headlineSmall, color = NeoDarkTextPrimary)
                 Spacer(Modifier.height(8.dp))
