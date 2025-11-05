@@ -34,6 +34,12 @@ android {
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
+
+        // NDK configuration for 16 KB page alignment
+        ndk {
+            // Ensure all ABIs are built with proper alignment
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
 
     buildTypes {
@@ -70,6 +76,9 @@ android {
 
     // Kotlin 2.0 uses built-in Compose compiler, no need for kotlinCompilerExtensionVersion
 
+    // NDK configuration for 16 KB page alignment
+    ndkVersion = "26.1.10909125"
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -83,6 +92,12 @@ android {
             excludes += "/META-INF/notice.txt"
             excludes += "/META-INF/ASL2.0"
             excludes += "/META-INF/*.kotlin_module"
+        }
+
+        // Enable 16 KB page alignment for native libraries
+        // Required for Android 15+ devices with 16 KB page size
+        jniLibs {
+            useLegacyPackaging = false
         }
     }
 }
@@ -114,11 +129,11 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.0")
     implementation("androidx.room:room-ktx:2.6.0")
     ksp("androidx.room:room-compiler:2.6.0")
-    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+    implementation("net.zetetic:android-database-sqlcipher:4.5.6")
     implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
-    // Signal Protocol (libsignal) - Using Android library
-    implementation("org.signal:libsignal-android:0.41.0")
+    // Signal Protocol (libsignal) - Using Android library with 16 KB alignment
+    implementation("org.signal:libsignal-android:0.51.1")
 
     // Cryptography
     // Using newer version to avoid conflicts with Web3j dependencies
@@ -131,8 +146,8 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    // WebRTC - Using Stream's distribution (more reliable)
-    implementation("io.getstream:stream-webrtc-android:1.1.0")
+    // WebRTC - Using Stream's distribution with 16 KB alignment support
+    implementation("io.getstream:stream-webrtc-android:1.1.5")
 
     // P2P Networking - TODO: Implement custom P2P or use alternative
     // Commenting out for now as libp2p-jvm doesn't have stable Android releases
