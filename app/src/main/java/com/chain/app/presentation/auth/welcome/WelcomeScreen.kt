@@ -2,7 +2,6 @@ package com.chain.app.presentation.auth.welcome
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -14,9 +13,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -27,7 +26,6 @@ import com.chain.app.R
 import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.components.ChainTextButton
 import com.chain.app.presentation.theme.*
-import kotlin.math.sin
 
 @Composable
 fun WelcomeScreen(
@@ -93,7 +91,7 @@ fun WelcomeScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             // CALL TO ACTION CARD
-            ActionCard(onGetStartedClick, onSignInClick, textColor, secondaryText)
+            ActionCard(onGetStartedClick, onSignInClick, secondaryText)
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
@@ -217,7 +215,6 @@ private fun FeatureCard(
 private fun ActionCard(
     onGetStarted: () -> Unit,
     onSignIn: () -> Unit,
-    textColor: Color,
     secondaryColor: Color
 ) {
     Box(
