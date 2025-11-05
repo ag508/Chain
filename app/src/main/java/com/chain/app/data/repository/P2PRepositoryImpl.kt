@@ -1,9 +1,12 @@
 package com.chain.app.data.repository
 
+import com.chain.app.data.crypto.KeyManagementService
 import com.chain.app.data.p2p.dht.DHTManager
 import com.chain.app.data.p2p.mdns.MDNSManager
+import com.chain.app.data.p2p.signaling.WebRTCSignalingService
 import com.chain.app.data.p2p.storeforward.StoreForwardManager
 import com.chain.app.data.p2p.webrtc.WebRTCDataChannelManager
+import com.chain.app.data.serialization.MessageSerializationService
 import com.chain.app.domain.model.*
 import com.chain.app.domain.repository.P2PRepository
 import kotlinx.coroutines.CoroutineScope
@@ -12,8 +15,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.security.MessageDigest
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,7 +28,10 @@ class P2PRepositoryImpl @Inject constructor(
     private val webrtcManager: WebRTCDataChannelManager,
     private val dhtManager: DHTManager,
     private val mdnsManager: MDNSManager,
-    private val storeForwardManager: StoreForwardManager
+    private val storeForwardManager: StoreForwardManager,
+    private val signalingService: WebRTCSignalingService,
+    private val serializationService: MessageSerializationService,
+    private val keyManagementService: KeyManagementService
 ) : P2PRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -70,9 +74,29 @@ class P2PRepositoryImpl @Inject constructor(
             webrtcManager.incomingMessages.collect { dataChannelMsg ->
                 // Deserialize P2P message from bytes
                 try {
-                    val p2pMessage = deserializeP2PMessage(dataChannelMsg.data)
-                    _incomingMessages.emit(p2pMessage)
-                    Timber.d("Received P2P message from ${dataChannelMsg.peerId}")
+                    val p2pMessage = serializationService.deserialize(dataChannelMsg.data)
+
+                    // Verify signature
+                    val peer = findPeer(p2pMessage.from).getOrNull()
+                    if (peer != null) {
+                        val dataToVerify = p2pMessage.encryptedPayload
+                        val isValid = keyManagementService.verify(
+                            dataToVerify,
+                            p2pMessage.signature,
+                            peer.publicKey
+                        ).getOrDefault(false)
+
+                        if (isValid) {
+                            _incomingMessages.emit(p2pMessage)
+                            Timber.d("Received and verified P2P message from ${dataChannelMsg.peerId}")
+                        } else {
+                            Timber.w("Invalid signature for message from ${dataChannelMsg.peerId}")
+                        }
+                    } else {
+                        // Accept message even if we can't find peer (for now)
+                        _incomingMessages.emit(p2pMessage)
+                        Timber.d("Received P2P message from unknown peer ${dataChannelMsg.peerId}")
+                    }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to deserialize incoming message")
                 }
@@ -100,9 +124,10 @@ class P2PRepositoryImpl @Inject constructor(
 
     override suspend fun startNode(): Result<NetworkInfo> {
         return try {
-            // Generate local peer ID
-            val localPeerId = generatePeerId()
-            val localPublicKey = generatePublicKey() // TODO: Use actual public key from encryption
+            // Generate or retrieve key pair
+            val keyPair = keyManagementService.getOrCreateKeyPair().getOrThrow()
+            val localPeerId = keyManagementService.generatePeerId()
+            val localPublicKey = keyManagementService.getPublicKeyString() ?: throw IllegalStateException("No public key")
 
             // Initialize WebRTC
             webrtcManager.initialize().getOrThrow()
@@ -112,6 +137,9 @@ class P2PRepositoryImpl @Inject constructor(
 
             // Start mDNS discovery
             mdnsManager.startDiscovery(localPeerId, localPublicKey).getOrThrow()
+
+            // Start WebRTC signaling polling
+            signalingService.startPolling(localPeerId)
 
             // Create node info
             nodeInfo = NetworkInfo(
@@ -128,7 +156,7 @@ class P2PRepositoryImpl @Inject constructor(
 
             updateNetworkStatus()
 
-            Timber.d("P2P node started: $localPeerId")
+            Timber.i("P2P node started: $localPeerId")
             Result.success(nodeInfo)
         } catch (e: Exception) {
             Timber.e(e, "Failed to start P2P node")
@@ -236,10 +264,15 @@ class P2PRepositoryImpl @Inject constructor(
             val peerConnection = connectedPeers[peerId]
 
             if (peerConnection?.dataChannelOpen == true) {
+                // Sign message
+                val signedMessage = signMessage(message)
+
+                // Serialize message
+                val serialized = serializationService.serialize(signedMessage)
+
                 // Send directly via WebRTC data channel
-                val serialized = serializeP2PMessage(message)
                 webrtcManager.sendData(peerId, serialized).getOrThrow()
-                Timber.d("Message sent directly to $peerId")
+                Timber.d("Message sent directly to $peerId (${serialized.size} bytes)")
             } else {
                 // Peer offline or not connected - use store-and-forward
                 Timber.d("Peer $peerId offline, using store-and-forward")
@@ -256,28 +289,28 @@ class P2PRepositoryImpl @Inject constructor(
     override fun subscribeToMessages(): Flow<P2PMessage> = _incomingMessages.asSharedFlow()
 
     override suspend fun sendDeliveryReceipt(messageId: String, recipientId: String): Result<Unit> {
-        // Create receipt message
+        // Create receipt message (will be signed in sendMessage)
         val receipt = P2PMessage(
-            id = UUID.randomUUID().toString(),
+            id = java.util.UUID.randomUUID().toString(),
             from = nodeInfo.localPeerId,
             to = recipientId,
             encryptedPayload = messageId.toByteArray(),
             timestamp = System.currentTimeMillis(),
             type = P2PMessageType.DELIVERY_RECEIPT,
-            signature = ByteArray(0) // TODO: Sign with private key
+            signature = ByteArray(0) // Will be set by signMessage
         )
         return sendMessage(receipt)
     }
 
     override suspend fun sendReadReceipt(messageId: String, recipientId: String): Result<Unit> {
         val receipt = P2PMessage(
-            id = UUID.randomUUID().toString(),
+            id = java.util.UUID.randomUUID().toString(),
             from = nodeInfo.localPeerId,
             to = recipientId,
             encryptedPayload = messageId.toByteArray(),
             timestamp = System.currentTimeMillis(),
             type = P2PMessageType.READ_RECEIPT,
-            signature = ByteArray(0) // TODO: Sign with private key
+            signature = ByteArray(0) // Will be set by signMessage
         )
         return sendMessage(receipt)
     }
@@ -318,13 +351,13 @@ class P2PRepositoryImpl @Inject constructor(
             mutualPeers.shuffled().take(storagePeers).forEach { peer ->
                 // Send store request to peer
                 val storeRequest = P2PMessage(
-                    id = UUID.randomUUID().toString(),
+                    id = java.util.UUID.randomUUID().toString(),
                     from = nodeInfo.localPeerId,
                     to = peer.id,
-                    encryptedPayload = serializeP2PMessage(message),
+                    encryptedPayload = serializationService.serialize(message),
                     timestamp = System.currentTimeMillis(),
                     type = P2PMessageType.STORE_FORWARD_REQUEST,
-                    signature = ByteArray(0)
+                    signature = ByteArray(0) // Will be signed
                 )
 
                 sendMessage(storeRequest).onSuccess {
@@ -458,33 +491,11 @@ class P2PRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun generatePeerId(): String {
-        return "peer-${UUID.randomUUID()}"
-    }
-
-    private fun generatePublicKey(): String {
-        // TODO: Get actual public key from encryption service
-        return "pubkey-${UUID.randomUUID()}"
-    }
-
-    private fun serializeP2PMessage(message: P2PMessage): ByteArray {
-        // TODO: Implement proper serialization (Protobuf, JSON, etc.)
-        // For now, simple concatenation
-        val data = "${message.id}|${message.from}|${message.to}|${message.timestamp}|${message.type}|${message.encryptedPayload.size}"
-        return data.toByteArray() + message.encryptedPayload + message.signature
-    }
-
-    private fun deserializeP2PMessage(data: ByteArray): P2PMessage {
-        // TODO: Implement proper deserialization
-        // This is a simplified placeholder
-        return P2PMessage(
-            id = UUID.randomUUID().toString(),
-            from = "unknown",
-            to = nodeInfo.localPeerId,
-            encryptedPayload = data,
-            timestamp = System.currentTimeMillis(),
-            type = P2PMessageType.CHAT_MESSAGE,
-            signature = ByteArray(0)
-        )
+    /**
+     * Sign a P2P message with the local private key.
+     */
+    private fun signMessage(message: P2PMessage): P2PMessage {
+        val signature = keyManagementService.sign(message.encryptedPayload).getOrNull() ?: ByteArray(0)
+        return message.copy(signature = signature)
     }
 }

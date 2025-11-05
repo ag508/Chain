@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -27,11 +28,34 @@ class ChainApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
+        // Initialize Timber logging
+        initializeLogging()
+
         // Initialize notification channels
         createNotificationChannels()
 
-        // Initialize crash reporting and analytics (if needed in future)
-        // initializeCrashReporting()
+        // Log application start
+        Timber.i("Chain Application started - Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+    }
+
+    private fun initializeLogging() {
+        if (BuildConfig.DEBUG) {
+            // Debug tree for development
+            Timber.plant(Timber.DebugTree())
+            Timber.d("Debug logging enabled")
+        } else {
+            // Production tree (you can add Crashlytics tree here)
+            Timber.plant(object : Timber.Tree() {
+                override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                    // Only log warnings and errors in production
+                    if (priority >= android.util.Log.WARN) {
+                        // Send to crash reporting service (e.g., Crashlytics)
+                        // Crashlytics.log(message)
+                        // if (t != null) Crashlytics.recordException(t)
+                    }
+                }
+            })
+        }
     }
 
     private fun createNotificationChannels() {

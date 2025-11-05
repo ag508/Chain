@@ -196,6 +196,13 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
+    // Protobuf for efficient P2P message serialization
+    implementation("com.google.protobuf:protobuf-javalite:3.24.0")
+    implementation("com.google.protobuf:protobuf-kotlin-lite:3.24.0")
+
+    // Logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
