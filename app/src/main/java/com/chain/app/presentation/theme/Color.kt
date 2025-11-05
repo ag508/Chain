@@ -73,3 +73,5 @@ val NeoDarkDarkShadow = GlassShadow
 val NeoLightSurface = GlassLightCardBg
 val NeoLightTextPrimary = GlassLightText
 val NeoLightTextSecondary = GlassLightTextSecondary
+val NeoLightLightShadow = GlassLightSurface
+val NeoLightDarkShadow = GlassLightShadow
