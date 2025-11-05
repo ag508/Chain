@@ -105,7 +105,7 @@ fun ProfileSetupScreen(
             ChainTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChanged,
-                placeholder = "satoshi",
+                placeholder = "Satoshi Nakamoto",
                 errorMessage = state.nameError
             )
 

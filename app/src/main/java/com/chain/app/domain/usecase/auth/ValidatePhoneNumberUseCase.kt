@@ -25,10 +25,10 @@ class ValidatePhoneNumberUseCase @Inject constructor() {
             )
         }
 
-        if (digitsOnly.length > 15) {
+        if (digitsOnly.length > 11) {
             return ValidationResult(
                 successful = false,
-                errorMessage = "Phone number is too long"
+                errorMessage = "Phone number must not exceed 11 digits"
             )
         }
 
