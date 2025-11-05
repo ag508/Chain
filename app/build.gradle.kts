@@ -13,6 +13,11 @@ kotlin {
     jvmToolchain(17)
 }
 
+// KSP configuration for Room schema export
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 android {
     namespace = "com.chain.app"
     compileSdk = 34
@@ -28,11 +33,6 @@ android {
 
         vectorDrawables {
             useSupportLibrary = true
-        }
-
-        // Room schema export directory
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
         }
 
         // NDK configuration for 16 KB page alignment
