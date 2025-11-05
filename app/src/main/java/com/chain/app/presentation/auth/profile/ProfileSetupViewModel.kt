@@ -37,24 +37,31 @@ class ProfileSetupViewModel @Inject constructor(
     }
 
     fun onContinueClick() {
+        println("DEBUG ProfileSetup: onContinueClick called, name='${_state.value.name}'")
         val validation = validateProfile(_state.value.name)
 
         if (!validation.successful) {
+            println("DEBUG ProfileSetup: Validation failed: ${validation.errorMessage}")
             _state.update { it.copy(nameError = validation.errorMessage) }
             return
         }
 
+        println("DEBUG ProfileSetup: Validation successful, creating profile")
         createProfile()
     }
 
     private fun createProfile() {
         viewModelScope.launch {
+            println("DEBUG ProfileSetup: createProfile started")
             _state.update { it.copy(isLoading = true, error = null) }
 
             val userId = _state.value.userId
             val phoneNumber = _state.value.phoneNumber
 
+            println("DEBUG ProfileSetup: userId=$userId, phoneNumber=$phoneNumber")
+
             if (userId == null || phoneNumber == null) {
+                println("DEBUG ProfileSetup: User data missing!")
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -67,6 +74,7 @@ class ProfileSetupViewModel @Inject constructor(
             // In a real app, we would upload the profile image first
             // For now, we'll use the URI as string or null
             val avatarUrl = _state.value.profileImageUri?.toString()
+            println("DEBUG ProfileSetup: avatarUrl=$avatarUrl")
 
             val result = authRepository.createUserProfile(
                 userId = userId,
@@ -75,11 +83,17 @@ class ProfileSetupViewModel @Inject constructor(
                 avatar = avatarUrl
             )
 
+            println("DEBUG ProfileSetup: createUserProfile result: ${result.isSuccess}")
+
             if (result.isSuccess) {
                 // Initialize encryption keys
+                println("DEBUG ProfileSetup: Initializing encryption...")
                 val encryptionResult = authRepository.initializeEncryption()
 
+                println("DEBUG ProfileSetup: Encryption result: ${encryptionResult.isSuccess}")
+
                 if (encryptionResult.isSuccess) {
+                    println("DEBUG ProfileSetup: Profile created successfully! Setting profileCreated=true")
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -87,6 +101,7 @@ class ProfileSetupViewModel @Inject constructor(
                         )
                     }
                 } else {
+                    println("DEBUG ProfileSetup: Encryption initialization failed: ${encryptionResult.exceptionOrNull()?.message}")
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -95,6 +110,7 @@ class ProfileSetupViewModel @Inject constructor(
                     }
                 }
             } else {
+                println("DEBUG ProfileSetup: Profile creation failed: ${result.exceptionOrNull()?.message}")
                 _state.update {
                     it.copy(
                         isLoading = false,

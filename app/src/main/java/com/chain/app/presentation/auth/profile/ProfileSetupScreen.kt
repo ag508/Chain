@@ -95,6 +95,15 @@ fun ProfileSetupScreen(
                     errorMessage = state.nameError
                 )
 
+                if (state.nameError == null && state.name.isEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Use letters, spaces, hyphens, or apostrophes (2-50 characters)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = NeoDarkTextSecondary.copy(alpha = 0.7f)
+                    )
+                }
+
                 Spacer(Modifier.height(18.dp))
 
                 ChainButton(
