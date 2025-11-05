@@ -2,129 +2,147 @@ package com.chain.app.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.chain.app.R
 
 /**
  * Chain App Typography System
- * Modern, clean hierarchy with excellent readability
- * Using system fonts for consistency across platforms
+ * Based on chain-complete.html design specification
+ * Inter font family for body text
+ * Zen Dots for branding
  */
 
+// Inter font family (400, 500, 600, 700, 800 weights from HTML spec)
+val InterFontFamily = FontFamily(
+    Font(R.font.inter_regular, FontWeight.Normal),     // 400
+    Font(R.font.inter_medium, FontWeight.Medium),      // 500
+    Font(R.font.inter_semibold, FontWeight.SemiBold),  // 600
+    Font(R.font.inter_bold, FontWeight.Bold),          // 700
+    Font(R.font.inter_extrabold, FontWeight.ExtraBold) // 800
+)
+
+// Zen Dots for branding elements (Chain logo, main title)
+val ZenDotsFontFamily = FontFamily(
+    Font(R.font.zendots_regular, FontWeight.Normal)
+)
+
 val Typography = Typography(
-    // === DISPLAY (Largest, for hero sections) ===
+    // === DISPLAY (Brand elements, large hero text) ===
+    // Use Zen Dots for largest brand elements
     displayLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp
+        fontFamily = ZenDotsFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 42.sp,  // Welcome title size from HTML
+        lineHeight = 50.sp,
+        letterSpacing = (-0.5).sp
     ),
     displayMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.ExtraBold,  // 800
+        fontSize = 36.sp,
+        lineHeight = 44.sp,
         letterSpacing = 0.sp
     ),
     displaySmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.ExtraBold,  // 800
+        fontSize = 28.sp,  // Auth title from HTML
+        lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
 
     // === HEADLINE (Page titles, section headers) ===
     headlineLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Bold,  // 700
+        fontSize = 28.sp,  // Auth title
         lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
-    headlineSmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
+    headlineMedium = TextStyle(
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Bold,  // 700
+        fontSize = 24.sp,  // Biometric title
         lineHeight = 32.sp,
         letterSpacing = 0.sp
     ),
-
-    // === TITLE (Card titles, dialog headers) ===
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp,
+    headlineSmall = TextStyle(
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.SemiBold,  // 600
+        fontSize = 20.sp,  // Chat header
         lineHeight = 28.sp,
         letterSpacing = 0.sp
     ),
-    titleMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
+
+    // === TITLE (Card titles, feature titles) ===
+    titleLarge = TextStyle(
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.SemiBold,  // 600
+        fontSize = 18.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.15.sp
+        letterSpacing = 0.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.SemiBold,  // 600
+        fontSize = 16.sp,  // Button text, feature title, chat name
+        lineHeight = 24.sp,
+        letterSpacing = 0.sp
     ),
     titleSmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Medium,  // 500
+        fontSize = 14.sp,  // Tab text
         lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
+        letterSpacing = 0.sp
     ),
 
     // === BODY (Primary content text) ===
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Normal,  // 400
+        fontSize = 16.sp,  // Input text, subtitle
         lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
+        letterSpacing = 0.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.25.sp
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Normal,  // 400
+        fontSize = 15.sp,  // Auth subtitle, biometric subtitle
+        lineHeight = 22.sp,
+        letterSpacing = 0.sp
     ),
     bodySmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Normal,  // 400
+        fontSize = 14.sp,  // Chat last message, feature desc
+        lineHeight = 20.sp,
+        letterSpacing = 0.sp
     ),
 
-    // === LABEL (Buttons, tabs, chips) ===
+    // === LABEL (Buttons, tabs, small text) ===
     labelLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.SemiBold,  // 600
+        fontSize = 14.sp,  // Tab label
         lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
+        letterSpacing = 0.sp
     ),
     labelMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Medium,  // 500
+        fontSize = 13.sp,  // Chat time
+        lineHeight = 18.sp,
+        letterSpacing = 0.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Medium,  // 500
+        fontSize = 12.sp,  // Nav label, small UI text
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        letterSpacing = 0.sp
     )
 )

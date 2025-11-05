@@ -1,24 +1,17 @@
 package com.chain.app.presentation.auth.phone
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,7 +19,6 @@ import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.components.ChainTextField
 import com.chain.app.presentation.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhoneNumberScreen(
     onBackClick: () -> Unit,
@@ -35,173 +27,124 @@ fun PhoneNumberScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scroll = rememberScrollState()
-    val zenDots = FontFamily.Default // Replace with FontFamily(Font(R.font.zendots_regular)) if available
 
     // When OTP is sent navigate
     LaunchedEffect(state.otpSent) {
         if (state.otpSent) onOtpSent("${state.countryCode}${state.phoneNumber}")
     }
 
-    // Subtle entrance animation state
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
-
-    // Matte background gradient (very subtle)
-    val bgBrush = Brush.verticalGradient(
-        colors = listOf(NeoDarkSurface, NeoDarkSurface.copy(alpha = 0.98f))
+    // Gradient background (135deg from HTML spec)
+    val bgBrush = Brush.linearGradient(
+        colors = listOf(GlassGradientStart, GlassGradientEnd)
     )
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = bgBrush)
-            .padding(24.dp)
+            .padding(top = 60.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
+            .verticalScroll(scroll),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top app bar row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        // Auth header
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(bottom = 40.dp)
         ) {
-            IconButton(onClick = onBackClick) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = NeoDarkTextPrimary)
+            // Auth icon: 80x80dp with 20dp border radius, glass effect
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .glassAuthIcon(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Phone,
+                    contentDescription = "Phone",
+                    modifier = Modifier.size(36.dp),
+                    tint = GlassText
+                )
             }
+
+            Spacer(Modifier.height(24.dp))
+
+            // Auth title: 28sp bold
             Text(
-                text = "Verify Phone",
-                style = MaterialTheme.typography.titleMedium,
-                color = NeoDarkTextPrimary
+                text = "Enter Your Phone",
+                style = MaterialTheme.typography.displaySmall,
+                color = GlassText
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // Auth subtitle: 15sp
+            Text(
+                text = "We'll send you a verification code to confirm your number",
+                style = MaterialTheme.typography.bodyMedium,
+                color = GlassTextSecondary,
+                textAlign = TextAlign.Center
             )
         }
 
-        // Centered content card
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 30.dp, bottom = 24.dp),
-            contentAlignment = Alignment.Center
+        // Auth form
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Card container
-            Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = NeoDarkSurface,
-                tonalElevation = 6.dp,
-                shadowElevation = 10.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
+            // Input group
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .verticalScroll(scroll)
-                        .alpha(if (visible) 1f else 0f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // small, restrained icon with soft pulse
-                    Box(
-                        modifier = Modifier
-                            .size(86.dp)
-                            .shadow(2.dp, RoundedCornerShape(44.dp))
-                            .background(NeoDarkSurface, RoundedCornerShape(44.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("📱", style = MaterialTheme.typography.displaySmall)
-                    }
+                // Country code field (simplified, glass input)
+                ChainTextField(
+                    value = state.countryCode,
+                    onValueChange = viewModel::onCountryCodeChanged,
+                    modifier = Modifier.width(100.dp),
+                    placeholder = "+1"
+                )
 
-                    Spacer(Modifier.height(20.dp))
-
-                    Text(
-                        text = "Let's get you connected",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = NeoDarkTextPrimary
+                // Phone number field
+                ChainTextField(
+                    value = state.phoneNumber,
+                    onValueChange = viewModel::onPhoneNumberChanged,
+                    modifier = Modifier.weight(1f),
+                    placeholder = "Phone number",
+                    errorMessage = state.phoneNumberError,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone
                     )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(
-                        text = "Enter your phone number to receive a verification code.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = NeoDarkTextSecondary,
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-
-                    Spacer(Modifier.height(20.dp))
-
-                    // Input group card (matte)
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = NeoDarkSurface,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Phone Number", color = NeoDarkTextSecondary, style = MaterialTheme.typography.labelMedium)
-                            Spacer(Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                                OutlinedTextField(
-                                    value = state.countryCode,
-                                    onValueChange = viewModel::onCountryCodeChanged,
-                                    singleLine = true,
-                                    modifier = Modifier.width(100.dp),
-                                    label = { Text("Code", color = NeoDarkTextSecondary) },
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = ChainSecureGreen,
-                                        unfocusedBorderColor = NeoDarkTextSecondary,
-                                        focusedTextColor = NeoDarkTextPrimary,
-                                        unfocusedTextColor = NeoDarkTextPrimary,
-                                        cursorColor = ChainSecureGreen
-                                    ),
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-
-                                ChainTextField(
-                                    value = state.phoneNumber,
-                                    onValueChange = viewModel::onPhoneNumberChanged,
-                                    modifier = Modifier.weight(1f),
-                                    label = "Number",
-                                    placeholder = "1234567890",
-                                    errorMessage = state.phoneNumberError,
-                                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(20.dp))
-
-                    ChainButton(
-                        text = if (state.isLoading) "Sending..." else "Send Code",
-                        onClick = { viewModel.onContinueClick() },
-                        enabled = state.phoneNumber.isNotBlank() && !state.isLoading,
-                        isAccent = true,
-                        isLoading = state.isLoading
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Text(
-                        text = "By providing your number, you agree to receive verification messages from Chain.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = NeoDarkTextSecondary,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
+                )
             }
+
+            // Continue button
+            ChainButton(
+                text = if (state.isLoading) "Sending..." else "Continue",
+                onClick = viewModel::onContinueClick,
+                enabled = state.phoneNumber.isNotBlank() && !state.isLoading,
+                isAccent = true,
+                isLoading = state.isLoading
+            )
         }
 
-        // Error snackbar (keeps previous behavior)
+        Spacer(Modifier.weight(1f))
+
+        // Footer text
+        Text(
+            text = "By continuing, you agree to our Terms of Service and Privacy Policy",
+            style = MaterialTheme.typography.labelSmall,
+            color = GlassTextMuted,
+            textAlign = TextAlign.Center
+        )
+
+        // Error snackbar
         if (state.error != null) {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = true,
-                enter = fadeIn(animationSpec = tween(220)),
-                exit = fadeOut(animationSpec = tween(180))
+            Spacer(Modifier.height(16.dp))
+            Snackbar(
+                containerColor = ChainError,
+                contentColor = GlassText
             ) {
-                Snackbar(
-                    containerColor = ChainError,
-                    contentColor = NeoDarkTextPrimary,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(20.dp)
-                ) { Text(state.error!!) }
+                Text(state.error!!)
             }
         }
     }

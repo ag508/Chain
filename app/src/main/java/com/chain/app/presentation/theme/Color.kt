@@ -3,84 +3,73 @@ package com.chain.app.presentation.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Chain App Neomorphic Color Palette
- * Soft, tactile design with extruded and pressed shadow effects
- * Based on WhatsApp layout with decentralized branding
+ * Chain App Glassmorphic Color Palette
+ * Based on chain-complete.html design specification
+ * Modern glassmorphism with backdrop blur effects
  */
 
-// ===== DARK MODE (PRIMARY) =====
-// Base surface color for neomorphic design
-val NeoDarkSurface = Color(0xFF2D343C)
-val NeoDarkLightShadow = Color(0xFF3C444F)  // Top-left highlight
-val NeoDarkDarkShadow = Color(0xFF1E242B)   // Bottom-right shadow
+// ===== DARK THEME (DEFAULT) =====
+// Background & Surfaces
+val GlassBg = Color(0xFF000000)  // Pure black background
+val GlassSurface = Color(0x1E1E1EB2)  // rgba(30, 30, 30, 0.7)
+val GlassCardBg = Color(0x14141499)  // rgba(20, 20, 20, 0.6)
+val GlassSurfaceElevated = Color(0xFF1A1A1A)
+val GlassBorder = Color(0x1AFFFFFF)  // rgba(255, 255, 255, 0.1)
 
-// Text colors
-val NeoDarkTextPrimary = Color(0xFFFFFFFF)
-val NeoDarkTextSecondary = Color(0xFF9A9A9A)
+// Text Colors
+val GlassText = Color(0xFFFFFFFF)
+val GlassTextSecondary = Color(0xFFB3B3B3)
+val GlassTextMuted = Color(0xFF737373)
 
-// ===== LIGHT MODE (SECONDARY) =====
-// Base surface color for neomorphic design
-val NeoLightSurface = Color(0xFFE0E5EC)
-val NeoLightLightShadow = Color(0xFFFFFFFF)  // Top-left highlight
-val NeoLightDarkShadow = Color(0xFFA3B1C6)   // Bottom-right shadow
+// Accent
+val GlassAccent = Color(0xFFFFFFFF)  // White accent for dark theme
+val GlassAccentHover = Color(0xFFE6E6E6)
 
-// Text colors
-val NeoLightTextPrimary = Color(0xFF333333)
-val NeoLightTextSecondary = Color(0xFF6A6A6A)
+// Borders & Dividers
+val GlassDivider = Color(0x14FFFFFF)  // rgba(255, 255, 255, 0.08)
 
-// ===== BRAND & ACCENT COLORS =====
-// "Secure Green" - primary brand color
-val ChainSecureGreen = Color(0xFF00C781)
-val ChainSecureGreenLight = Color(0xFF00E290)  // For green bubble highlights
-val ChainSecureGreenDark = Color(0xFF00A36A)   // For green bubble shadows
+// Shadows & Overlays
+val GlassShadow = Color(0x80000000)  // rgba(0, 0, 0, 0.5)
+val GlassOverlay = Color(0xB3000000)  // rgba(0, 0, 0, 0.7)
 
-// Modern gradient accent colors
-val ChainCyan = Color(0xFF00FFFF)
-val ChainAquaGlow = Color(0xFF00E6B8)
+// Gradients
+val GlassGradientStart = Color(0xFF1A1A1A)
+val GlassGradientEnd = Color(0xFF000000)
 
-// Status & alerts
-val ChainError = Color(0xFFFF3B30)
+// ===== LIGHT THEME =====
+val GlassLightBg = Color(0xFFF5F5F5)
+val GlassLightSurface = Color(0xB2F0F0F0)  // rgba(240, 240, 240, 0.7)
+val GlassLightCardBg = Color(0x99FFFFFF)  // rgba(255, 255, 255, 0.6)
+val GlassLightBorder = Color(0x1A000000)  // rgba(0, 0, 0, 0.1)
+val GlassLightText = Color(0xFF000000)
+val GlassLightTextSecondary = Color(0xFF666666)
+val GlassLightTextMuted = Color(0xFF999999)
+val GlassLightAccent = Color(0xFF2D2D2D)
+val GlassLightAccentHover = Color(0xFF000000)
+val GlassLightShadow = Color(0x1A000000)  // rgba(0, 0, 0, 0.1)
+val GlassLightGradientStart = Color(0xFFFFFFFF)
+val GlassLightGradientEnd = Color(0xFFE0E0E0)
+
+// ===== STATUS COLORS =====
+val ChainError = Color(0xFFFF3333)
+val ChainSuccess = Color(0xFF00CC66)
 val ChainWarning = Color(0xFFFFCC00)
-val ChainSuccess = Color(0xFF34C759)
 
-// Online/Offline status
-val StatusOnline = ChainSecureGreen
-val StatusOffline = Color(0xFF8E8E93)
+// Call status colors
+val CallIncoming = Color(0xFF00CC66)
+val CallOutgoing = GlassTextSecondary
+val CallMissed = Color(0xFFFF3333)
 
-// ===== MESSAGE BUBBLES =====
-// Received messages use the base surface color with neomorphic shadows
-// Sent messages use the secure green with adjusted shadows
+// ===== BRAND COLORS (if needed for specific elements) =====
+val ChainSecureGreen = Color(0xFF00C781)
 
-// ===== LEGACY SUPPORT =====
-// Keeping these for backward compatibility during transition
-val ChainBlack = NeoDarkSurface
-val ChainWhite = NeoLightSurface
-val ChainAccent = ChainSecureGreen
-val ChainPrimary = ChainSecureGreen
-
-// ===== BACKWARD COMPATIBILITY ALIASES =====
-// These map old glassmorphism colors to neomorphic equivalents
-// This allows old screens to build while we incrementally update them
-
-// Glassmorphism overlays → Neomorphic shadows
-val GlassWhite5 = NeoDarkLightShadow.copy(alpha = 0.05f)
-val GlassWhite10 = NeoDarkLightShadow.copy(alpha = 0.1f)
-val GlassWhite20 = NeoDarkLightShadow.copy(alpha = 0.2f)
-val GlassWhite30 = NeoDarkLightShadow.copy(alpha = 0.3f)
-val GlassBlack10 = NeoDarkDarkShadow.copy(alpha = 0.1f)
-val GlassBlack20 = NeoDarkDarkShadow.copy(alpha = 0.2f)
-val GlassBlack30 = NeoDarkDarkShadow.copy(alpha = 0.3f)
-
-// Old gray scale → Neomorphic text colors
-val ChainDarkGray = NeoDarkSurface
-val ChainMediumGray = NeoDarkTextSecondary
-val ChainLightGray = NeoDarkTextSecondary.copy(alpha = 0.7f)
-val ChainLightestGray = NeoLightSurface
-
-// Old gradients → Single surface colors
-val GradientDarkStart = NeoDarkSurface
-val GradientDarkMiddle = NeoDarkSurface
-val GradientDarkEnd = NeoDarkSurface
-val GradientLightStart = NeoLightSurface
-val GradientLightMiddle = NeoLightSurface
-val GradientLightEnd = NeoLightSurface
+// ===== BACKWARD COMPATIBILITY =====
+// Map old color names to glassmorphic equivalents for gradual migration
+val NeoDarkSurface = GlassCardBg
+val NeoDarkTextPrimary = GlassText
+val NeoDarkTextSecondary = GlassTextSecondary
+val NeoDarkLightShadow = GlassSurface
+val NeoDarkDarkShadow = GlassShadow
+val NeoLightSurface = GlassLightCardBg
+val NeoLightTextPrimary = GlassLightText
+val NeoLightTextSecondary = GlassLightTextSecondary
