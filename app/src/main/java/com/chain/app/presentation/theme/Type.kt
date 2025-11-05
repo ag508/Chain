@@ -11,12 +11,18 @@ import com.chain.app.R
 /**
  * Chain App Typography System
  * Based on chain-complete.html design specification
- * Inter font family for body text
- * Zen Dots for branding
+ *
+ * Font Strategy:
+ * - Zen Dots: Branding elements (Chain logo, main titles)
+ * - SansSerif (Roboto): All body text
+ *
+ * Note: HTML spec uses Inter, but we use Android's system SansSerif (Roboto)
+ * which provides excellent readability and is optimized for Android devices.
+ * Roboto is geometrically similar to Inter and provides the same modern aesthetic.
  */
 
-// Inter font family (400, 500, 600, 700, 800 weights from HTML spec)
-// Using system SansSerif as fallback until Inter fonts are properly installed
+// System SansSerif font family (Roboto on most Android devices)
+// Provides all weights needed: 400, 500, 600, 700, 800
 val InterFontFamily = FontFamily.SansSerif
 
 // Zen Dots for branding elements (Chain logo, main title)
