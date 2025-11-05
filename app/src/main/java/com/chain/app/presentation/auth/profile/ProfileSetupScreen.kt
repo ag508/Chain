@@ -35,8 +35,18 @@ fun ProfileSetupScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) { viewModel.setUserData(userId, phoneNumber) }
-    LaunchedEffect(state.profileCreated) { if (state.profileCreated) onProfileCreated() }
+    LaunchedEffect(Unit) {
+        println("DEBUG ProfileScreen: Initializing with userId=$userId, phoneNumber=$phoneNumber")
+        viewModel.setUserData(userId, phoneNumber)
+    }
+
+    LaunchedEffect(state.profileCreated) {
+        println("DEBUG ProfileScreen: profileCreated changed to ${state.profileCreated}")
+        if (state.profileCreated) {
+            println("DEBUG ProfileScreen: Calling onProfileCreated() navigation callback")
+            onProfileCreated()
+        }
+    }
 
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         viewModel.onProfileImageSelected(uri)

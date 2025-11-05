@@ -130,7 +130,12 @@ fun ChainApp(
                 userId = userId,
                 phoneNumber = phoneNumber,
                 onProfileCreated = {
-                    navController.navigate(NavRoutes.BiometricSetup.route)
+                    println("DEBUG MainActivity: onProfileCreated callback triggered, navigating to BiometricSetup")
+                    navController.navigate(NavRoutes.BiometricSetup.route) {
+                        // Don't clear back stack yet - allow back navigation if needed
+                        popUpTo(NavRoutes.ProfileSetup.route) { inclusive = true }
+                    }
+                    println("DEBUG MainActivity: Navigation to BiometricSetup completed")
                 }
             )
         }

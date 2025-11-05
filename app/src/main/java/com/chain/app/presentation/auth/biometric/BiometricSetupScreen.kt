@@ -19,9 +19,20 @@ fun BiometricSetupScreen(
     onSetupComplete: () -> Unit,
     viewModel: BiometricSetupViewModel = hiltViewModel()
 ) {
+    println("DEBUG BiometricScreen: Screen composing")
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(state.setupComplete) { if (state.setupComplete) onSetupComplete() }
+    LaunchedEffect(Unit) {
+        println("DEBUG BiometricScreen: LaunchedEffect initialized")
+    }
+
+    LaunchedEffect(state.setupComplete) {
+        println("DEBUG BiometricScreen: setupComplete = ${state.setupComplete}")
+        if (state.setupComplete) {
+            println("DEBUG BiometricScreen: Calling onSetupComplete()")
+            onSetupComplete()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(NeoDarkSurface).padding(24.dp)) {
         Surface(
