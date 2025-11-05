@@ -16,13 +16,8 @@ import com.chain.app.R
  */
 
 // Inter font family (400, 500, 600, 700, 800 weights from HTML spec)
-val InterFontFamily = FontFamily(
-    Font(R.font.inter_regular, FontWeight.Normal),     // 400
-    Font(R.font.inter_medium, FontWeight.Medium),      // 500
-    Font(R.font.inter_semibold, FontWeight.SemiBold),  // 600
-    Font(R.font.inter_bold, FontWeight.Bold),          // 700
-    Font(R.font.inter_extrabold, FontWeight.ExtraBold) // 800
-)
+// Using system SansSerif as fallback until Inter fonts are properly installed
+val InterFontFamily = FontFamily.SansSerif
 
 // Zen Dots for branding elements (Chain logo, main title)
 val ZenDotsFontFamily = FontFamily(
