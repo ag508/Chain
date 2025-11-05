@@ -2,10 +2,13 @@ package com.chain.app.presentation.auth.welcome
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,231 +17,238 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.chain.app.R
 import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.components.ChainTextButton
 import com.chain.app.presentation.theme.*
+import kotlin.math.sin
 
-/**
- * Neomorphic Welcome/Splash screen for Chain app.
- * Clean, minimalist design with soft shadows and "Chain" branding.
- * Tagline: "Decentralized. Secure. Yours."
- */
 @Composable
 fun WelcomeScreen(
     onGetStartedClick: () -> Unit,
     onSignInClick: () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
-    val surfaceColor = if (isDark) NeoDarkSurface else NeoLightSurface
+    val surface = if (isDark) NeoDarkSurface else NeoLightSurface
     val lightShadow = if (isDark) NeoDarkLightShadow else NeoLightLightShadow
     val darkShadow = if (isDark) NeoDarkDarkShadow else NeoLightDarkShadow
     val textColor = if (isDark) NeoDarkTextPrimary else NeoLightTextPrimary
-    val secondaryTextColor = if (isDark) NeoDarkTextSecondary else NeoLightTextSecondary
+    val secondaryText = if (isDark) NeoDarkTextSecondary else NeoLightTextSecondary
 
-    // Animations
-    val infiniteTransition = rememberInfiniteTransition(label = "logo_animation")
+    val zenDots = FontFamily(Font(resId = R.font.zendots_regular))
+    val scrollState = rememberScrollState()
+    val infinite = rememberInfiniteTransition(label = "bg_anim")
 
-    val logoScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.05f,
+    // Background shimmer animation
+    val offset by infinite.animateFloat(
+        initialValue = 0f, targetValue = 1000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2500, easing = FastOutSlowInEasing),
+            animation = tween(10000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
+        ), label = "offset_anim"
+    )
+
+    // Animated gradient
+    val bgGradient = Brush.linearGradient(
+        listOf(
+            ChainSecureGreen.copy(alpha = 0.3f),
+            ChainCyan.copy(alpha = 0.25f),
+            ChainSecureGreenLight.copy(alpha = 0.3f)
         ),
-        label = "logo_scale"
+        start = Offset(0f, offset),
+        end = Offset(offset, 0f)
     )
 
-    var isVisible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-
-    val contentAlpha by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(durationMillis = 1000),
-        label = "content_alpha"
-    )
-
-    // Main container with neomorphic surface
+    // Main layout
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(surfaceColor)
+            .background(bgGradient)
+            .padding(horizontal = 24.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp)
-                .verticalScroll(rememberScrollState())
-                .alpha(contentAlpha),
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
 
-            // Logo and branding section
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Logo - neomorphic extruded circle
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .scale(logoScale)
-                        .clip(CircleShape)
-                        .background(surfaceColor)
-                        .neomorphicExtruded(
-                            lightShadow = lightShadow,
-                            darkShadow = darkShadow,
-                            cornerRadius = 60.dp,
-                            shadowBlur = 15.dp,
-                            shadowOffset = 8.dp
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "⛓️",
-                        style = MaterialTheme.typography.displayLarge,
-                        fontSize = MaterialTheme.typography.displayLarge.fontSize * 1.2f
-                    )
-                }
+            Spacer(modifier = Modifier.height(60.dp))
 
-                Spacer(modifier = Modifier.height(40.dp))
+            // HERO SECTION — logo + tagline
+            HeroSection(surface, lightShadow, darkShadow, zenDots, textColor, secondaryText)
 
-                // App Name - "Chain" in Zen Dots font (TODO: add custom font)
-                Text(
-                    text = "Chain",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = textColor,
-                    textAlign = TextAlign.Center
-                )
+            Spacer(modifier = Modifier.height(40.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // FEATURES CAROUSEL — modern horizontal layout
+            FeatureCarousel(textColor, secondaryText)
 
-                // Tagline
-                Text(
-                    text = "Decentralized. Secure. Yours.",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = secondaryTextColor,
-                    textAlign = TextAlign.Center
-                )
+            Spacer(modifier = Modifier.height(48.dp))
 
-                Spacer(modifier = Modifier.height(64.dp))
-
-                // Feature highlights - simple text, no cards
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(24.dp),
-                    horizontalAlignment = Alignment.Start,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    FeatureItem(
-                        icon = "🔒",
-                        title = "End-to-End Encrypted",
-                        description = "Your messages stay private with Signal Protocol",
-                        textColor = textColor,
-                        secondaryColor = secondaryTextColor
-                    )
-
-                    FeatureItem(
-                        icon = "🌐",
-                        title = "Decentralized Network",
-                        description = "No central servers, true peer-to-peer messaging",
-                        textColor = textColor,
-                        secondaryColor = secondaryTextColor
-                    )
-
-                    FeatureItem(
-                        icon = "⛓️",
-                        title = "Blockchain Verified",
-                        description = "Messages authenticated on-chain for trust",
-                        textColor = textColor,
-                        secondaryColor = secondaryTextColor
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Action buttons
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                ChainButton(
-                    text = "Get Started",
-                    onClick = onGetStartedClick,
-                    isAccent = true
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Already have an account?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = secondaryTextColor
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    ChainTextButton(
-                        text = "Sign In",
-                        onClick = onSignInClick
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "By continuing, you agree to our Terms of Service\nand Privacy Policy",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = secondaryTextColor.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            // CALL TO ACTION CARD
+            ActionCard(onGetStartedClick, onSignInClick, textColor, secondaryText)
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-private fun FeatureItem(
+private fun HeroSection(
+    surface: Color,
+    lightShadow: Color,
+    darkShadow: Color,
+    zenDots: FontFamily,
+    textColor: Color,
+    secondaryText: Color
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "hero_logo_anim")
+    val pulse by infiniteTransition.animateFloat(
+        initialValue = 1f, targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ), label = "pulse_anim"
+    )
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .scale(pulse)
+                .clip(CircleShape)
+                .background(surface)
+                .neomorphicExtruded(lightShadow, darkShadow),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("⛓️", style = MaterialTheme.typography.displaySmall, color = ChainSecureGreen)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Chain",
+            fontFamily = zenDots,
+            fontWeight = FontWeight.Normal,
+            style = MaterialTheme.typography.displaySmall,
+            color = textColor
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Decentralized Messaging, Reinvented.",
+            style = MaterialTheme.typography.titleMedium,
+            color = secondaryText,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun FeatureCarousel(textColor: Color, secondaryColor: Color) {
+    val features = listOf(
+        Triple("🔐", "Total Privacy", "End-to-end encryption with blockchain key validation."),
+        Triple("🌍", "Peer-to-Peer", "No central server, no censorship. Just you and your network."),
+        Triple("⚡", "Blazing Fast", "Real-time message sync using distributed nodes."),
+        Triple("🧩", "Modular", "Plug-in features for groups, wallets, and DAOs.")
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        features.forEach { (icon, title, desc) ->
+            FeatureCard(icon, title, desc, textColor, secondaryColor)
+        }
+    }
+}
+
+@Composable
+private fun FeatureCard(
     icon: String,
     title: String,
     description: String,
-    textColor: androidx.compose.ui.graphics.Color,
-    secondaryColor: androidx.compose.ui.graphics.Color
+    textColor: Color,
+    secondaryColor: Color
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.Top
+    Card(
+        modifier = Modifier
+            .width(260.dp)
+            .height(160.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Text(
-            text = icon,
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(end = 16.dp)
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.05f),
+                            ChainSecureGreen.copy(alpha = 0.05f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(24.dp)
+                )
+                .padding(20.dp)
+        ) {
+            Column {
+                Text(icon, style = MaterialTheme.typography.headlineMedium)
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(title, style = MaterialTheme.typography.titleMedium, color = textColor)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(description, style = MaterialTheme.typography.bodySmall, color = secondaryColor)
+            }
+        }
+    }
+}
 
-        Column {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = textColor
+@Composable
+private fun ActionCard(
+    onGetStarted: () -> Unit,
+    onSignIn: () -> Unit,
+    textColor: Color,
+    secondaryColor: Color
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color.White.copy(alpha = 0.03f))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            ChainButton(
+                text = "Get Started",
+                onClick = onGetStarted,
+                isAccent = true
             )
-            Spacer(modifier = Modifier.height(4.dp))
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Already on Chain?", color = secondaryColor)
+                Spacer(modifier = Modifier.width(4.dp))
+                ChainTextButton("Sign In", onClick = onSignIn)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = secondaryColor
+                "By continuing, you agree to our Terms & Privacy Policy.",
+                style = MaterialTheme.typography.labelSmall,
+                color = secondaryColor.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center
             )
         }
     }

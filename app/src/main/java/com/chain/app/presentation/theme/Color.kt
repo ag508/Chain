@@ -34,6 +34,10 @@ val ChainSecureGreen = Color(0xFF00C781)
 val ChainSecureGreenLight = Color(0xFF00E290)  // For green bubble highlights
 val ChainSecureGreenDark = Color(0xFF00A36A)   // For green bubble shadows
 
+// Modern gradient accent colors
+val ChainCyan = Color(0xFF00FFFF)
+val ChainAquaGlow = Color(0xFF00E6B8)
+
 // Status & alerts
 val ChainError = Color(0xFFFF3B30)
 val ChainWarning = Color(0xFFFFCC00)
