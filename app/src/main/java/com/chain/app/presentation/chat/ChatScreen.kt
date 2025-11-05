@@ -49,22 +49,18 @@ fun ChatListScreen(
             .background(brush = bgBrush)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Glassmorphic header with fade effect (top to bottom)
+            // Glassmorphic header with rounded corners
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                GlassCardBg,
-                                GlassCardBg.copy(alpha = 0.8f),
-                                GlassCardBg.copy(alpha = 0.4f),
-                                androidx.compose.ui.graphics.Color.Transparent
-                            )
-                        )
-                    )
-                    .padding(horizontal = 20.dp, vertical = 16.dp)
+                    .padding(horizontal = 20.dp, top = 16.dp, bottom = 8.dp)
             ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glass(shape = RoundedCornerShape(16.dp))
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -109,6 +105,7 @@ fun ChatListScreen(
                         }
                     }
                 }
+                }
             }
 
             // Chat content
@@ -129,22 +126,18 @@ fun ChatListScreen(
                 }
             }
 
-            // Glassmorphic bottom nav with fade effect (bottom to top)
+            // Glassmorphic bottom nav with rounded corners
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                androidx.compose.ui.graphics.Color.Transparent,
-                                GlassCardBg.copy(alpha = 0.4f),
-                                GlassCardBg.copy(alpha = 0.8f),
-                                GlassCardBg
-                            )
-                        )
-                    )
-                    .padding(horizontal = 20.dp, vertical = 16.dp)
+                    .padding(horizontal = 20.dp, top = 8.dp, bottom = 16.dp)
             ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glass(shape = RoundedCornerShape(16.dp))
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround
@@ -164,6 +157,7 @@ fun ChatListScreen(
                         isActive = currentTab == "calls",
                         onClick = { currentTab = "calls" }
                     )
+                }
                 }
             }
         }

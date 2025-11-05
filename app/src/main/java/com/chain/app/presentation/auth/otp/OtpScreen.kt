@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -259,19 +261,21 @@ private fun VerificationResultPopup(
     message: String,
     description: String
 ) {
-    // Semi-transparent overlay
+    // Semi-transparent overlay with blur effect
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(GlassOverlay),
         contentAlignment = Alignment.Center
     ) {
-        // Glassmorphic popup card
+        // Glassmorphic popup card with strong blur effect
         Column(
             modifier = Modifier
                 .padding(horizontal = 32.dp)
+                .shadow(elevation = 20.dp, shape = RoundedCornerShape(24.dp))
                 .clip(RoundedCornerShape(24.dp))
-                .glassStrong()
+                .background(GlassSurface)  // Stronger glass background for more blur effect
+                .border(width = 1.dp, color = GlassBorder, shape = RoundedCornerShape(24.dp))
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
