@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 // ===== DARK THEME (DEFAULT) =====
 // Background & Surfaces
 val GlassBg = Color(0xFF000000)  // Pure black background
-val GlassSurface = Color(0x1E1E1EBF)  // rgba(30, 30, 30, 0.75)
+val GlassSurface = Color(0xFF1E1E1E)  // rgba(30, 30, 30, 1.0) - fully opaque
 val GlassCardBg = Color(0x14141499)  // rgba(20, 20, 20, 0.6)
 val GlassSurfaceElevated = Color(0xFF1A1A1A)
 val GlassBorder = Color(0x1AFFFFFF)  // rgba(255, 255, 255, 0.1)
