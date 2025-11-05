@@ -30,6 +30,7 @@ fun ChatScreen() {
 }
 
 @Composable
+@Suppress("UNUSED_PARAMETER")
 fun ChatListScreen(
     viewModel: ChatListViewModel = hiltViewModel(),
     onChatClick: (Chat) -> Unit = {},
@@ -53,7 +54,7 @@ fun ChatListScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, top = 16.dp, bottom = 8.dp)
+                    .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 8.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -130,7 +131,7 @@ fun ChatListScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, top = 8.dp, bottom = 16.dp)
+                    .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 16.dp)
             ) {
                 Box(
                     modifier = Modifier
