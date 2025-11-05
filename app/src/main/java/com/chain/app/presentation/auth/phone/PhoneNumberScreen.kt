@@ -101,7 +101,8 @@ fun PhoneNumberScreen(
                     value = state.countryCode,
                     onValueChange = viewModel::onCountryCodeChanged,
                     modifier = Modifier.width(100.dp),
-                    placeholder = "+1"
+                    placeholder = "+1",
+                    textAlign = TextAlign.Center
                 )
 
                 // Phone number field

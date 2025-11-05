@@ -7,12 +7,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -84,7 +88,7 @@ fun WelcomeScreen(
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
-            // App Logo with pulse animation
+            // App Logo with pulse animation - fills entire rounded box
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -92,15 +96,15 @@ fun WelcomeScreen(
                         scaleX = pulse
                         scaleY = pulse
                     }
-                    .glassAppLogo()
-                    .padding(20.dp),
+                    .clip(RoundedCornerShape(30.dp))
+                    .glassAppLogo(),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.app_icon),
                     contentDescription = "Chain Logo",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop
                 )
             }
 
@@ -134,21 +138,21 @@ fun WelcomeScreen(
             ) {
                 // Feature 1: End-to-End Encrypted
                 FeatureCard(
-                    icon = "🔒",
+                    icon = Icons.Outlined.Lock,
                     title = "End-to-End Encrypted",
                     description = "Your messages are secure and private"
                 )
 
                 // Feature 2: Decentralized Network
                 FeatureCard(
-                    icon = "🔗",
+                    icon = Icons.Outlined.Link,
                     title = "Decentralized Network",
                     description = "No central server, complete control"
                 )
 
                 // Feature 3: Lightning Fast
                 FeatureCard(
-                    icon = "⚡",
+                    icon = Icons.Outlined.Bolt,
                     title = "Lightning Fast",
                     description = "Instant message delivery worldwide"
                 )
@@ -188,7 +192,7 @@ fun WelcomeScreen(
  */
 @Composable
 private fun FeatureCard(
-    icon: String,
+    icon: ImageVector,
     title: String,
     description: String
 ) {
@@ -207,10 +211,11 @@ private fun FeatureCard(
                 .glass(shape = RoundedCornerShape(14.dp), shadowElevation = 4.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = icon,
-                style = MaterialTheme.typography.headlineMedium,
-                fontSize = 24.sp
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = GlassText
             )
         }
 

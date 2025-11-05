@@ -49,11 +49,20 @@ fun ChatListScreen(
             .background(brush = bgBrush)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Glassmorphic header (sticky top)
+            // Glassmorphic header with fade effect (top to bottom)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glass(shape = RoundedCornerShape(0.dp), shadowElevation = 0.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                GlassCardBg,
+                                GlassCardBg.copy(alpha = 0.8f),
+                                GlassCardBg.copy(alpha = 0.4f),
+                                androidx.compose.ui.graphics.Color.Transparent
+                            )
+                        )
+                    )
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Row(
@@ -61,25 +70,14 @@ fun ChatListScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Header left
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Link,
-                            contentDescription = "Chain",
-                            modifier = Modifier.size(28.dp),
-                            tint = GlassText
-                        )
-                        Text(
-                            text = "Chats",
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = GlassText
-                        )
-                    }
+                    // Header left - Chain logo text in Zen Dots
+                    Text(
+                        text = "Chain",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize
+                        ),
+                        color = GlassText
+                    )
 
                     // Header right
                     Row(
@@ -131,11 +129,20 @@ fun ChatListScreen(
                 }
             }
 
-            // Glassmorphic bottom nav (sticky bottom)
+            // Glassmorphic bottom nav with fade effect (bottom to top)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glass(shape = RoundedCornerShape(0.dp), shadowElevation = 0.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                androidx.compose.ui.graphics.Color.Transparent,
+                                GlassCardBg.copy(alpha = 0.4f),
+                                GlassCardBg.copy(alpha = 0.8f),
+                                GlassCardBg
+                            )
+                        )
+                    )
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Row(
@@ -176,12 +183,9 @@ private fun BottomNavItem(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .then(
-                if (isActive) {
-                    Modifier.glass(shape = RoundedCornerShape(12.dp), shadowElevation = 0.dp)
-                } else {
-                    Modifier
-                }
+            .background(
+                color = if (isActive) GlassCardBg else GlassCardBg.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(12.dp)
             )
             .padding(horizontal = 20.dp, vertical = 8.dp)
     ) {

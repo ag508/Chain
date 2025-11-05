@@ -1,18 +1,28 @@
 package com.chain.app.presentation.auth.otp
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -22,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.components.ChainTextButton
 import com.chain.app.presentation.theme.*
+import kotlinx.coroutines.delay
 
 @Composable
 fun OtpScreen(
@@ -33,8 +44,26 @@ fun OtpScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scroll = rememberScrollState()
 
+    // Track popup states
+    var showSuccessPopup by remember { mutableStateOf(false) }
+    var showErrorPopup by remember { mutableStateOf(false) }
+
+    // Show success popup and delay navigation
     LaunchedEffect(state.verified) {
-        if (state.verified && state.userId != null) onVerified(state.userId!!)
+        if (state.verified && state.userId != null) {
+            showSuccessPopup = true
+            delay(1500) // Show success popup for 1.5 seconds
+            onVerified(state.userId!!)
+        }
+    }
+
+    // Show error popup when verification fails
+    LaunchedEffect(state.otpError) {
+        if (state.otpError != null) {
+            showErrorPopup = true
+            delay(3000) // Show error popup for 3 seconds
+            showErrorPopup = false
+        }
     }
 
     // Gradient background (135deg from HTML spec)
@@ -42,7 +71,8 @@ fun OtpScreen(
         colors = listOf(GlassGradientStart, GlassGradientEnd)
     )
 
-    Column(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = bgBrush)
@@ -151,6 +181,35 @@ fun OtpScreen(
             }
         }
     }
+
+        // Verification Success Popup
+        AnimatedVisibility(
+            visible = showSuccessPopup,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut(),
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            VerificationResultPopup(
+                isSuccess = true,
+                message = "Verification Successful!",
+                description = "Redirecting to profile setup..."
+            )
+        }
+
+        // Verification Error Popup
+        AnimatedVisibility(
+            visible = showErrorPopup,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut(),
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            VerificationResultPopup(
+                isSuccess = false,
+                message = "Verification Failed",
+                description = state.otpError ?: "Invalid code. Please try again."
+            )
+        }
+    }
 }
 
 @Composable
@@ -164,7 +223,7 @@ private fun OtpInput(otp: String, onOtpChange: (String) -> Unit, isError: Boolea
         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
         decorationBox = {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -172,11 +231,11 @@ private fun OtpInput(otp: String, onOtpChange: (String) -> Unit, isError: Boolea
                     val char = if (i < otp.length) otp[i].toString() else ""
                     val isFocused = i == otp.length
 
-                    // OTP box: 56x64dp with 16dp border radius, glass effect
+                    // OTP box: flexible width with 64dp height, 16dp border radius, glass effect
                     Box(
                         modifier = Modifier
-                            .width(56.dp)
-                            .height(64.dp)
+                            .weight(1f)
+                            .aspectRatio(0.875f)  // 56:64 ratio = 0.875
                             .glassOtpBox(),
                         contentAlignment = Alignment.Center
                     ) {
@@ -192,4 +251,64 @@ private fun OtpInput(otp: String, onOtpChange: (String) -> Unit, isError: Boolea
             }
         }
     )
+}
+
+@Composable
+private fun VerificationResultPopup(
+    isSuccess: Boolean,
+    message: String,
+    description: String
+) {
+    // Semi-transparent overlay
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(GlassOverlay),
+        contentAlignment = Alignment.Center
+    ) {
+        // Glassmorphic popup card
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .glassStrong()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Icon
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(if (isSuccess) ChainSuccess.copy(alpha = 0.2f) else ChainError.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isSuccess) Icons.Outlined.CheckCircle else Icons.Outlined.Error,
+                    contentDescription = if (isSuccess) "Success" else "Error",
+                    modifier = Modifier.size(48.dp),
+                    tint = if (isSuccess) ChainSuccess else ChainError
+                )
+            }
+
+            // Message
+            Text(
+                text = message,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = GlassText,
+                textAlign = TextAlign.Center
+            )
+
+            // Description
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = GlassTextSecondary,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 }

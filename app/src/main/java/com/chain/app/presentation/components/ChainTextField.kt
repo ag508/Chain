@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.chain.app.presentation.theme.*
 
@@ -44,7 +45,8 @@ fun ChainTextField(
     errorMessage: String? = null,
     singleLine: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    textAlign: TextAlign = TextAlign.Start
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -91,7 +93,10 @@ fun ChainTextField(
                 onValueChange = onValueChange,
                 singleLine = singleLine,
                 cursorBrush = SolidColor(GlassAccent),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = GlassText),
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = GlassText,
+                    textAlign = textAlign
+                ),
                 keyboardOptions = keyboardOptions,
                 visualTransformation = visualTransformation,
                 interactionSource = interactionSource,
