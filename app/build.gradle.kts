@@ -230,3 +230,77 @@ configurations.all {
 kapt {
     correctErrorTypes = true
 }
+
+// Task to align native libraries at 16 KB boundaries for Android 15+ compatibility
+tasks.register("align16KbNativeLibs") {
+    description = "Aligns native library LOAD segments to 16 KB boundaries"
+    group = "build"
+
+    doLast {
+        val ndkDir = android.ndkDirectory
+
+        // Detect OS for correct objcopy path
+        val osName = System.getProperty("os.name").lowercase()
+        val prebuiltDir = when {
+            osName.contains("linux") -> "linux-x86_64"
+            osName.contains("mac") || osName.contains("darwin") -> "darwin-x86_64"
+            osName.contains("windows") -> "windows-x86_64"
+            else -> "linux-x86_64"
+        }
+
+        val objcopyPath = "$ndkDir/toolchains/llvm/prebuilt/$prebuiltDir/bin/llvm-objcopy"
+        val objcopyFile = file(objcopyPath)
+
+        if (!objcopyFile.exists()) {
+            println("Warning: llvm-objcopy not found at $objcopyPath")
+            println("Skipping native library alignment. Ensure NDK is properly installed.")
+            return@doLast
+        }
+
+        // Find all .so files in build outputs
+        val nativeLibDirs = listOf(
+            "build/intermediates/merged_native_libs",
+            "build/intermediates/stripped_native_libs"
+        )
+
+        var alignedCount = 0
+        nativeLibDirs.forEach { dirPath ->
+            val libDir = file(dirPath)
+            if (libDir.exists()) {
+                fileTree(libDir) {
+                    include("**/*.so")
+                }.forEach { soFile ->
+                    println("Aligning ${soFile.name} to 16 KB boundaries...")
+                    try {
+                        exec {
+                            commandLine(
+                                objcopyPath,
+                                "--set-section-alignment", ".text=16384",
+                                "--set-section-alignment", ".data=16384",
+                                "--set-section-alignment", ".rodata=16384",
+                                "--set-section-alignment", ".bss=16384",
+                                soFile.absolutePath
+                            )
+                            isIgnoreExitValue = true
+                        }
+                        println("✓ Successfully aligned ${soFile.name}")
+                        alignedCount++
+                    } catch (e: Exception) {
+                        println("⚠ Warning: Could not align ${soFile.name}: ${e.message}")
+                    }
+                }
+            }
+        }
+
+        println("═════════════════════════════════════════════════════")
+        println("16 KB Alignment Complete: $alignedCount libraries aligned")
+        println("═════════════════════════════════════════════════════")
+    }
+}
+
+// Hook the alignment task into the build process
+tasks.whenTaskAdded {
+    if (name.contains("merge") && name.contains("NativeLibs") && !name.contains("Release")) {
+        finalizedBy("align16KbNativeLibs")
+    }
+}
