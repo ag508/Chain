@@ -131,9 +131,7 @@ private fun HeroSection(
             Image(
                 painter = painterResource(id = R.drawable.app_icon),
                 contentDescription = "Chain Logo",
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape),
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
         }
