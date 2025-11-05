@@ -179,7 +179,7 @@ private fun BottomNavItem(
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .background(
-                color = if (isActive) GlassCardBg else GlassCardBg.copy(alpha = 0.3f),
+                color = if (isActive) GlassCardBg else androidx.compose.ui.graphics.Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(horizontal = 20.dp, vertical = 8.dp)
