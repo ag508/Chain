@@ -86,28 +86,33 @@ class ProfileSetupViewModel @Inject constructor(
             println("DEBUG ProfileSetup: createUserProfile result: ${result.isSuccess}")
 
             if (result.isSuccess) {
-                // Initialize encryption keys
+                // Initialize encryption keys with timeout
                 println("DEBUG ProfileSetup: Initializing encryption...")
-                val encryptionResult = authRepository.initializeEncryption()
+                val encryptionResult = try {
+                    kotlinx.coroutines.withTimeout(10000L) { // 10 second timeout
+                        authRepository.initializeEncryption()
+                    }
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    println("DEBUG ProfileSetup: Encryption initialization timed out after 10 seconds")
+                    Result.failure<Unit>(Exception("Encryption initialization timed out"))
+                }
 
                 println("DEBUG ProfileSetup: Encryption result: ${encryptionResult.isSuccess}")
 
                 if (encryptionResult.isSuccess) {
-                    println("DEBUG ProfileSetup: Profile created successfully! Setting profileCreated=true")
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            profileCreated = true
-                        )
-                    }
+                    println("DEBUG ProfileSetup: Profile created successfully with encryption! Setting profileCreated=true")
                 } else {
                     println("DEBUG ProfileSetup: Encryption initialization failed: ${encryptionResult.exceptionOrNull()?.message}")
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = "Failed to initialize encryption"
-                        )
-                    }
+                    println("DEBUG ProfileSetup: Proceeding anyway - encryption can be initialized later")
+                }
+
+                // Proceed regardless of encryption result (encryption can be initialized later)
+                println("DEBUG ProfileSetup: Setting profileCreated=true")
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        profileCreated = true
+                    )
                 }
             } else {
                 println("DEBUG ProfileSetup: Profile creation failed: ${result.exceptionOrNull()?.message}")

@@ -11,7 +11,9 @@ sealed class NavRoutes(val route: String) {
     object OtpVerification : NavRoutes("otp_verification/{phoneNumber}") {
         fun createRoute(phoneNumber: String) = "otp_verification/$phoneNumber"
     }
-    object ProfileSetup : NavRoutes("profile_setup")
+    object ProfileSetup : NavRoutes("profile_setup/{userId}/{phoneNumber}") {
+        fun createRoute(userId: String, phoneNumber: String) = "profile_setup/$userId/$phoneNumber"
+    }
     object BiometricSetup : NavRoutes("biometric_setup")
 
     // Main app flow
