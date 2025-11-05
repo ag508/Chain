@@ -54,7 +54,7 @@ interface MessageRepository {
     fun observeMessages(chatId: String): Flow<Message>
 
     /**
-     * Sync messages from blockchain.
+     * Sync messages from P2P network.
      */
     suspend fun syncMessages(): Result<Unit>
 }

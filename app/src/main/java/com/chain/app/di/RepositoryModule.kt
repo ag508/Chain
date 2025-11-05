@@ -4,10 +4,12 @@ import com.chain.app.data.repository.AuthRepositoryImpl
 import com.chain.app.data.repository.ChatRepositoryImpl
 import com.chain.app.data.repository.EncryptionRepositoryImpl
 import com.chain.app.data.repository.MessageRepositoryImpl
+import com.chain.app.data.repository.P2PRepositoryImpl
 import com.chain.app.domain.repository.AuthRepository
 import com.chain.app.domain.repository.ChatRepository
 import com.chain.app.domain.repository.EncryptionRepository
 import com.chain.app.domain.repository.MessageRepository
+import com.chain.app.domain.repository.P2PRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -44,4 +46,10 @@ abstract class RepositoryModule {
     abstract fun bindChatRepository(
         impl: ChatRepositoryImpl
     ): ChatRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindP2PRepository(
+        impl: P2PRepositoryImpl
+    ): P2PRepository
 }

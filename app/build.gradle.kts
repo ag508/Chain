@@ -171,12 +171,15 @@ dependencies {
     // WebRTC - Using Stream's distribution (more reliable)
     implementation("io.getstream:stream-webrtc-android:1.1.0")
 
-    // P2P Networking - TODO: Implement custom P2P or use alternative
-    // Commenting out for now as libp2p-jvm doesn't have stable Android releases
-    // implementation("io.github.libp2p:jvm-libp2p-minimal:0.10.0-RELEASE")
+    // P2P Networking - Pure P2P approach (no blockchain)
+    // DHT for global peer discovery
+    implementation("com.offbynull.kademlia:kademlia:1.0.0")
 
-    // Blockchain (Web3j for Ethereum-compatible chains)
-    implementation("org.web3j:core:4.10.3")
+    // mDNS/Bonjour for local network discovery
+    implementation("javax.jmdns:jmdns:3.5.8")
+
+    // IPFS Java library for DHT bootstrap nodes (optional, for wider network)
+    implementation("com.github.ipfs:java-ipfs-http-client:v1.3.3")
 
     // Cloud Storage SDKs
     implementation("com.google.android.gms:play-services-auth:20.7.0")

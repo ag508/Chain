@@ -28,7 +28,7 @@ Chain follows Clean Architecture principles with MVVM pattern for the presentati
 │                        Data Layer                            │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
 │  │  Repository  │  │  Database    │  │  Network         │  │
-│  │  Impls       │  │  (Room)      │  │  (Blockchain)    │  │
+│  │  Impls       │  │  (Room)      │  │  (P2P + WebRTC)  │  │
 │  └──────────────┘  └──────────────┘  └──────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -173,15 +173,19 @@ MessageRepository.sendMessage()
     ↓
 MessageDao.insertMessage() → Room Database
     ↓
-BlockchainService.broadcastTransaction() → Blockchain Network
+P2PRepository.sendMessage() → Direct P2P (WebRTC Data Channel)
+    ↓
+If recipient offline → P2PRepository.storeForwardMessage()
 ```
 
 ### Receiving Messages
 
 ```
-Blockchain Network
+P2P Network (WebRTC Data Channel)
     ↓
-BlockchainRepository.subscribeToMessages()
+P2PRepository.subscribeToMessages()
+    ↓
+EncryptionRepository.decryptMessage()
     ↓
 MessageRepository.observeMessages()
     ↓
@@ -374,16 +378,18 @@ Android Keystore (Key Storage)
    - Use lazy loading for lists
 
 3. **Network**
-   - Batch blockchain transactions
-   - Implement exponential backoff for retries
-   - Cache frequently accessed data
+   - Maintain P2P connections efficiently
+   - Implement exponential backoff for peer reconnection
+   - Cache frequently accessed peer information
+   - Optimize DHT lookups
 
 ## Next Steps
 
-1. **Blockchain Integration**
-   - Implement Web3j connection manager
-   - Create transaction broadcasting service
-   - Add P2P networking with libp2p
+1. **P2P Networking Implementation**
+   - Implement WebRTC data channel manager
+   - Create DHT service for global peer discovery
+   - Add mDNS service for local network discovery
+   - Implement store-and-forward for offline messages
 
 2. **Authentication**
    - OAuth integration (Google/Microsoft)
@@ -393,7 +399,7 @@ Android Keystore (Key Storage)
 3. **WebRTC Calls**
    - PeerConnection management
    - STUN/TURN server integration
-   - Call signaling through blockchain
+   - Call signaling through P2P data channels
 
 4. **Cloud Storage**
    - Google Drive API integration
