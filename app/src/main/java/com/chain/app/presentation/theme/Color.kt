@@ -53,3 +53,30 @@ val ChainBlack = NeoDarkSurface
 val ChainWhite = NeoLightSurface
 val ChainAccent = ChainSecureGreen
 val ChainPrimary = ChainSecureGreen
+
+// ===== BACKWARD COMPATIBILITY ALIASES =====
+// These map old glassmorphism colors to neomorphic equivalents
+// This allows old screens to build while we incrementally update them
+
+// Glassmorphism overlays → Neomorphic shadows
+val GlassWhite5 = NeoDarkLightShadow.copy(alpha = 0.05f)
+val GlassWhite10 = NeoDarkLightShadow.copy(alpha = 0.1f)
+val GlassWhite20 = NeoDarkLightShadow.copy(alpha = 0.2f)
+val GlassWhite30 = NeoDarkLightShadow.copy(alpha = 0.3f)
+val GlassBlack10 = NeoDarkDarkShadow.copy(alpha = 0.1f)
+val GlassBlack20 = NeoDarkDarkShadow.copy(alpha = 0.2f)
+val GlassBlack30 = NeoDarkDarkShadow.copy(alpha = 0.3f)
+
+// Old gray scale → Neomorphic text colors
+val ChainDarkGray = NeoDarkSurface
+val ChainMediumGray = NeoDarkTextSecondary
+val ChainLightGray = NeoDarkTextSecondary.copy(alpha = 0.7f)
+val ChainLightestGray = NeoLightSurface
+
+// Old gradients → Single surface colors
+val GradientDarkStart = NeoDarkSurface
+val GradientDarkMiddle = NeoDarkSurface
+val GradientDarkEnd = NeoDarkSurface
+val GradientLightStart = NeoLightSurface
+val GradientLightMiddle = NeoLightSurface
+val GradientLightEnd = NeoLightSurface
