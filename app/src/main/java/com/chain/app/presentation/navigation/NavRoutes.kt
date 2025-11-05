@@ -23,4 +23,12 @@ sealed class NavRoutes(val route: String) {
     }
     object Settings : NavRoutes("settings")
     object Profile : NavRoutes("profile")
+
+    // Contacts and Groups
+    object ContactSearch : NavRoutes("contact_search")
+    object QRCodeScanner : NavRoutes("qr_code_scanner")
+    object CreateGroup : NavRoutes("create_group")
+    object GroupSetup : NavRoutes("group_setup/{selectedContactIds}") {
+        fun createRoute(selectedContactIds: String) = "group_setup/$selectedContactIds"
+    }
 }

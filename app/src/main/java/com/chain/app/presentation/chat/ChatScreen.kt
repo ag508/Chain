@@ -27,8 +27,14 @@ import com.chain.app.presentation.theme.*
  * Simple wrapper for the chat list screen.
  */
 @Composable
-fun ChatScreen() {
-    ChatListScreen()
+fun ChatScreen(
+    onChatClick: (Chat) -> Unit = {},
+    onNewChatClick: () -> Unit = {}
+) {
+    ChatListScreen(
+        onChatClick = onChatClick,
+        onNewChatClick = onNewChatClick
+    )
 }
 
 @Composable

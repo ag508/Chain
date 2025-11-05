@@ -50,14 +50,14 @@ class MessageRepositoryImpl @Inject constructor(
             // Encrypt message content
             val encryptedContent = encryptionRepository.encryptMessage(
                 plaintext = message.content,
-                recipientId = message.recipientId ?: message.chatId
+                recipientId = message.chatId // Use chatId as recipient
             ).getOrThrow()
 
             // Create P2P message
             val p2pMessage = P2PMessage(
                 id = message.id,
                 from = message.senderId,
-                to = message.recipientId ?: message.chatId,
+                to = message.chatId, // Use chatId as recipient
                 encryptedPayload = encryptedContent.content.toByteArray(),
                 timestamp = message.timestamp.time,
                 type = P2PMessageType.CHAT_MESSAGE,

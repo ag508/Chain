@@ -13,9 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.chain.app.domain.model.Chat
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.ChatType
-import com.chain.app.domain.model.Message
 import com.chain.app.presentation.chat.detail.components.*
 import com.chain.app.presentation.theme.*
 
@@ -25,8 +24,61 @@ import com.chain.app.presentation.theme.*
  */
 @Composable
 fun ChatDetailScreen(
-    chat: Chat,
-    messages: List<Message>,
+    chatId: String,
+    currentUserId: String,
+    onBackClick: () -> Unit,
+    onVoiceCallClick: () -> Unit,
+    onVideoCallClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: ChatDetailViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val messages by viewModel.messages.collectAsState()
+
+    LaunchedEffect(chatId) {
+        viewModel.loadChat(chatId)
+        viewModel.setCurrentUserId(currentUserId)
+    }
+
+    when (val state = uiState) {
+        is ChatDetailUiState.Loading -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = GlassAccent)
+            }
+        }
+        is ChatDetailUiState.Error -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Error: ${state.message}",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+        is ChatDetailUiState.Success -> {
+            ChatDetailContent(
+                chat = state.chat,
+                messages = messages,
+                currentUserId = currentUserId,
+                onBackClick = onBackClick,
+                onSendMessage = viewModel::sendMessage,
+                onVoiceCallClick = onVoiceCallClick,
+                onVideoCallClick = onVideoCallClick,
+                modifier = modifier
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChatDetailContent(
+    chat: com.chain.app.domain.model.Chat,
+    messages: List<com.chain.app.domain.model.Message>,
     currentUserId: String,
     onBackClick: () -> Unit,
     onSendMessage: (String) -> Unit,

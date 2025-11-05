@@ -25,6 +25,7 @@ import com.chain.app.presentation.auth.phone.PhoneNumberScreen
 import com.chain.app.presentation.auth.profile.ProfileSetupScreen
 import com.chain.app.presentation.auth.welcome.WelcomeScreen
 import com.chain.app.presentation.chat.ChatScreen
+import com.chain.app.presentation.chat.detail.ChatDetailScreen
 import com.chain.app.presentation.navigation.NavRoutes
 import com.chain.app.presentation.theme.ChainTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -149,9 +150,92 @@ fun ChainApp(
             )
         }
 
-        // Chat list screen (placeholder)
+        // Chat list screen
         composable(NavRoutes.ChatList.route) {
-            ChatScreen()
+            ChatScreen(
+                onChatClick = { chat ->
+                    navController.navigate(NavRoutes.ChatDetail.createRoute(chat.id))
+                },
+                onNewChatClick = {
+                    navController.navigate(NavRoutes.ContactSearch.route)
+                }
+            )
+        }
+
+        // Chat detail screen
+        composable(
+            route = NavRoutes.ChatDetail.route,
+            arguments = listOf(
+                navArgument("chatId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+            // TODO: Get current user ID from auth
+            ChatDetailScreen(
+                chatId = chatId,
+                currentUserId = "current_user_id",
+                onBackClick = { navController.popBackStack() },
+                onVoiceCallClick = { /* TODO: Start voice call */ },
+                onVideoCallClick = { /* TODO: Start video call */ }
+            )
+        }
+
+        // Contact search screen
+        composable(NavRoutes.ContactSearch.route) {
+            com.chain.app.presentation.contacts.ContactSearchScreen(
+                onBackClick = { navController.popBackStack() },
+                onContactSelected = { phoneNumber ->
+                    // TODO: Create chat with contact and navigate to it
+                    navController.popBackStack()
+                },
+                onQRCodeClick = {
+                    navController.navigate(NavRoutes.QRCodeScanner.route)
+                }
+            )
+        }
+
+        // QR code scanner screen
+        composable(NavRoutes.QRCodeScanner.route) {
+            com.chain.app.presentation.contacts.QRCodeScannerScreen(
+                onBackClick = { navController.popBackStack() },
+                onQRCodeScanned = { qrData ->
+                    // TODO: Process QR code and add contact
+                    navController.popBackStack()
+                },
+                onShowMyQRCode = {
+                    // TODO: Show user's QR code
+                }
+            )
+        }
+
+        // Create group screen
+        composable(NavRoutes.CreateGroup.route) {
+            com.chain.app.presentation.groups.CreateGroupScreen(
+                onBackClick = { navController.popBackStack() },
+                onNextClick = { selectedContactIds ->
+                    val contactIdsString = selectedContactIds.joinToString(",")
+                    navController.navigate(NavRoutes.GroupSetup.createRoute(contactIdsString))
+                }
+            )
+        }
+
+        // Group setup screen
+        composable(
+            route = NavRoutes.GroupSetup.route,
+            arguments = listOf(
+                navArgument("selectedContactIds") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val selectedContactIdsString = backStackEntry.arguments?.getString("selectedContactIds") ?: ""
+            val selectedContactIds = selectedContactIdsString.split(",").filter { it.isNotEmpty() }
+            com.chain.app.presentation.groups.GroupSetupScreen(
+                selectedContactIds = selectedContactIds,
+                onBackClick = { navController.popBackStack() },
+                onCreateGroup = { groupName, groupIcon ->
+                    // TODO: Create group chat
+                    navController.popBackStack(NavRoutes.ChatList.route, inclusive = false)
+                }
+            )
         }
     }
 }
