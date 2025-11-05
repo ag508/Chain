@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.Chat
+import com.chain.app.presentation.chat.list.components.*
+import com.chain.app.presentation.components.glass.GlassFAB
 import com.chain.app.presentation.theme.*
 
 /**
@@ -37,7 +39,10 @@ fun ChatListScreen(
     onNewChatClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
     var currentTab by remember { mutableStateOf("chats") }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var showSearchBar by remember { mutableStateOf(false) }
 
     // Background gradient
     val bgBrush = Brush.linearGradient(
@@ -62,50 +67,73 @@ fun ChatListScreen(
                         .glass(shape = RoundedCornerShape(16.dp))
                         .padding(horizontal = 20.dp, vertical = 16.dp)
                 ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Header left - Chain logo text in Zen Dots
-                    Text(
-                        text = "Chain",
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = MaterialTheme.typography.headlineMedium.fontSize
-                        ),
-                        color = GlassText
-                    )
-
-                    // Header right
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        IconButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .glassIconButton()
+                    if (showSearchBar) {
+                        // Show search bar when active
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = GlassText
+                            IconButton(
+                                onClick = {
+                                    showSearchBar = false
+                                    viewModel.updateSearchQuery("")
+                                },
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Close search",
+                                    tint = GlassText
+                                )
+                            }
+                            SearchBar(
+                                query = searchQuery,
+                                onQueryChange = viewModel::updateSearchQuery,
+                                onSearch = { },
+                                modifier = Modifier.weight(1f)
                             )
                         }
-                        IconButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .glassIconButton()
+                    } else {
+                        // Normal header
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More",
-                                tint = GlassText
+                            // Header left - Chain logo text in Zen Dots
+                            Text(
+                                text = "Chain",
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontSize = MaterialTheme.typography.headlineMedium.fontSize
+                                ),
+                                color = GlassText
                             )
+
+                            // Header right
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                IconButton(
+                                    onClick = { showSearchBar = true },
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .glassIconButton()
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = GlassText
+                                    )
+                                }
+                                TopBarMenu(
+                                    onProfileClick = { /* TODO: Navigate to profile */ },
+                                    onSettingsClick = { /* TODO: Navigate to settings */ },
+                                    onLogoutClick = { /* TODO: Handle logout */ }
+                                )
+                            }
                         }
                     }
-                }
                 }
             }
 
@@ -120,10 +148,28 @@ fun ChatListScreen(
                     when (state) {
                         is ChatListUiState.Loading -> CenterProgress()
                         is ChatListUiState.Success -> {
-                            if (state.chats.isEmpty()) EmptyChatPlaceholder() else ChatList(state.chats, onChatClick)
+                            if (state.chats.isEmpty()) {
+                                EmptyChatPlaceholder()
+                            } else {
+                                ChatList(state.chats, onChatClick)
+                            }
                         }
                         is ChatListUiState.Error -> ErrorChatPlaceholder(state.message, onRetry = viewModel::refresh)
                     }
+                }
+
+                // Floating action button for adding contacts/groups
+                GlassFAB(
+                    onClick = { showAddDialog = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add contact or group",
+                        tint = GlassText
+                    )
                 }
             }
 
@@ -161,6 +207,21 @@ fun ChatListScreen(
                 }
                 }
             }
+        }
+
+        // Add contact/group dialog
+        if (showAddDialog) {
+            AddContactDialog(
+                onDismiss = { showAddDialog = false },
+                onAddContact = { phoneNumber ->
+                    // TODO: Implement add contact functionality
+                    // For now, just close the dialog
+                },
+                onCreateGroup = {
+                    // TODO: Implement create group functionality
+                    // For now, just close the dialog
+                }
+            )
         }
     }
 }
@@ -201,96 +262,17 @@ private fun BottomNavItem(
 
 @Composable
 private fun ChatList(chats: List<Chat>, onChatClick: (Chat) -> Unit) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(chats) { chat ->
-            ChatItem(chat = chat, onClick = { onChatClick(chat) })
-        }
-    }
-}
-
-@Composable
-private fun ChatItem(chat: Chat, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(vertical = 8.dp)
     ) {
-        // Avatar: 52x52dp with 16dp border radius, glass effect
-        Box(
-            modifier = Modifier
-                .size(52.dp)
-                .glassAvatar(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = chat.name.take(2).uppercase(),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = GlassText
+        items(chats, key = { it.id }) { chat ->
+            ChatListItem(
+                chat = chat,
+                isOnline = false, // TODO: Get real online status from P2P network
+                onClick = { onChatClick(chat) }
             )
-        }
-
-        // Chat content
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = chat.name,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = GlassText
-                )
-                Text(
-                    text = "2:45 PM", // TODO: Get real time
-                    style = MaterialTheme.typography.labelMedium,
-                    color = GlassTextMuted
-                )
-            }
-
-            Spacer(Modifier.height(6.dp))
-
-            chat.lastMessage?.let {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Sent",
-                        modifier = Modifier.size(16.dp),
-                        tint = GlassTextSecondary
-                    )
-                    Text(
-                        text = it.content,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GlassTextSecondary,
-                        maxLines = 1
-                    )
-                }
-            }
-        }
-
-        // Unread badge
-        if (chat.unreadCount > 0) {
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .background(GlassAccent, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = chat.unreadCount.toString(),
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = GlassBg
-                )
-            }
         }
     }
 }

@@ -1,0 +1,246 @@
+package com.chain.app.presentation.chat.list.components
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.chain.app.presentation.components.glass.GlassButton
+import com.chain.app.presentation.components.glass.GlassTextField
+import com.chain.app.presentation.theme.glassDialog
+
+@Composable
+fun AddContactDialog(
+    onDismiss: () -> Unit,
+    onAddContact: (phoneNumber: String) -> Unit,
+    onCreateGroup: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var selectedTab by remember { mutableStateOf(0) }
+    var phoneNumber by remember { mutableStateOf("") }
+    var isPhoneNumberValid by remember { mutableStateOf(false) }
+
+    // Simple phone number validation
+    LaunchedEffect(phoneNumber) {
+        isPhoneNumberValid = phoneNumber.matches(Regex("^[+]?[0-9]{10,15}$"))
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = modifier
+                .fillMaxWidth()
+                .glassDialog(RoundedCornerShape(24.dp)),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Title
+                Text(
+                    text = "Add Contact or Group",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                // Tab selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    GlassButton(
+                        onClick = { selectedTab = 0 },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Contact",
+                            color = if (selectedTab == 0)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+
+                    GlassButton(
+                        onClick = { selectedTab = 1 },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Group,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Group",
+                            color = if (selectedTab == 1)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+
+                // Content based on selected tab
+                when (selectedTab) {
+                    0 -> {
+                        // Add Contact tab
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = "Enter phone number to add contact",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+
+                            GlassTextField(
+                                value = phoneNumber,
+                                onValueChange = { phoneNumber = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = "Phone Number",
+                                placeholder = "+1234567890",
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Phone,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                },
+                                singleLine = true
+                            )
+
+                            // Action buttons
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                GlassButton(
+                                    onClick = onDismiss,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Cancel")
+                                }
+
+                                GlassButton(
+                                    onClick = {
+                                        if (isPhoneNumberValid) {
+                                            onAddContact(phoneNumber)
+                                            onDismiss()
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    enabled = isPhoneNumberValid
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Add")
+                                }
+                            }
+
+                            // Alternative options
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                            )
+
+                            Text(
+                                text = "Or scan QR code",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+
+                            GlassButton(
+                                onClick = { /* TODO: Implement QR scanner */ },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.QrCodeScanner,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Scan QR Code")
+                            }
+                        }
+                    }
+
+                    1 -> {
+                        // Create Group tab
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Group,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                            )
+
+                            Text(
+                                text = "Create a new group",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Text(
+                                text = "Add members, set group name, and start chatting",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+
+                            // Action buttons
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                GlassButton(
+                                    onClick = onDismiss,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Cancel")
+                                }
+
+                                GlassButton(
+                                    onClick = {
+                                        onCreateGroup()
+                                        onDismiss()
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Create")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
