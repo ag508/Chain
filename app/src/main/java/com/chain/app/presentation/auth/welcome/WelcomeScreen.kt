@@ -18,6 +18,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.chain.app.R
 import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.theme.*
@@ -35,8 +36,7 @@ import com.chain.app.presentation.theme.*
  */
 @Composable
 fun WelcomeScreen(
-    onGetStartedClick: () -> Unit,
-    onSignInClick: () -> Unit
+    onGetStartedClick: () -> Unit
 ) {
     // Animated gradient background
     val infiniteTransition = rememberInfiniteTransition(label = "gradient_animation")

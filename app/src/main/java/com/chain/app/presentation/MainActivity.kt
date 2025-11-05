@@ -78,9 +78,6 @@ fun ChainApp(
             WelcomeScreen(
                 onGetStartedClick = {
                     navController.navigate(NavRoutes.PhoneNumber.route)
-                },
-                onSignInClick = {
-                    navController.navigate(NavRoutes.PhoneNumber.route)
                 }
             )
         }
