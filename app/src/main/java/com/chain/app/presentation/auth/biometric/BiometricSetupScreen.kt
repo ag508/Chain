@@ -1,23 +1,12 @@
 package com.chain.app.presentation.auth.biometric
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,10 +14,6 @@ import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.components.ChainSecondaryButton
 import com.chain.app.presentation.theme.*
 
-/**
- * Biometric setup screen with modern glassmorphic design.
- * Optional security enhancement with clean, minimalist interface.
- */
 @Composable
 fun BiometricSetupScreen(
     onSetupComplete: () -> Unit,
@@ -36,228 +21,63 @@ fun BiometricSetupScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    // Navigate when setup is complete
-    LaunchedEffect(state.setupComplete) {
-        if (state.setupComplete) {
-            onSetupComplete()
-        }
-    }
+    LaunchedEffect(state.setupComplete) { if (state.setupComplete) onSetupComplete() }
 
-    // Animations
-    var isVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-
-    val contentAlpha by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(durationMillis = 800),
-        label = "content_alpha"
-    )
-
-    val contentOffset by animateDpAsState(
-        targetValue = if (isVisible) 0.dp else 30.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "content_offset"
-    )
-
-    // Floating animation for background
-    val infiniteTransition = rememberInfiniteTransition(label = "background_animation")
-
-    val floatOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 22f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4200, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float_offset"
-    )
-
-    val fingerprintScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "fingerprint_scale"
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        GradientDarkStart,
-                        GradientDarkEnd
-                    )
-                )
-            )
-    ) {
-        // Decorative background elements
-        Box(
+    Box(modifier = Modifier.fillMaxSize().background(NeoDarkSurface).padding(24.dp)) {
+        Surface(
             modifier = Modifier
-                .size(270.dp)
-                .offset(x = (-65).dp, y = (130 + floatOffset).dp)
-                .background(
-                    color = GlassWhite5,
-                    shape = CircleShape
-                )
-                .blur(60.dp)
-        )
-
-        Box(
-            modifier = Modifier
-                .size(230.dp)
-                .offset(x = 215.dp, y = (470 - floatOffset).dp)
-                .background(
-                    color = GlassWhite5,
-                    shape = CircleShape
-                )
-                .blur(55.dp)
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(32.dp)
-                .verticalScroll(rememberScrollState())
-                .alpha(contentAlpha)
-                .offset(y = contentOffset),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .align(Alignment.Center)
+                .padding(horizontal = 12.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = NeoDarkSurface,
+            tonalElevation = 6.dp
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
-
-            // Animated fingerprint icon in glassmorphic container
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .scale(fingerprintScale)
-                    .background(
-                        color = GlassWhite10,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "👆",
-                    style = MaterialTheme.typography.displayLarge
-                )
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            Text(
-                text = "Enable Biometric Lock",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = ChainWhite,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Secure your messages with fingerprint\nor face recognition",
-                style = MaterialTheme.typography.bodyLarge,
-                color = ChainLightGray,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(56.dp))
-
-            // Features in glassmorphic card
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = GlassWhite10
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    BiometricFeature(
-                        icon = "🔒",
-                        title = "Extra Security",
-                        description = "Additional protection for your account"
-                    )
-
-                    Divider(
-                        color = GlassWhite10,
-                        thickness = 1.dp
-                    )
-
-                    BiometricFeature(
-                        icon = "⚡",
-                        title = "Quick Access",
-                        description = "Unlock instantly with your biometric"
-                    )
-
-                    Divider(
-                        color = GlassWhite10,
-                        thickness = 1.dp
-                    )
-
-                    BiometricFeature(
-                        icon = "🛡️",
-                        title = "Privacy Protection",
-                        description = "Keep conversations private and secure"
-                    )
+            Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                // Soft fingerprint icon
+                Box(modifier = Modifier.size(92.dp).background(NeoDarkLightShadow.copy(alpha = 0.02f), RoundedCornerShape(46.dp)), contentAlignment = Alignment.Center) {
+                    Text("🔒", style = MaterialTheme.typography.displaySmall)
                 }
-            }
 
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(Modifier.height(16.dp))
 
-            // Enable button
-            ChainButton(
-                text = if (state.isLoading) "Enabling..." else "Enable Biometric",
-                onClick = viewModel::onEnableBiometricClick,
-                enabled = !state.isLoading,
-                isLoading = state.isLoading
-            )
+                Text("Secure your messages instantly", style = MaterialTheme.typography.headlineSmall, color = NeoDarkTextPrimary)
+                Spacer(Modifier.height(8.dp))
+                Text("Enable biometrics for quick secure access to your account.", style = MaterialTheme.typography.bodyMedium, color = NeoDarkTextSecondary)
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
 
-            // Skip button
-            ChainSecondaryButton(
-                text = "Skip for Now",
-                onClick = viewModel::onSkipClick,
-                enabled = !state.isLoading
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "You can always enable this later in Settings",
-                style = MaterialTheme.typography.labelSmall,
-                color = ChainMediumGray,
-                textAlign = TextAlign.Center
-            )
-        }
-
-        // Error snackbar
-        if (state.error != null) {
-            Snackbar(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(24.dp)
-                    .navigationBarsPadding(),
-                containerColor = ChainError,
-                contentColor = ChainWhite,
-                shape = RoundedCornerShape(16.dp),
-                action = {
-                    TextButton(onClick = { viewModel.clearError() }) {
-                        Text("Dismiss", color = ChainWhite)
+                Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = NeoDarkSurface) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        BiometricFeatureRow("Extra security", "Fingerprint or face unlock")
+                        Divider(color = NeoDarkLightShadow.copy(alpha = 0.04f))
+                        BiometricFeatureRow("Convenient", "Faster login without passwords")
+                        Divider(color = NeoDarkLightShadow.copy(alpha = 0.04f))
+                        BiometricFeatureRow("Optional", "You can enable later in Settings")
                     }
                 }
-            ) {
+
+                Spacer(Modifier.height(18.dp))
+
+                ChainButton(
+                    text = if (state.isLoading) "Enabling..." else "Enable Biometric",
+                    onClick = viewModel::onEnableBiometricClick,
+                    enabled = !state.isLoading,
+                    isLoading = state.isLoading,
+                    isAccent = true
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                ChainSecondaryButton(text = "Skip for now", onClick = viewModel::onSkipClick, enabled = !state.isLoading)
+
+                Spacer(Modifier.height(12.dp))
+                Text("You can change this later in Settings", style = MaterialTheme.typography.labelSmall, color = NeoDarkTextSecondary)
+            }
+        }
+
+        if (state.error != null) {
+            Snackbar(modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp), containerColor = ChainError, contentColor = NeoDarkTextPrimary) {
                 Text(state.error!!)
             }
         }
@@ -265,47 +85,11 @@ fun BiometricSetupScreen(
 }
 
 @Composable
-private fun BiometricFeature(
-    icon: String,
-    title: String,
-    description: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Icon container
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = GlassWhite10,
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = icon,
-                style = MaterialTheme.typography.headlineSmall
-            )
-        }
-
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = ChainWhite
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = ChainLightGray
-            )
+private fun BiometricFeatureRow(title: String, desc: String) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Column {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = NeoDarkTextPrimary)
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = NeoDarkTextSecondary)
         }
     }
 }
