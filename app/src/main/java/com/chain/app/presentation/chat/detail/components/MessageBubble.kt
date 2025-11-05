@@ -85,7 +85,7 @@ fun MessageBubble(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // Reply preview (if replying to a message)
-                message.repliedToMessageId?.let {
+                message.replyTo?.let {
                     ReplyPreviewInBubble(
                         replyTo = it, // TODO: Get actual message being replied to
                         modifier = Modifier.fillMaxWidth()
@@ -105,16 +105,6 @@ fun MessageBubble(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Edited indicator
-                    if (message.isEdited) {
-                        Text(
-                            text = "edited",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            fontSize = 10.sp
-                        )
-                    }
-
                     // Timestamp
                     Text(
                         text = formatMessageTime(message.timestamp.time),
@@ -178,9 +168,12 @@ private fun ReplyPreviewInBubble(
 
 @Composable
 private fun MessageReactions(
-    reactions: Map<String, List<String>>, // emoji -> list of user IDs
+    reactions: List<com.chain.app.domain.model.Reaction>,
     modifier: Modifier = Modifier
 ) {
+    // Group reactions by emoji
+    val groupedReactions = reactions.groupBy { it.emoji }
+
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -188,7 +181,7 @@ private fun MessageReactions(
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        reactions.forEach { (emoji, users) ->
+        groupedReactions.forEach { (emoji, reactionList) ->
             Row(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -197,9 +190,9 @@ private fun MessageReactions(
                     text = emoji,
                     style = MaterialTheme.typography.bodySmall
                 )
-                if (users.size > 1) {
+                if (reactionList.size > 1) {
                     Text(
-                        text = users.size.toString(),
+                        text = reactionList.size.toString(),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         fontSize = 10.sp
