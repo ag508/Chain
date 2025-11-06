@@ -1,5 +1,8 @@
 package com.chain.app.presentation.chat.detail
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,8 +15,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.ChatType
 import com.chain.app.presentation.chat.detail.components.*
@@ -94,6 +99,50 @@ private fun ChatDetailContent(
     var showAttachmentMenu by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
+    val context = LocalContext.current
+
+    // Camera permission state
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Microphone permission state
+    var hasMicrophonePermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Camera permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        if (isGranted) {
+            // Permission granted, take photo
+            cameraCapture.takePhoto()
+        }
+    }
+
+    // Microphone permission launcher
+    val microphonePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasMicrophonePermission = isGranted
+        if (isGranted) {
+            // Permission granted, start recording
+            isRecordingVoice = true
+            // TODO: Start voice recording
+        }
+    }
 
     // Media pickers
     val mediaPicker = rememberMediaPicker { uri ->
@@ -209,8 +258,12 @@ private fun ChatDetailContent(
                         showAttachmentMenu = true
                     },
                     onVoiceRecordStart = {
-                        isRecordingVoice = true
-                        // TODO: Start voice recording
+                        if (hasMicrophonePermission) {
+                            isRecordingVoice = true
+                            // TODO: Start voice recording
+                        } else {
+                            microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
                     },
                     onVoiceRecordStop = {
                         isRecordingVoice = false
@@ -236,7 +289,11 @@ private fun ChatDetailContent(
                     onDismiss = { showAttachmentMenu = false },
                     onCameraClick = {
                         showAttachmentMenu = false
-                        cameraCapture.takePhoto()
+                        if (hasCameraPermission) {
+                            cameraCapture.takePhoto()
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
                     },
                     onGalleryClick = {
                         showAttachmentMenu = false

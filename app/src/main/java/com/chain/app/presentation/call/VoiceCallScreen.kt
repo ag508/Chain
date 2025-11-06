@@ -1,5 +1,8 @@
 package com.chain.app.presentation.call
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,8 +19,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.CallType
 import com.chain.app.presentation.theme.*
@@ -42,11 +47,47 @@ fun VoiceCallScreen(
     val participants by viewModel.callParticipants.collectAsState()
 
     var showContactPicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    // Initiate call if outgoing
+    // Microphone permission state
+    var hasMicrophonePermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    var permissionDenied by remember { mutableStateOf(false) }
+
+    // Microphone permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasMicrophonePermission = isGranted
+
+        if (isGranted) {
+            // Permission granted, initiate call
+            if (!isIncoming && peerId != null) {
+                viewModel.initiateCall(peerId, CallType.VOICE)
+            }
+        } else {
+            // Permission denied, show error
+            permissionDenied = true
+        }
+    }
+
+    // Check and request permission, then initiate call if outgoing
     LaunchedEffect(peerId, isIncoming) {
         if (!isIncoming && peerId != null) {
-            viewModel.initiateCall(peerId, CallType.VOICE)
+            if (hasMicrophonePermission) {
+                // Permission already granted
+                viewModel.initiateCall(peerId, CallType.VOICE)
+            } else {
+                // Request permission
+                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
         }
     }
 
@@ -54,6 +95,14 @@ fun VoiceCallScreen(
     LaunchedEffect(uiState) {
         if (uiState is CallUiState.Ended) {
             kotlinx.coroutines.delay(3000) // Wait 3 seconds
+            onCallEnded()
+        }
+    }
+
+    // Handle permission denied - navigate back
+    LaunchedEffect(permissionDenied) {
+        if (permissionDenied) {
+            kotlinx.coroutines.delay(2000) // Show error for 2 seconds
             onCallEnded()
         }
     }
@@ -68,6 +117,15 @@ fun VoiceCallScreen(
             .background(brush = bgBrush)
             .systemBarsPadding()
     ) {
+        // Show permission error if denied
+        if (permissionDenied) {
+            ErrorContent(
+                message = "Microphone permission is required for voice calls",
+                onClose = onCallEnded
+            )
+            return@Box
+        }
+
         when (val state = uiState) {
             is CallUiState.Idle -> {
                 IdleContent()
