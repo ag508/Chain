@@ -38,6 +38,10 @@ fun VoiceCallScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isMuted by viewModel.isMuted.collectAsState()
     val isSpeakerOn by viewModel.isSpeakerOn.collectAsState()
+    val contacts by viewModel.contacts.collectAsState()
+    val participants by viewModel.callParticipants.collectAsState()
+
+    var showContactPicker by remember { mutableStateOf(false) }
 
     // Initiate call if outgoing
     LaunchedEffect(peerId, isIncoming) {
@@ -46,9 +50,10 @@ fun VoiceCallScreen(
         }
     }
 
-    // Handle call ended state
+    // Handle call ended state with 3-second delay
     LaunchedEffect(uiState) {
         if (uiState is CallUiState.Ended) {
+            kotlinx.coroutines.delay(3000) // Wait 3 seconds
             onCallEnded()
         }
     }
@@ -90,8 +95,10 @@ fun VoiceCallScreen(
                     duration = state.duration,
                     isMuted = isMuted,
                     isSpeakerOn = isSpeakerOn,
+                    participantCount = participants.size,
                     onMuteToggle = { viewModel.toggleMute() },
                     onSpeakerToggle = { viewModel.toggleSpeaker() },
+                    onAddPerson = { showContactPicker = true },
                     onEndCall = { viewModel.endCall() }
                 )
             }
@@ -108,6 +115,19 @@ fun VoiceCallScreen(
                 )
             }
         }
+    }
+
+    // Contact picker dialog
+    if (showContactPicker) {
+        ContactPickerDialog(
+            contacts = contacts,
+            alreadyInCall = participants,
+            onContactSelected = { contact ->
+                viewModel.addParticipant(contact.id)
+                showContactPicker = false
+            },
+            onDismiss = { showContactPicker = false }
+        )
     }
 }
 
@@ -293,8 +313,10 @@ private fun InCallContent(
     duration: String,
     isMuted: Boolean,
     isSpeakerOn: Boolean,
+    participantCount: Int,
     onMuteToggle: () -> Unit,
     onSpeakerToggle: () -> Unit,
+    onAddPerson: () -> Unit,
     onEndCall: () -> Unit
 ) {
     // TODO: Get actual connection state from WebRTC
@@ -338,6 +360,22 @@ private fun InCallContent(
                 color = GlassText
             )
 
+            // Participant count badge (if multiple participants)
+            if (participantCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .glass()
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "+$participantCount participant${if (participantCount > 1) "s" else ""}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GlassAccent,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
             // Duration
             Box(
                 modifier = Modifier
@@ -376,7 +414,7 @@ private fun InCallContent(
                     icon = Icons.Default.PersonAdd,
                     label = "Add",
                     isActive = false,
-                    onClick = { /* TODO: Navigate to contact picker */ }
+                    onClick = onAddPerson
                 )
 
                 // Speaker button
@@ -434,17 +472,6 @@ private fun EndedContent(
             style = MaterialTheme.typography.bodyLarge,
             color = GlassText.copy(alpha = 0.7f)
         )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = onClose,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GlassAccent
-            )
-        ) {
-            Text("Close")
-        }
     }
 }
 
@@ -624,4 +651,124 @@ private fun ConnectionStatus(isOnline: Boolean) {
             fontWeight = FontWeight.SemiBold
         )
     }
+}
+
+@Composable
+private fun ContactPickerDialog(
+    contacts: List<com.chain.app.domain.model.Contact>,
+    alreadyInCall: List<String>,
+    onContactSelected: (com.chain.app.domain.model.Contact) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Add Person to Call",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+            ) {
+                if (contacts.isEmpty()) {
+                    Text(
+                        text = "No contacts available",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = GlassText.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(vertical = 32.dp)
+                    )
+                } else {
+                    contacts.filter { !alreadyInCall.contains(it.userId) }.forEach { contact ->
+                        ContactItem(
+                            contact = contact,
+                            onClick = { onContactSelected(contact) }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        containerColor = GlassBackground,
+        tonalElevation = 8.dp
+    )
+}
+
+@Composable
+private fun ContactItem(
+    contact: com.chain.app.domain.model.Contact,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.White.copy(alpha = 0.05f))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            // Avatar
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(GlassAccent.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = GlassAccent,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            // Name
+            Column {
+                Text(
+                    text = contact.displayName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = GlassText,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = contact.phoneNumber,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GlassText.copy(alpha = 0.6f)
+                )
+            }
+        }
+
+        // Add button
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(OnlineGreen)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add to call",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
 }

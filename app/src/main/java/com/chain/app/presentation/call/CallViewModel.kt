@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.chain.app.domain.model.Call
 import com.chain.app.domain.model.CallSession
 import com.chain.app.domain.model.CallType
+import com.chain.app.domain.model.Contact
 import com.chain.app.domain.repository.CallRepository
+import com.chain.app.domain.repository.ContactRepository
 import com.chain.app.domain.usecase.call.AcceptCallUseCase
 import com.chain.app.domain.usecase.call.EndCallUseCase
 import com.chain.app.domain.usecase.call.InitiateCallUseCase
@@ -34,7 +36,8 @@ class CallViewModel @Inject constructor(
     private val acceptCallUseCase: AcceptCallUseCase,
     private val endCallUseCase: EndCallUseCase,
     private val rejectCallUseCase: RejectCallUseCase,
-    private val callRepository: CallRepository
+    private val callRepository: CallRepository,
+    private val contactRepository: ContactRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CallUiState>(CallUiState.Idle)
@@ -49,12 +52,19 @@ class CallViewModel @Inject constructor(
     private val _isVideoOn = MutableStateFlow(false)
     val isVideoOn: StateFlow<Boolean> = _isVideoOn.asStateFlow()
 
+    private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
+    val contacts: StateFlow<List<Contact>> = _contacts.asStateFlow()
+
+    private val _callParticipants = MutableStateFlow<List<String>>(emptyList())
+    val callParticipants: StateFlow<List<String>> = _callParticipants.asStateFlow()
+
     private var currentCallId: String? = null
     private var callStartTime: Long = 0
     private var durationJob: Job? = null
 
     init {
         observeIncomingCalls()
+        loadContacts()
     }
 
     /**
@@ -275,6 +285,32 @@ class CallViewModel @Inject constructor(
             String.format("%02d:%02d:%02d", hours, minutes, seconds)
         } else {
             String.format("%02d:%02d", minutes, seconds)
+        }
+    }
+
+    private fun loadContacts() {
+        viewModelScope.launch {
+            contactRepository.getAllContacts().collect { contactList ->
+                _contacts.value = contactList.filter { !it.isBlocked }
+            }
+        }
+    }
+
+    /**
+     * Add a participant to the active call.
+     */
+    fun addParticipant(contactId: String) {
+        viewModelScope.launch {
+            val contact = contactRepository.getContactById(contactId) ?: return@launch
+
+            // Add to participants list
+            if (!_callParticipants.value.contains(contact.userId)) {
+                _callParticipants.value = _callParticipants.value + contact.userId
+
+                // TODO: Implement WebRTC multi-party call logic
+                // This would involve creating new peer connections for each participant
+                // and managing the media streams accordingly
+            }
         }
     }
 
