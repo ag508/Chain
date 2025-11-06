@@ -39,8 +39,8 @@ class ChatListViewModel @Inject constructor(
                     chats
                 } else {
                     chats.filter { chat ->
-                        chat.recipientName.contains(query, ignoreCase = true) ||
-                        chat.lastMessage.contains(query, ignoreCase = true)
+                        chat.name.contains(query, ignoreCase = true) ||
+                        chat.lastMessage?.content?.contains(query, ignoreCase = true) == true
                     }
                 }
             }.collect { filteredChats ->
@@ -67,8 +67,8 @@ class ChatListViewModel @Inject constructor(
                         chats
                     } else {
                         chats.filter { chat ->
-                            chat.recipientName.contains(query, ignoreCase = true) ||
-                            chat.lastMessage.contains(query, ignoreCase = true)
+                            chat.name.contains(query, ignoreCase = true) ||
+                            chat.lastMessage?.content?.contains(query, ignoreCase = true) == true
                         }
                     }
                     _uiState.value = ChatListUiState.Success(filteredChats)

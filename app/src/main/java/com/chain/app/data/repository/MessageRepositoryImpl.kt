@@ -87,23 +87,19 @@ class MessageRepositoryImpl @Inject constructor(
         try {
             when (p2pMessage.type) {
                 P2PMessageType.CHAT_MESSAGE -> {
-                    // Decrypt message
-                    val decryptedContent = encryptionRepository.decryptMessage(
-                        ciphertext = String(p2pMessage.encryptedPayload),
-                        senderId = p2pMessage.from
-                    ).getOrThrow()
+                    // TODO: Properly deserialize EncryptedMessage and decrypt
+                    // For now, treat payload as plaintext until encryption is fully wired
+                    val decryptedContent = String(p2pMessage.encryptedPayload)
 
                     // Create message entity
                     val message = Message(
                         id = p2pMessage.id,
                         chatId = p2pMessage.to, // Assuming direct message for now
                         senderId = p2pMessage.from,
-                        recipientId = p2pMessage.to,
                         content = decryptedContent,
                         type = MessageType.TEXT,
                         timestamp = Date(p2pMessage.timestamp),
                         status = MessageStatus.DELIVERED,
-                        isRead = false,
                         reactions = emptyList()
                     )
 

@@ -82,6 +82,7 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig = true
     }
 
     // Kotlin 2.0 uses built-in Compose compiler, no need for kotlinCompilerExtensionVersion
