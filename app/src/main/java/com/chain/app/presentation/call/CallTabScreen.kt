@@ -314,7 +314,9 @@ private fun CallHistoryItem(
     call: Call,
     onCallClick: () -> Unit
 ) {
-    val isIncoming = call.status == CallStatus.ANSWERED || call.status == CallStatus.RINGING
+    // Determine call type based on status
+    // Note: In a real app, compare call.initiator with current userId
+    val isIncoming = call.status == CallStatus.RINGING || call.status == CallStatus.CONNECTED
     val isMissed = call.status == CallStatus.MISSED
     val isMultiParty = call.participants.size > 2
 
