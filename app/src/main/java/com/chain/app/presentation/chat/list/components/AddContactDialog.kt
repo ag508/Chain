@@ -5,7 +5,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -158,7 +157,7 @@ fun AddContactDialog(
                             }
 
                             // Alternative options
-                            HorizontalDivider(
+                            Divider(
                                 modifier = Modifier.padding(vertical = 8.dp),
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                             )

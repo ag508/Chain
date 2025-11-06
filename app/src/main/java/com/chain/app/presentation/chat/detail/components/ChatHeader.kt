@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -274,7 +273,7 @@ private fun ChatHeaderMenu(
             onClick = if (chatType == ChatType.GROUP) onViewGroupInfo else onViewProfile
         )
 
-        HorizontalDivider(
+        Divider(
             modifier = Modifier.padding(horizontal = 8.dp),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
         )
@@ -301,7 +300,7 @@ private fun ChatHeaderMenu(
             onClick = onSearchInChat
         )
 
-        HorizontalDivider(
+        Divider(
             modifier = Modifier.padding(horizontal = 8.dp),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
         )
@@ -330,7 +329,7 @@ private fun ChatHeaderMenu(
 
         // Block (only for direct chats)
         if (chatType == ChatType.DIRECT) {
-            HorizontalDivider(
+            Divider(
                 modifier = Modifier.padding(horizontal = 8.dp),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
             )
