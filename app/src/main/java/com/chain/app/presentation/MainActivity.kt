@@ -281,11 +281,13 @@ fun ChainApp(
         ) { backStackEntry ->
             val selectedContactIdsString = backStackEntry.arguments?.getString("selectedContactIds") ?: ""
             val selectedContactIds = selectedContactIdsString.split(",").filter { it.isNotEmpty() }
+
             com.chain.app.presentation.groups.GroupSetupScreen(
                 selectedContactIds = selectedContactIds,
                 onBackClick = { navController.popBackStack() },
                 onCreateGroup = { groupName, groupIcon ->
-                    // TODO: Create group chat
+                    // Group is created in the ViewModel, callback is only for navigation
+                    // Navigate back to chat list where the new group will appear
                     navController.popBackStack(NavRoutes.ChatList.route, inclusive = false)
                 }
             )
