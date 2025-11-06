@@ -329,6 +329,27 @@ class CallViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Get local video track for rendering.
+     */
+    fun getLocalVideoTrack(): org.webrtc.VideoTrack? {
+        return callRepository.getLocalVideoTrack()
+    }
+
+    /**
+     * Get remote video track for a peer.
+     */
+    fun getRemoteVideoTrack(peerId: String): org.webrtc.VideoTrack? {
+        return callRepository.getRemoteVideoTrack(peerId)
+    }
+
+    /**
+     * Get all remote video tracks.
+     */
+    fun getAllRemoteVideoTracks(): List<Pair<String, org.webrtc.VideoTrack>> {
+        return callRepository.getAllRemoteVideoTracks()
+    }
+
     override fun onCleared() {
         super.onCleared()
         durationJob?.cancel()

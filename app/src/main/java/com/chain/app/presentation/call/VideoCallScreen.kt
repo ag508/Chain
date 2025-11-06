@@ -23,6 +23,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.CallType
 import com.chain.app.presentation.theme.*
+import org.webrtc.EglBase
+import org.webrtc.RendererCommon
 import org.webrtc.SurfaceViewRenderer
 
 // Define vibrant red color for end call
@@ -488,34 +490,69 @@ private fun VideoInCallContent(
 
 @Composable
 private fun RemoteVideoView(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: CallViewModel = hiltViewModel()
 ) {
-    // Placeholder for WebRTC remote video renderer
+    val eglBase = remember { EglBase.create() }
+
     AndroidView(
         factory = { context ->
             SurfaceViewRenderer(context).apply {
-                // Initialize WebRTC SurfaceViewRenderer
-                // TODO: Connect to CallManager's remote video track
+                // Initialize SurfaceViewRenderer with EglBase
+                init(eglBase.eglBaseContext, null)
+                setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
+                setEnableHardwareScaler(true)
+                setMirror(false)
+            }
+        },
+        update = { renderer ->
+            // Get and attach remote video tracks
+            val remoteTracks = viewModel.getAllRemoteVideoTracks()
+            if (remoteTracks.isNotEmpty()) {
+                // For now, show the first remote track (in multi-party, we'd handle multiple)
+                remoteTracks.firstOrNull()?.second?.addSink(renderer)
             }
         },
         modifier = modifier
     )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            eglBase.release()
+        }
+    }
 }
 
 @Composable
 private fun LocalVideoView(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: CallViewModel = hiltViewModel()
 ) {
-    // Placeholder for WebRTC local video renderer
+    val eglBase = remember { EglBase.create() }
+
     AndroidView(
         factory = { context ->
             SurfaceViewRenderer(context).apply {
-                // Initialize WebRTC SurfaceViewRenderer
-                // TODO: Connect to CallManager's local video track
+                // Initialize SurfaceViewRenderer with EglBase
+                init(eglBase.eglBaseContext, null)
+                setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
+                setEnableHardwareScaler(true)
+                setMirror(true) // Mirror for front camera
             }
+        },
+        update = { renderer ->
+            // Get and attach local video track
+            val localTrack = viewModel.getLocalVideoTrack()
+            localTrack?.addSink(renderer)
         },
         modifier = modifier
     )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            eglBase.release()
+        }
+    }
 }
 
 @Composable

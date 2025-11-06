@@ -4,6 +4,7 @@ import com.chain.app.domain.model.Call
 import com.chain.app.domain.model.CallSession
 import com.chain.app.domain.model.CallType
 import kotlinx.coroutines.flow.Flow
+import org.webrtc.VideoTrack
 
 /**
  * Repository interface for call operations.
@@ -78,4 +79,19 @@ interface CallRepository {
      * Observe active call session.
      */
     fun observeCallSession(callId: String): Flow<CallSession>
+
+    /**
+     * Get local video track for rendering in UI.
+     */
+    fun getLocalVideoTrack(): VideoTrack?
+
+    /**
+     * Get remote video track for a specific peer.
+     */
+    fun getRemoteVideoTrack(peerId: String): VideoTrack?
+
+    /**
+     * Get all remote video tracks (for multi-party video calls).
+     */
+    fun getAllRemoteVideoTracks(): List<Pair<String, VideoTrack>>
 }

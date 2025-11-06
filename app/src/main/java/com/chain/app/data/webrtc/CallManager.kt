@@ -481,6 +481,31 @@ class CallManager @Inject constructor(
     }
 
     /**
+     * Get the local video track for rendering in UI.
+     */
+    fun getLocalVideoTrack(): VideoTrack? {
+        return localVideoTrack
+    }
+
+    /**
+     * Get remote video track for a specific peer.
+     */
+    fun getRemoteVideoTrack(peerId: String): VideoTrack? {
+        return participants[peerId]?.remoteVideoTrack
+    }
+
+    /**
+     * Get all remote video tracks (for multi-party calls).
+     */
+    fun getAllRemoteVideoTracks(): List<Pair<String, VideoTrack>> {
+        return participants.mapNotNull { (peerId, participant) ->
+            participant.remoteVideoTrack?.let { track ->
+                peerId to track
+            }
+        }
+    }
+
+    /**
      * Create peer connection observer for a specific participant.
      */
     private fun createPeerConnectionObserver(peerId: String): PeerConnection.Observer {
