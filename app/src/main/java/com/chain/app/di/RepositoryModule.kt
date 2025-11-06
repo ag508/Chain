@@ -6,12 +6,14 @@ import com.chain.app.data.repository.ContactRepositoryImpl
 import com.chain.app.data.repository.EncryptionRepositoryImpl
 import com.chain.app.data.repository.MessageRepositoryImpl
 import com.chain.app.data.repository.P2PRepositoryImpl
+import com.chain.app.data.repository.UserRepositoryImpl
 import com.chain.app.domain.repository.AuthRepository
 import com.chain.app.domain.repository.ChatRepository
 import com.chain.app.domain.repository.ContactRepository
 import com.chain.app.domain.repository.EncryptionRepository
 import com.chain.app.domain.repository.MessageRepository
 import com.chain.app.domain.repository.P2PRepository
+import com.chain.app.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -60,4 +62,10 @@ abstract class RepositoryModule {
     abstract fun bindContactRepository(
         impl: ContactRepositoryImpl
     ): ContactRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        impl: UserRepositoryImpl
+    ): UserRepository
 }
