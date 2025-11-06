@@ -242,7 +242,7 @@ fun DeleteMessageDialog(
                 )
             }
         },
-        containerColor = GlassBackground,
+        containerColor = GlassSurface,
         modifier = modifier
     )
 }

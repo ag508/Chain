@@ -91,7 +91,7 @@ fun DisappearingMessagesDialog(
                 )
             }
         },
-        containerColor = GlassBackground,
+        containerColor = GlassSurface,
         modifier = modifier
     )
 }
