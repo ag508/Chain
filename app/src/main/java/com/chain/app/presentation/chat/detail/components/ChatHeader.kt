@@ -18,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.chain.app.domain.model.ChatType
 import com.chain.app.presentation.components.glass.GlassTextField
@@ -357,7 +356,7 @@ private fun ChatHeaderMenu(
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                     )
@@ -372,7 +371,7 @@ private fun ChatHeaderMenu(
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                     )
@@ -389,7 +388,7 @@ private fun ChatHeaderMenu(
 
                     // Block (only for direct chats)
                     if (chatType == ChatType.DIRECT) {
-                        HorizontalDivider(
+                        Divider(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                         )
