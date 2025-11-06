@@ -405,4 +405,16 @@ class CallRepositoryImpl @Inject constructor(
             Timber.e(e, "Failed to handle incoming call")
         }
     }
+
+    override fun getLocalVideoTrack(): org.webrtc.VideoTrack? {
+        return callManager.getLocalVideoTrack()
+    }
+
+    override fun getRemoteVideoTrack(peerId: String): org.webrtc.VideoTrack? {
+        return callManager.getRemoteVideoTrack(peerId)
+    }
+
+    override fun getAllRemoteVideoTracks(): List<Pair<String, org.webrtc.VideoTrack>> {
+        return callManager.getAllRemoteVideoTracks()
+    }
 }
