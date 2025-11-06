@@ -183,6 +183,12 @@ fun ChainApp(
                 },
                 onScanQRCodeClick = {
                     navController.navigate(NavRoutes.QRCodeScanner.route)
+                },
+                onVoiceCallClick = { peerId ->
+                    navController.navigate(NavRoutes.VoiceCall.createRoute(peerId, false))
+                },
+                onVideoCallClick = { peerId ->
+                    navController.navigate(NavRoutes.VoiceCall.createRoute(peerId, false))
                 }
             )
         }
