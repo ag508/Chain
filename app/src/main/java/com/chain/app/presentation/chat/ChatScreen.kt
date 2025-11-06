@@ -211,7 +211,8 @@ fun ChatListScreen(
                                 onVideoCallClick = { peerId ->
                                     // Navigate to video call screen
                                     // TODO: Navigate with peerId and video=true
-                                }
+                                },
+                                searchQuery = searchQuery
                             )
                         }
                     }

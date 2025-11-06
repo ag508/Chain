@@ -1,9 +1,11 @@
 package com.chain.app.domain.usecase.debug
 
 import android.util.Log
+import com.chain.app.data.local.dao.CallDao
 import com.chain.app.data.local.dao.ChatDao
 import com.chain.app.data.local.dao.ContactDao
 import com.chain.app.data.local.dao.MessageDao
+import com.chain.app.data.local.entity.CallEntity
 import com.chain.app.data.local.entity.ChatEntity
 import com.chain.app.data.local.entity.ContactEntity
 import com.chain.app.data.local.entity.MessageEntity
@@ -13,12 +15,13 @@ import javax.inject.Inject
 
 /**
  * Debug use case to seed sample data for testing.
- * Creates sample contacts, chats, and messages.
+ * Creates sample contacts, chats, messages, and call history.
  */
 class SeedSampleDataUseCase @Inject constructor(
     private val contactDao: ContactDao,
     private val chatDao: ChatDao,
-    private val messageDao: MessageDao
+    private val messageDao: MessageDao,
+    private val callDao: CallDao
 ) {
     suspend operator fun invoke(currentUserId: String) {
         Log.d("SeedSampleData", "Starting seed with userId: $currentUserId")
@@ -407,6 +410,103 @@ class SeedSampleDataUseCase @Inject constructor(
             Log.d("SeedSampleData", "Chat 3 messages inserted")
         } catch (e: Exception) {
             Log.e("SeedSampleData", "Error inserting chat 3 messages", e)
+            throw e
+        }
+
+        // Create sample call history
+        val calls = listOf(
+            // Recent answered voice call with Alice
+            CallEntity(
+                id = UUID.randomUUID().toString(),
+                chatId = chat1Id,
+                initiator = "user-alice",
+                participants = listOf(currentUserId, "user-alice"),
+                type = "VOICE",
+                status = "ENDED",
+                startTime = Date().time - 3600000 * 2, // 2 hours ago
+                endTime = Date().time - 3600000 * 2 + 323000, // 5 min 23 sec call
+                duration = 323000L
+            ),
+            // Missed call from Bob (1 hour ago)
+            CallEntity(
+                id = UUID.randomUUID().toString(),
+                chatId = chat2Id,
+                initiator = "user-bob",
+                participants = listOf(currentUserId, "user-bob"),
+                type = "VOICE",
+                status = "MISSED",
+                startTime = Date().time - 3600000, // 1 hour ago
+                endTime = null,
+                duration = null
+            ),
+            // Video call with Charlie (yesterday)
+            CallEntity(
+                id = UUID.randomUUID().toString(),
+                chatId = chat3Id,
+                initiator = currentUserId,
+                participants = listOf(currentUserId, "user-charlie"),
+                type = "VIDEO",
+                status = "ENDED",
+                startTime = Date().time - 86400000, // 1 day ago
+                endTime = Date().time - 86400000 + 725000, // 12 min 5 sec call
+                duration = 725000L
+            ),
+            // Multi-party call with Alice, Bob, Charlie (3 days ago)
+            CallEntity(
+                id = UUID.randomUUID().toString(),
+                chatId = chat1Id,
+                initiator = currentUserId,
+                participants = listOf(currentUserId, "user-alice", "user-bob", "user-charlie"),
+                type = "VOICE",
+                status = "ENDED",
+                startTime = Date().time - 86400000 * 3, // 3 days ago
+                endTime = Date().time - 86400000 * 3 + 1845000, // 30 min 45 sec call
+                duration = 1845000L
+            ),
+            // Another missed call from Alice (5 days ago)
+            CallEntity(
+                id = UUID.randomUUID().toString(),
+                chatId = chat1Id,
+                initiator = "user-alice",
+                participants = listOf(currentUserId, "user-alice"),
+                type = "VOICE",
+                status = "MISSED",
+                startTime = Date().time - 86400000 * 5, // 5 days ago
+                endTime = null,
+                duration = null
+            ),
+            // Multi-party video call (1 week ago)
+            CallEntity(
+                id = UUID.randomUUID().toString(),
+                chatId = chat2Id,
+                initiator = "user-bob",
+                participants = listOf(currentUserId, "user-bob", "user-alice"),
+                type = "VIDEO",
+                status = "ENDED",
+                startTime = Date().time - 86400000 * 7, // 1 week ago
+                endTime = Date().time - 86400000 * 7 + 452000, // 7 min 32 sec call
+                duration = 452000L
+            ),
+            // Short answered call with Bob (30 minutes ago)
+            CallEntity(
+                id = UUID.randomUUID().toString(),
+                chatId = chat2Id,
+                initiator = currentUserId,
+                participants = listOf(currentUserId, "user-bob"),
+                type = "VOICE",
+                status = "ENDED",
+                startTime = Date().time - 1800000, // 30 minutes ago
+                endTime = Date().time - 1800000 + 45000, // 45 second call
+                duration = 45000L
+            )
+        )
+
+        Log.d("SeedSampleData", "Inserting ${calls.size} sample calls...")
+        try {
+            calls.forEach { callDao.insertCall(it) }
+            Log.d("SeedSampleData", "Sample calls inserted successfully")
+        } catch (e: Exception) {
+            Log.e("SeedSampleData", "Error inserting sample calls", e)
             throw e
         }
 

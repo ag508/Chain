@@ -25,12 +25,6 @@ class CallTabViewModel @Inject constructor(
     private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
     val contacts: StateFlow<List<Contact>> = _contacts.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
-    private val _isSearching = MutableStateFlow(false)
-    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
-
     init {
         loadCallHistory()
         loadContacts()
@@ -53,19 +47,7 @@ class CallTabViewModel @Inject constructor(
         }
     }
 
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
-        if (query.isEmpty()) {
-            _isSearching.value = false
-        } else {
-            _isSearching.value = true
-        }
-    }
-
-    fun toggleSearch() {
-        _isSearching.value = !_isSearching.value
-        if (!_isSearching.value) {
-            _searchQuery.value = ""
-        }
+    fun getContactName(userId: String): String {
+        return _contacts.value.find { it.userId == userId }?.displayName ?: userId
     }
 }
