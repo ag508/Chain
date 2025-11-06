@@ -94,6 +94,19 @@ private fun ChatDetailContent(
 
     val listState = rememberLazyListState()
 
+    // Media pickers
+    val mediaPicker = rememberMediaPicker { uri ->
+        // TODO: Send media message
+    }
+
+    val documentPicker = rememberDocumentPicker { uri ->
+        // TODO: Send document message
+    }
+
+    val cameraCapture = rememberCameraCapture { uri ->
+        // TODO: Send photo message
+    }
+
     // Background gradient
     val bgBrush = Brush.linearGradient(
         colors = listOf(GlassGradientStart, GlassGradientEnd)
@@ -209,32 +222,39 @@ private fun ChatDetailContent(
             }
         }
 
-        // Attachment menu modal
+        // Attachment menu modal - with opaque background
         if (showAttachmentMenu) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f)),
+                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))
+                    .clickable { showAttachmentMenu = false },
                 contentAlignment = Alignment.BottomCenter
             ) {
                 AttachmentMenu(
                     onDismiss = { showAttachmentMenu = false },
                     onCameraClick = {
-                        // TODO: Open camera
+                        showAttachmentMenu = false
+                        cameraCapture.takePhoto()
                     },
                     onGalleryClick = {
-                        // TODO: Open gallery
+                        showAttachmentMenu = false
+                        mediaPicker.pickImageOrVideo()
                     },
                     onDocumentClick = {
-                        // TODO: Open document picker
+                        showAttachmentMenu = false
+                        documentPicker.pickDocument()
                     },
                     onLocationClick = {
+                        showAttachmentMenu = false
                         // TODO: Open location picker
                     },
                     onContactClick = {
+                        showAttachmentMenu = false
                         // TODO: Open contact picker
                     },
                     onPollClick = {
+                        showAttachmentMenu = false
                         // TODO: Create poll
                     }
                 )
