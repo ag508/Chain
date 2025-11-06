@@ -70,12 +70,17 @@ class ChatRepositoryImpl @Inject constructor(
         description: String?
     ): Result<GroupChat> {
         return try {
+            // The participants list should already include the creator (added by use case)
+            // Creator is the last participant (current user added at the end by use case)
+            val creator = participants.lastOrNull()
+                ?: return Result.failure(Exception("No participants provided"))
+
             val chat = Chat(
                 id = UUID.randomUUID().toString(),
                 type = ChatType.GROUP,
                 name = name,
-                participants = participants + "current_user",
-                admins = listOf("current_user"),
+                participants = participants,
+                admins = listOf(creator),
                 createdAt = Date(),
                 updatedAt = Date()
             )

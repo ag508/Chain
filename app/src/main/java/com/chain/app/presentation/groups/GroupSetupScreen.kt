@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.presentation.components.glass.GlassButton
 import com.chain.app.presentation.components.glass.GlassCard
 import com.chain.app.presentation.components.glass.GlassTextField
@@ -31,12 +32,16 @@ fun GroupSetupScreen(
     selectedContactIds: List<String>,
     onBackClick: () -> Unit,
     onCreateGroup: (String, String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: GroupSetupViewModel = hiltViewModel()
 ) {
     var groupName by remember { mutableStateOf("") }
     var groupDescription by remember { mutableStateOf("") }
     var selectedIcon by remember { mutableStateOf<String?>(null) }
     var showIconPicker by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val uiState by viewModel.uiState.collectAsState()
 
     val isValid = groupName.isNotBlank() && groupName.length >= 3
 
@@ -45,12 +50,15 @@ fun GroupSetupScreen(
         colors = listOf(GlassGradientStart, GlassGradientEnd)
     )
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(brush = bgBrush)
             .systemBarsPadding()
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
         // Header
         Box(
             modifier = Modifier
@@ -317,30 +325,97 @@ fun GroupSetupScreen(
                 .padding(20.dp)
         ) {
             GlassButton(
-                onClick = { onCreateGroup(groupName, selectedIcon) },
+                onClick = {
+                    viewModel.createGroup(
+                        groupName = groupName,
+                        selectedContactIds = selectedContactIds,
+                        groupIcon = selectedIcon,
+                        onSuccess = { groupChat ->
+                            // Call the original callback for navigation
+                            onCreateGroup(groupName, selectedIcon)
+                        },
+                        onError = { error ->
+                            errorMessage = error
+                        }
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = isValid
+                enabled = isValid && uiState !is GroupSetupUiState.Loading
             ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                if (uiState is GroupSetupUiState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = GlassBg,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Create Group")
+                Text(if (uiState is GroupSetupUiState.Loading) "Creating..." else "Create Group")
             }
         }
-    }
 
-    // Icon picker dialog
-    if (showIconPicker) {
-        IconPickerDialog(
-            onDismiss = { showIconPicker = false },
-            onIconSelected = { icon ->
-                selectedIcon = icon
-                showIconPicker = false
+        // Show error message if any
+        errorMessage?.let { message ->
+            LaunchedEffect(message) {
+                kotlinx.coroutines.delay(3000)
+                errorMessage = null
             }
-        )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glass(shape = RoundedCornerShape(16.dp)),
+                    color = ChainError.copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = GlassText,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { errorMessage = null }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Dismiss",
+                                tint = GlassText
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        }
+
+        // Icon picker dialog
+        if (showIconPicker) {
+            IconPickerDialog(
+                onDismiss = { showIconPicker = false },
+                onIconSelected = { icon ->
+                    selectedIcon = icon
+                    showIconPicker = false
+                }
+            )
+        }
     }
 }
 
