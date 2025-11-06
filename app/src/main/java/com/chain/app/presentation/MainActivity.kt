@@ -21,6 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.chain.app.domain.repository.AuthRepository
 import com.chain.app.domain.usecase.auth.GetCurrentUserIdUseCase
+import com.chain.app.domain.usecase.debug.SeedSampleDataUseCase
 import com.chain.app.presentation.auth.biometric.BiometricSetupScreen
 import com.chain.app.presentation.auth.otp.OtpScreen
 import com.chain.app.presentation.auth.phone.PhoneNumberScreen
@@ -272,7 +273,8 @@ fun ChainApp(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
+    private val seedSampleDataUseCase: SeedSampleDataUseCase
 ) : ViewModel() {
 
     private val _isAuthenticated = MutableStateFlow(false)
@@ -284,6 +286,7 @@ class MainViewModel @Inject constructor(
     init {
         checkAuthStatus()
         loadCurrentUserId()
+        seedSampleData()
     }
 
     private fun checkAuthStatus() {
@@ -295,6 +298,16 @@ class MainViewModel @Inject constructor(
     private fun loadCurrentUserId() {
         viewModelScope.launch {
             _currentUserId.value = getCurrentUserIdUseCase()
+        }
+    }
+
+    private fun seedSampleData() {
+        viewModelScope.launch {
+            val userId = getCurrentUserIdUseCase()
+            if (userId != null) {
+                // Seed sample data for testing (only runs once)
+                seedSampleDataUseCase(userId)
+            }
         }
     }
 
