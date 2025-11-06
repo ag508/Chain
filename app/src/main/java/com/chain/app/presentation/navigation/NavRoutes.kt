@@ -31,4 +31,10 @@ sealed class NavRoutes(val route: String) {
     object GroupSetup : NavRoutes("group_setup/{selectedContactIds}") {
         fun createRoute(selectedContactIds: String) = "group_setup/$selectedContactIds"
     }
+
+    // Calls
+    object VoiceCall : NavRoutes("voice_call/{peerId}?isIncoming={isIncoming}") {
+        fun createRoute(peerId: String, isIncoming: Boolean = false) =
+            "voice_call/$peerId?isIncoming=$isIncoming"
+    }
 }

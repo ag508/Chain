@@ -201,8 +201,12 @@ fun ChainApp(
                 chatId = chatId,
                 currentUserId = currentUserId ?: "unknown",
                 onBackClick = { navController.popBackStack() },
-                onVoiceCallClick = { /* TODO: Start voice call */ },
-                onVideoCallClick = { /* TODO: Start video call */ }
+                onVoiceCallClick = {
+                    navController.navigate(NavRoutes.VoiceCall.createRoute(chatId, isIncoming = false))
+                },
+                onVideoCallClick = {
+                    // TODO: Implement video call screen
+                }
             )
         }
 
@@ -277,6 +281,29 @@ fun ChainApp(
                 onCreateGroup = { groupName, groupIcon ->
                     // TODO: Create group chat
                     navController.popBackStack(NavRoutes.ChatList.route, inclusive = false)
+                }
+            )
+        }
+
+        // Voice call screen
+        composable(
+            route = NavRoutes.VoiceCall.route,
+            arguments = listOf(
+                navArgument("peerId") { type = NavType.StringType },
+                navArgument("isIncoming") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val peerId = backStackEntry.arguments?.getString("peerId")
+            val isIncoming = backStackEntry.arguments?.getBoolean("isIncoming") ?: false
+
+            com.chain.app.presentation.call.VoiceCallScreen(
+                peerId = peerId,
+                isIncoming = isIncoming,
+                onCallEnded = {
+                    navController.popBackStack()
                 }
             )
         }
