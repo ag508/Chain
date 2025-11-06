@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.chain.app.domain.model.ChatType
 import com.chain.app.presentation.components.glass.GlassTextField
@@ -53,10 +54,17 @@ fun ChatHeader(
         AnimatedContent(
             targetState = showSearchBar,
             transitionSpec = {
-                fadeIn(animationSpec = tween(300)) +
-                    expandHorizontally(animationSpec = tween(300)) togetherWith
-                    fadeOut(animationSpec = tween(300)) +
-                    shrinkHorizontally(animationSpec = tween(300))
+                (slideInHorizontally(
+                    animationSpec = tween(400, easing = FastOutSlowInEasing),
+                    initialOffsetX = { fullWidth -> fullWidth }
+                ) + fadeIn(
+                    animationSpec = tween(400, easing = LinearOutSlowInEasing)
+                )) togetherWith (slideOutHorizontally(
+                    animationSpec = tween(400, easing = FastOutSlowInEasing),
+                    targetOffsetX = { fullWidth -> -fullWidth }
+                ) + fadeOut(
+                    animationSpec = tween(400, easing = LinearOutSlowInEasing)
+                ))
             },
             label = "search_bar_animation"
         ) { isSearching ->
@@ -319,25 +327,21 @@ private fun ChatHeaderMenu(
     onBlock: () -> Unit,
     onViewGroupInfo: () -> Unit
 ) {
-    MaterialTheme(
-        shapes = MaterialTheme.shapes.copy(
-            extraSmall = RoundedCornerShape(16.dp)
-        )
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        offset = DpOffset(0.dp, 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .width(220.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .glass(
+                shape = RoundedCornerShape(16.dp),
+                blurRadius = 16.dp,
+                alpha = 0.25f,
+                borderAlpha = 0.4f
+            )
     ) {
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismiss,
-            offset = DpOffset(0.dp, 4.dp),
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .glass(
-                    shape = RoundedCornerShape(16.dp),
-                    blurRadius = 16.dp,
-                    alpha = 0.25f,
-                    borderAlpha = 0.4f
-                )
-                .width(220.dp)
-        ) {
         // View Profile or Group Info
         DropdownMenuItem(
             text = {
@@ -441,7 +445,6 @@ private fun ChatHeaderMenu(
                 },
                 onClick = onBlock
             )
-        }
         }
     }
 }
