@@ -42,6 +42,10 @@ class AuthRepositoryImpl @Inject constructor(
         return userPreferences.getUserId() != null
     }
 
+    override suspend fun getCurrentUserId(): String? {
+        return userPreferences.getUserId()
+    }
+
     override suspend fun sendOtp(phoneNumber: String): Result<Unit> {
         return try {
             // Simulate API call delay

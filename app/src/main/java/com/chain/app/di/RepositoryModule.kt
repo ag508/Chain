@@ -2,11 +2,13 @@ package com.chain.app.di
 
 import com.chain.app.data.repository.AuthRepositoryImpl
 import com.chain.app.data.repository.ChatRepositoryImpl
+import com.chain.app.data.repository.ContactRepositoryImpl
 import com.chain.app.data.repository.EncryptionRepositoryImpl
 import com.chain.app.data.repository.MessageRepositoryImpl
 import com.chain.app.data.repository.P2PRepositoryImpl
 import com.chain.app.domain.repository.AuthRepository
 import com.chain.app.domain.repository.ChatRepository
+import com.chain.app.domain.repository.ContactRepository
 import com.chain.app.domain.repository.EncryptionRepository
 import com.chain.app.domain.repository.MessageRepository
 import com.chain.app.domain.repository.P2PRepository
@@ -52,4 +54,10 @@ abstract class RepositoryModule {
     abstract fun bindP2PRepository(
         impl: P2PRepositoryImpl
     ): P2PRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindContactRepository(
+        impl: ContactRepositoryImpl
+    ): ContactRepository
 }

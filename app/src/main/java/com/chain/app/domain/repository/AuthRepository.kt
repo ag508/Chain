@@ -13,6 +13,12 @@ interface AuthRepository {
     suspend fun isAuthenticated(): Boolean
 
     /**
+     * Get current authenticated user's ID.
+     * Returns null if no user is authenticated.
+     */
+    suspend fun getCurrentUserId(): String?
+
+    /**
      * Send OTP to the given phone number.
      */
     suspend fun sendOtp(phoneNumber: String): Result<Unit>
