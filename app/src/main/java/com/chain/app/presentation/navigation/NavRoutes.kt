@@ -38,4 +38,8 @@ sealed class NavRoutes(val route: String) {
         fun createRoute(peerId: String, isIncoming: Boolean = false) =
             "voice_call/$peerId?isIncoming=$isIncoming"
     }
+    object VideoCall : NavRoutes("video_call/{peerId}?isIncoming={isIncoming}") {
+        fun createRoute(peerId: String, isIncoming: Boolean = false) =
+            "video_call/$peerId?isIncoming=$isIncoming"
+    }
 }

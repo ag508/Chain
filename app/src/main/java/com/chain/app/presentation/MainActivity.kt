@@ -188,7 +188,7 @@ fun ChainApp(
                     navController.navigate(NavRoutes.VoiceCall.createRoute(peerId, false))
                 },
                 onVideoCallClick = { peerId ->
-                    navController.navigate(NavRoutes.VoiceCall.createRoute(peerId, false))
+                    navController.navigate(NavRoutes.VideoCall.createRoute(peerId, false))
                 }
             )
         }
@@ -211,7 +211,7 @@ fun ChainApp(
                     navController.navigate(NavRoutes.VoiceCall.createRoute(chatId, isIncoming = false))
                 },
                 onVideoCallClick = {
-                    // TODO: Implement video call screen
+                    navController.navigate(NavRoutes.VideoCall.createRoute(chatId, isIncoming = false))
                 }
             )
         }
@@ -324,6 +324,29 @@ fun ChainApp(
             val isIncoming = backStackEntry.arguments?.getBoolean("isIncoming") ?: false
 
             com.chain.app.presentation.call.VoiceCallScreen(
+                peerId = peerId,
+                isIncoming = isIncoming,
+                onCallEnded = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Video call screen
+        composable(
+            route = NavRoutes.VideoCall.route,
+            arguments = listOf(
+                navArgument("peerId") { type = NavType.StringType },
+                navArgument("isIncoming") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val peerId = backStackEntry.arguments?.getString("peerId")
+            val isIncoming = backStackEntry.arguments?.getBoolean("isIncoming") ?: false
+
+            com.chain.app.presentation.call.VideoCallScreen(
                 peerId = peerId,
                 isIncoming = isIncoming,
                 onCallEnded = {

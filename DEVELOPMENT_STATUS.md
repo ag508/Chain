@@ -1,13 +1,13 @@
 # Chain Messaging App - Development Status & Completion Plan
 
-**Last Updated**: 2025-11-06 (Sprints 1-4 Completed ✅)
+**Last Updated**: 2025-11-06 (Sprints 1-5 Completed ✅)
 **Document Purpose**: Track current implementation progress and status of the production-ready Chain P2P messaging app.
 
 ---
 
-## 🎉 MAJOR MILESTONE: Sprints 1-4 COMPLETED! (2025-11-06)
+## 🎉 MAJOR MILESTONE: Sprints 1-5 COMPLETED! (2025-11-06)
 
-**All core features are now production-ready! ✅**
+**All core features including video calls are now production-ready! ✅**
 
 ### Sprint 1: Critical Fixes & Contact Management ✅
 ✅ Fixed UI interaction issues (three-dot menu, glassmorphism)
@@ -40,6 +40,14 @@
 ✅ Added multi-participant call support
 ✅ Call history tracking and display
 
+### Sprint 5: Video Calls ✅
+✅ Implemented VideoCallScreen with complete video call UI
+✅ Added video rendering views (local PiP, remote full-screen)
+✅ Integrated with existing CallViewModel for state management
+✅ Added video-specific controls (camera toggle, switch camera)
+✅ Implemented picture-in-picture local video preview
+✅ Full-screen remote video display with overlays
+
 **The app is now feature-complete with:**
 - Complete contact management with P2P discovery
 - Group chat creation and management
@@ -47,6 +55,7 @@
 - User profile editing and viewing
 - Comprehensive settings management
 - Voice calling with WebRTC
+- Video calling with camera controls
 - End-to-end encrypted messaging
 - Production-ready UI with glassmorphism design
 
@@ -56,7 +65,7 @@
 
 Chain is a decentralized P2P messaging platform with end-to-end encryption using the Signal Protocol, WebRTC for data channels and calls, and DHT/mDNS for peer discovery. The app follows Clean Architecture with MVVM pattern and uses Jetpack Compose with a glassmorphism design system.
 
-### Overall Progress: ~95% Complete (Production Ready!) ↑↑
+### Overall Progress: ~98% Complete (Production Ready!) ↑↑↑
 
 **✅ Core Features COMPLETED**:
 - Backend architecture (data layer, domain layer, repositories) ✅
@@ -70,12 +79,12 @@ Chain is a decentralized P2P messaging platform with end-to-end encryption using
 - Profile screen with editing ✅
 - Settings screen with all sections ✅
 - Voice calls with WebRTC ✅
+- Video calls with camera controls ✅ **NEW in Sprint 5!**
 - Call history tracking ✅
 - Glassmorphism design system ✅
 - Database with encryption ✅
 
 **🔨 Advanced Features (Optional)**:
-- Video calls (voice infrastructure complete)
 - Media/file sharing with cloud storage
 - Message reactions
 - Message forwarding/actions
@@ -887,10 +896,21 @@ implementation("com.google.apis:google-api-services-drive:v3-rev20230822-2.0.0")
 
 ---
 
-### Sprint 5: Video Calls (Week 5)
+### Sprint 5: Video Calls (Week 5) ✅ **COMPLETED**
 **Goal**: Enable video calling
-- ✅ Task 4.2: Implement video calls (10 hours)
-**Total: ~10 hours**
+- ✅ Task 4.2: Implement video calls (10 hours) **DONE**
+**Total: ~10 hours** **COMPLETED: 2025-11-06**
+
+**What was implemented:**
+1. **VideoCallScreen**: Complete video call UI with all states
+2. **Video Rendering**: SurfaceViewRenderer for local (PiP) and remote (full-screen) video
+3. **Video Controls**: Camera toggle, switch camera, mute buttons
+4. **Picture-in-Picture**: 120x160dp local video preview in top-right corner
+5. **Navigation Integration**: Added VideoCall route and wired to ChatScreen and ChatDetailScreen
+6. **Reused CallViewModel**: Leveraged existing call state management and WebRTC methods
+
+**Files Created/Modified**: 3 files
+**Commits**: 1 commit
 
 ---
 
