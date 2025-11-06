@@ -1,5 +1,8 @@
 package com.chain.app.presentation.call
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,9 +20,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.CallType
 import com.chain.app.presentation.theme.*
@@ -47,11 +52,62 @@ fun VideoCallScreen(
     val participants by viewModel.callParticipants.collectAsState()
 
     var showContactPicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    // Initiate call if outgoing
+    // Permission states
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    var hasMicrophonePermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    var permissionsDenied by remember { mutableStateOf(false) }
+
+    // Multiple permissions launcher for both camera and microphone
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        hasCameraPermission = permissions[Manifest.permission.CAMERA] ?: false
+        hasMicrophonePermission = permissions[Manifest.permission.RECORD_AUDIO] ?: false
+
+        if (hasCameraPermission && hasMicrophonePermission) {
+            // Both permissions granted, initiate call
+            if (!isIncoming && peerId != null) {
+                viewModel.initiateCall(peerId, CallType.VIDEO)
+            }
+        } else {
+            // Permissions denied, show error
+            permissionsDenied = true
+        }
+    }
+
+    // Check and request permissions, then initiate call if outgoing
     LaunchedEffect(peerId, isIncoming) {
         if (!isIncoming && peerId != null) {
-            viewModel.initiateCall(peerId, CallType.VIDEO)
+            if (hasCameraPermission && hasMicrophonePermission) {
+                // Both permissions already granted
+                viewModel.initiateCall(peerId, CallType.VIDEO)
+            } else {
+                // Request permissions
+                permissionsLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.RECORD_AUDIO
+                    )
+                )
+            }
         }
     }
 
@@ -59,6 +115,14 @@ fun VideoCallScreen(
     LaunchedEffect(uiState) {
         if (uiState is CallUiState.Ended) {
             kotlinx.coroutines.delay(3000) // Wait 3 seconds
+            onCallEnded()
+        }
+    }
+
+    // Handle permissions denied - navigate back
+    LaunchedEffect(permissionsDenied) {
+        if (permissionsDenied) {
+            kotlinx.coroutines.delay(2000) // Show error for 2 seconds
             onCallEnded()
         }
     }
@@ -73,6 +137,15 @@ fun VideoCallScreen(
             .background(brush = bgBrush)
             .systemBarsPadding()
     ) {
+        // Show permission error if denied
+        if (permissionsDenied) {
+            ErrorContent(
+                message = "Camera and microphone permissions are required for video calls",
+                onClose = onCallEnded
+            )
+            return@Box
+        }
+
         when (val state = uiState) {
             is CallUiState.Idle -> {
                 IdleContent()
