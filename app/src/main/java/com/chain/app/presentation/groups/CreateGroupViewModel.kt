@@ -3,7 +3,7 @@ package com.chain.app.presentation.groups
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chain.app.domain.model.Contact
-import com.chain.app.domain.usecase.contact.GetAllContactsUseCase
+import com.chain.app.domain.usecase.contact.GetContactsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class CreateGroupViewModel @Inject constructor(
-    private val getAllContactsUseCase: GetAllContactsUseCase
+    private val getContactsUseCase: GetContactsUseCase
 ) : ViewModel() {
 
     private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
@@ -33,7 +33,7 @@ class CreateGroupViewModel @Inject constructor(
     private fun loadContacts() {
         viewModelScope.launch {
             _isLoading.value = true
-            getAllContactsUseCase().collect { contacts ->
+            getContactsUseCase().collect { contacts ->
                 _contacts.value = contacts
                 _isLoading.value = false
             }
