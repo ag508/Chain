@@ -1,8 +1,8 @@
 package com.chain.app.presentation.chat.list.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.chain.app.presentation.theme.*
@@ -39,76 +38,63 @@ fun TopBarMenu(
             )
         }
 
-        // Custom glassmorphic dropdown menu
-        if (expanded) {
+        // Custom glassmorphic dropdown menu without fullMaxSize overlay
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .width(200.dp)
+                .background(GlassCardBg, RoundedCornerShape(16.dp))
+                .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+        ) {
+            // Profile item
+            MenuItemGlass(
+                icon = Icons.Default.Person,
+                text = "Profile",
+                onClick = {
+                    expanded = false
+                    onProfileClick()
+                }
+            )
+
+            // Divider
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        onClick = { expanded = false },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    )
-            ) {
-                // Menu content
-                Column(
-                    modifier = Modifier
-                        .width(200.dp)
-                        .align(Alignment.TopEnd)
-                        .padding(top = 48.dp, end = 0.dp)
-                        .glass(shape = RoundedCornerShape(16.dp))
-                        .padding(vertical = 8.dp)
-                ) {
-                    // Profile item
-                    MenuItemGlass(
-                        icon = Icons.Default.Person,
-                        text = "Profile",
-                        onClick = {
-                            expanded = false
-                            onProfileClick()
-                        }
-                    )
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .padding(horizontal = 12.dp)
+                    .background(GlassBorder)
+            )
 
-                    // Divider
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .padding(horizontal = 12.dp)
-                            .background(GlassBorder)
-                    )
-
-                    // Settings item
-                    MenuItemGlass(
-                        icon = Icons.Default.Settings,
-                        text = "Settings",
-                        onClick = {
-                            expanded = false
-                            onSettingsClick()
-                        }
-                    )
-
-                    // Divider
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .padding(horizontal = 12.dp)
-                            .background(GlassBorder)
-                    )
-
-                    // Logout item
-                    MenuItemGlass(
-                        icon = Icons.Default.ExitToApp,
-                        text = "Logout",
-                        onClick = {
-                            expanded = false
-                            onLogoutClick()
-                        },
-                        isDestructive = true
-                    )
+            // Settings item
+            MenuItemGlass(
+                icon = Icons.Default.Settings,
+                text = "Settings",
+                onClick = {
+                    expanded = false
+                    onSettingsClick()
                 }
-            }
+            )
+
+            // Divider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .padding(horizontal = 12.dp)
+                    .background(GlassBorder)
+            )
+
+            // Logout item
+            MenuItemGlass(
+                icon = Icons.Default.ExitToApp,
+                text = "Logout",
+                onClick = {
+                    expanded = false
+                    onLogoutClick()
+                },
+                isDestructive = true
+            )
         }
     }
 }
