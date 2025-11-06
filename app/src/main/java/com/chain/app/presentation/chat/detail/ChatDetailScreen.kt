@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -101,6 +100,19 @@ private fun ChatDetailContent(
     val listState = rememberLazyListState()
     val context = LocalContext.current
 
+    // Media pickers - must be declared before permission launchers that use them
+    val mediaPicker = rememberMediaPicker { uri ->
+        // TODO: Send media message
+    }
+
+    val documentPicker = rememberDocumentPicker { uri ->
+        // TODO: Send document message
+    }
+
+    val cameraCapture = rememberCameraCapture { uri ->
+        // TODO: Send photo message
+    }
+
     // Camera permission state
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -142,19 +154,6 @@ private fun ChatDetailContent(
             isRecordingVoice = true
             // TODO: Start voice recording
         }
-    }
-
-    // Media pickers
-    val mediaPicker = rememberMediaPicker { uri ->
-        // TODO: Send media message
-    }
-
-    val documentPicker = rememberDocumentPicker { uri ->
-        // TODO: Send document message
-    }
-
-    val cameraCapture = rememberCameraCapture { uri ->
-        // TODO: Send photo message
     }
 
     // Background gradient
