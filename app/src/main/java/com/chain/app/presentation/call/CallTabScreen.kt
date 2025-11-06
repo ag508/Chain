@@ -38,6 +38,7 @@ fun CallTabScreen(
 ) {
     val callHistory by viewModel.callHistory.collectAsState()
     val contacts by viewModel.contacts.collectAsState()
+    val currentUserId by viewModel.currentUserId.collectAsState()
 
     Column(
         modifier = modifier
@@ -69,6 +70,7 @@ fun CallTabScreen(
                     onCallClick = onVoiceCallClick,
                     onVideoCallClick = onVideoCallClick,
                     viewModel = viewModel,
+                    currentUserId = currentUserId,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -210,6 +212,7 @@ private fun CallHistoryList(
     onCallClick: (String) -> Unit,
     onVideoCallClick: (String) -> Unit,
     viewModel: CallTabViewModel,
+    currentUserId: String?,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -221,6 +224,7 @@ private fun CallHistoryList(
             CallHistoryItem(
                 call = call,
                 viewModel = viewModel,
+                currentUserId = currentUserId,
                 onCallClick = {
                     if (call.type == CallType.VIDEO) {
                         onVideoCallClick(call.initiator)
@@ -237,20 +241,29 @@ private fun CallHistoryList(
 private fun CallHistoryItem(
     call: Call,
     viewModel: CallTabViewModel,
+    currentUserId: String?,
     onCallClick: () -> Unit
 ) {
     // Observe contacts for reactive updates
     val contacts by viewModel.contacts.collectAsState()
 
-    // Determine call type based on status
-    // Note: In a real app, compare call.initiator with current userId
-    val isIncoming = call.status == CallStatus.RINGING || call.status == CallStatus.CONNECTED
+    // Determine call direction based on who initiated the call
+    val isIncoming = call.initiator != currentUserId
     val isMissed = call.status == CallStatus.MISSED
     val isMultiParty = call.participants.size > 2
 
-    // Get caller name from contacts list
-    val callerName = remember(call.initiator, contacts) {
-        contacts.find { it.userId == call.initiator }?.displayName ?: call.initiator
+    // Get the display name for the call
+    // For incoming calls: show the initiator's name
+    // For outgoing calls: show the other participant's name (first non-current-user participant)
+    val callerName = remember(call.initiator, call.participants, contacts, currentUserId) {
+        val targetUserId = if (isIncoming) {
+            // Incoming call: show who called you
+            call.initiator
+        } else {
+            // Outgoing call: show who you called (first participant that's not you)
+            call.participants.firstOrNull { it != currentUserId } ?: call.initiator
+        }
+        contacts.find { it.userId == targetUserId }?.displayName ?: targetUserId
     }
 
     Row(
