@@ -16,7 +16,8 @@ data class Message(
     val replyTo: String? = null,
     val reactions: List<Reaction> = emptyList(),
     val isEncrypted: Boolean = true,
-    val disappearAfter: Long? = null // Milliseconds after which message should disappear
+    val disappearAfter: Long? = null, // Milliseconds after which message should disappear
+    val metadata: Map<String, Any?>? = null // For media messages: caption, fileName, fileSize, duration, etc.
 )
 
 enum class MessageType {

@@ -276,6 +276,10 @@ fun ChatHeader(
                                     showMenu = false
                                     showSearchBar = true
                                 },
+                                onDisappearingMessages = {
+                                    showMenu = false
+                                    // TODO: Show disappearing messages dialog
+                                },
                                 onMute = {
                                     showMenu = false
                                     // TODO: Mute chat
@@ -306,7 +310,8 @@ private fun ChatHeaderMenu(
     onSearchInChat: () -> Unit,
     onMute: () -> Unit,
     onBlock: () -> Unit,
-    onViewGroupInfo: () -> Unit
+    onViewGroupInfo: () -> Unit,
+    onDisappearingMessages: () -> Unit = {}
 ) {
     DropdownMenu(
         expanded = expanded,
@@ -368,6 +373,37 @@ private fun ChatHeaderMenu(
             },
             onClick = {
                 onSearchInChat()
+                onDismiss()
+            }
+        )
+
+        Divider(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            color = GlassText.copy(alpha = 0.12f)
+        )
+
+        // Disappearing Messages
+        DropdownMenuItem(
+            text = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Timer,
+                        contentDescription = null,
+                        tint = GlassText,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Disappearing Messages",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = GlassText
+                    )
+                }
+            },
+            onClick = {
+                onDisappearingMessages()
                 onDismiss()
             }
         )
