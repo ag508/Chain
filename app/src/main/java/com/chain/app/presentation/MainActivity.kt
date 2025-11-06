@@ -163,6 +163,22 @@ fun ChainApp(
                 },
                 onNewChatClick = {
                     navController.navigate(NavRoutes.ContactSearch.route)
+                },
+                onProfileClick = {
+                    // TODO: Navigate to profile when ProfileScreen is implemented
+                    // For now, just log
+                    println("Profile clicked - screen not yet implemented")
+                },
+                onSettingsClick = {
+                    // TODO: Navigate to settings when SettingsScreen is implemented
+                    // For now, just log
+                    println("Settings clicked - screen not yet implemented")
+                },
+                onLogoutClick = {
+                    mainViewModel.logout()
+                    navController.navigate(NavRoutes.Welcome.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
@@ -263,6 +279,13 @@ class MainViewModel @Inject constructor(
     private fun checkAuthStatus() {
         viewModelScope.launch {
             _isAuthenticated.value = authRepository.isAuthenticated()
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+            _isAuthenticated.value = false
         }
     }
 }

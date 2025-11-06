@@ -42,7 +42,10 @@ fun ChatScreen(
 fun ChatListScreen(
     viewModel: ChatListViewModel = hiltViewModel(),
     onChatClick: (Chat) -> Unit = {},
-    onNewChatClick: () -> Unit = {}
+    onNewChatClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -134,9 +137,9 @@ fun ChatListScreen(
                                     )
                                 }
                                 TopBarMenu(
-                                    onProfileClick = { /* TODO: Navigate to profile */ },
-                                    onSettingsClick = { /* TODO: Navigate to settings */ },
-                                    onLogoutClick = { /* TODO: Handle logout */ }
+                                    onProfileClick = onProfileClick,
+                                    onSettingsClick = onSettingsClick,
+                                    onLogoutClick = onLogoutClick
                                 )
                             }
                         }

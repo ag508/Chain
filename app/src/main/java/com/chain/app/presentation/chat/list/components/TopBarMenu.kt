@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.chain.app.presentation.theme.glass
+import com.chain.app.presentation.theme.glassIconButton
 
 @Composable
 fun TopBarMenu(
@@ -25,7 +26,12 @@ fun TopBarMenu(
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
-        IconButton(onClick = { expanded = true }) {
+        IconButton(
+            onClick = { expanded = true },
+            modifier = Modifier
+                .size(40.dp)
+                .glassIconButton()
+        ) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
                 contentDescription = "Menu",
@@ -36,15 +42,8 @@ fun TopBarMenu(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            offset = DpOffset(0.dp, 0.dp),
-            modifier = Modifier
-                .glass(
-                    shape = RoundedCornerShape(16.dp),
-                    blurRadius = 16.dp,
-                    alpha = 0.25f,
-                    borderAlpha = 0.4f
-                )
-                .width(200.dp)
+            offset = DpOffset(0.dp, 8.dp),
+            modifier = Modifier.width(200.dp)
         ) {
             // Profile item
             DropdownMenuItem(
