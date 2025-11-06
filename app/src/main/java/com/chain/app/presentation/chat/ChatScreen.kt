@@ -152,7 +152,8 @@ fun ChatListScreen(
                                     Icon(
                                         imageVector = Icons.Default.Search,
                                         contentDescription = "Search",
-                                        tint = GlassText
+                                        tint = GlassText,
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                                 TopBarMenu(
