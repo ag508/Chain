@@ -50,6 +50,21 @@ interface CallRepository {
     suspend fun switchCamera(callId: String): Result<Unit>
 
     /**
+     * Add a participant to an active call.
+     */
+    suspend fun addParticipantToCall(callId: String, peerId: String, callType: CallType): Result<Unit>
+
+    /**
+     * Remove a participant from an active call.
+     */
+    suspend fun removeParticipantFromCall(callId: String, peerId: String): Result<Unit>
+
+    /**
+     * Get list of participants in a call.
+     */
+    suspend fun getCallParticipants(callId: String): Result<List<String>>
+
+    /**
      * Get call history.
      */
     fun getCallHistory(): Flow<List<Call>>

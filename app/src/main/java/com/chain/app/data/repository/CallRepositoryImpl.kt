@@ -289,6 +289,72 @@ class CallRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun addParticipantToCall(
+        callId: String,
+        peerId: String,
+        callType: CallType
+    ): Result<Unit> {
+        return try {
+            val currentSession = _activeCallSession.value
+                ?: return Result.failure(Exception("No active call"))
+
+            if (currentSession.call.id != callId) {
+                return Result.failure(Exception("Call ID mismatch"))
+            }
+
+            // Add participant to WebRTC mesh
+            callManager.addParticipant(peerId, callType, isInitiator = true).getOrThrow()
+
+            // TODO: Send signaling data to new participant via P2P
+            // This would include offer SDP and ICE candidates
+
+            Timber.d("Added participant to call: $peerId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to add participant")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun removeParticipantFromCall(callId: String, peerId: String): Result<Unit> {
+        return try {
+            val currentSession = _activeCallSession.value
+                ?: return Result.failure(Exception("No active call"))
+
+            if (currentSession.call.id != callId) {
+                return Result.failure(Exception("Call ID mismatch"))
+            }
+
+            callManager.removeParticipant(peerId).getOrThrow()
+
+            // TODO: Send leave signal to participant via P2P
+
+            Timber.d("Removed participant from call: $peerId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to remove participant")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getCallParticipants(callId: String): Result<List<String>> {
+        return try {
+            val currentSession = _activeCallSession.value
+                ?: return Result.failure(Exception("No active call"))
+
+            if (currentSession.call.id != callId) {
+                return Result.failure(Exception("Call ID mismatch"))
+            }
+
+            val participants = callManager.getParticipants()
+            Timber.d("Current call participants: $participants")
+            Result.success(participants)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get participants")
+            Result.failure(e)
+        }
+    }
+
     override fun getCallHistory(): Flow<List<Call>> {
         return callDao.getAllCalls().map { entities ->
             entities.map { it.toDomain() }

@@ -6,11 +6,25 @@ import com.chain.app.domain.model.CallType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.webrtc.*
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
+ * Participant in a multi-party call.
+ */
+data class CallParticipant(
+    val peerId: String,
+    val peerConnection: PeerConnection,
+    var remoteAudioTrack: AudioTrack? = null,
+    var remoteVideoTrack: VideoTrack? = null,
+    var isAudioEnabled: Boolean = true,
+    var isVideoEnabled: Boolean = false
+)
+
+/**
  * Manages WebRTC audio/video streams for voice and video calls.
+ * Supports multi-party calls using mesh architecture.
  */
 @Singleton
 class CallManager @Inject constructor(
@@ -22,11 +36,17 @@ class CallManager @Inject constructor(
     private lateinit var videoSource: VideoSource
     private lateinit var videoCapturer: VideoCapturer
 
-    // Active peer connection
-    private var peerConnection: PeerConnection? = null
+    // Multi-party call participants (mesh architecture)
+    private val participants = ConcurrentHashMap<String, CallParticipant>()
+
+    // Local media tracks (shared across all participants)
     private var localAudioTrack: AudioTrack? = null
     private var localVideoTrack: VideoTrack? = null
-    private var remoteVideoTrack: VideoTrack? = null
+
+    // Callbacks for signaling
+    private var onIceCandidateCallback: ((peerId: String, candidate: IceCandidate) -> Unit)? = null
+    private var onRemoteStreamCallback: ((peerId: String, stream: MediaStream) -> Unit)? = null
+    private var onParticipantLeftCallback: ((peerId: String) -> Unit)? = null
 
     // Audio manager for routing
     private val audioManager: AudioManager by lazy {
@@ -41,6 +61,7 @@ class CallManager @Inject constructor(
     )
 
     private var isInitialized = false
+    private var currentCallType: CallType = CallType.VOICE
 
     /**
      * Initialize WebRTC for calls.
@@ -92,7 +113,20 @@ class CallManager @Inject constructor(
     }
 
     /**
-     * Start a call (voice or video).
+     * Set callbacks for signaling events.
+     */
+    fun setCallbacks(
+        onIceCandidate: (peerId: String, candidate: IceCandidate) -> Unit,
+        onRemoteStream: (peerId: String, stream: MediaStream) -> Unit,
+        onParticipantLeft: (peerId: String) -> Unit
+    ) {
+        this.onIceCandidateCallback = onIceCandidate
+        this.onRemoteStreamCallback = onRemoteStream
+        this.onParticipantLeftCallback = onParticipantLeft
+    }
+
+    /**
+     * Start a call (voice or video) - creates connection to first participant.
      */
     suspend fun startCall(
         peerId: String,
@@ -100,177 +134,277 @@ class CallManager @Inject constructor(
         onIceCandidate: (IceCandidate) -> Unit,
         onRemoteStream: (MediaStream) -> Unit
     ): Result<SessionDescription> {
-        return try {
-            if (!isInitialized) {
-                initialize().getOrThrow()
-            }
-
-            // Create peer connection
-            val rtcConfig = PeerConnection.RTCConfiguration(iceServers).apply {
-                bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE
-                rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE
-                tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED
-            }
-
-            peerConnection = peerConnectionFactory.createPeerConnection(
-                rtcConfig,
-                object : PeerConnection.Observer {
-                    override fun onIceCandidate(candidate: IceCandidate?) {
-                        candidate?.let { onIceCandidate(it) }
-                    }
-
-                    override fun onAddStream(stream: MediaStream?) {
-                        stream?.let {
-                            if (it.videoTracks.isNotEmpty()) {
-                                remoteVideoTrack = it.videoTracks[0]
-                            }
-                            onRemoteStream(it)
-                        }
-                    }
-
-                    override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
-                        Timber.d("Connection state changed: $newState")
-                    }
-
-                    override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
-                    override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
-                    override fun onIceConnectionReceivingChange(p0: Boolean) {}
-                    override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
-                    override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
-                    override fun onRemoveStream(p0: MediaStream?) {}
-                    override fun onDataChannel(p0: DataChannel?) {}
-                    override fun onRenegotiationNeeded() {}
-                    override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
-                }
-            ) ?: return Result.failure(Exception("Failed to create peer connection"))
-
-            // Add local audio track
-            localAudioTrack = peerConnectionFactory.createAudioTrack("audio", audioSource)
-            peerConnection?.addTrack(localAudioTrack)
-
-            // Add local video track if video call
-            if (callType == CallType.VIDEO) {
-                initializeVideoCapture()
-                localVideoTrack = peerConnectionFactory.createVideoTrack("video", videoSource)
-                peerConnection?.addTrack(localVideoTrack)
-            }
-
-            // Create offer
-            val offerConstraints = MediaConstraints().apply {
-                mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
-                mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", if (callType == CallType.VIDEO) "true" else "false"))
-            }
-
-            val offer = peerConnection?.createOffer(offerConstraints)
-                ?: return Result.failure(Exception("Failed to create offer"))
-
-            peerConnection?.setLocalDescription(offer)
-
-            // Configure audio routing
-            configureAudioRouting()
-
-            Timber.d("Call started with peer: $peerId")
-            Result.success(offer)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to start call")
-            Result.failure(e)
+        // Set legacy callbacks for backward compatibility
+        this.onIceCandidateCallback = { id, candidate ->
+            if (id == peerId) onIceCandidate(candidate)
         }
+        this.onRemoteStreamCallback = { id, stream ->
+            if (id == peerId) onRemoteStream(stream)
+        }
+
+        currentCallType = callType
+        return addParticipant(peerId, callType, isInitiator = true)
     }
 
     /**
-     * Answer an incoming call.
+     * Add a new participant to the call (for multi-party calls).
      */
-    suspend fun answerCall(
-        offer: SessionDescription,
-        onIceCandidate: (IceCandidate) -> Unit,
-        onRemoteStream: (MediaStream) -> Unit
+    suspend fun addParticipant(
+        peerId: String,
+        callType: CallType = currentCallType,
+        isInitiator: Boolean = true
     ): Result<SessionDescription> {
         return try {
             if (!isInitialized) {
                 initialize().getOrThrow()
             }
 
-            // Create peer connection if not exists
-            if (peerConnection == null) {
-                val rtcConfig = PeerConnection.RTCConfiguration(iceServers)
-                peerConnection = peerConnectionFactory.createPeerConnection(
-                    rtcConfig,
-                    object : PeerConnection.Observer {
-                        override fun onIceCandidate(candidate: IceCandidate?) {
-                            candidate?.let { onIceCandidate(it) }
-                        }
-
-                        override fun onAddStream(stream: MediaStream?) {
-                            stream?.let { onRemoteStream(it) }
-                        }
-
-                        override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
-                            Timber.d("Connection state changed: $newState")
-                        }
-
-                        override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
-                        override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
-                        override fun onIceConnectionReceivingChange(p0: Boolean) {}
-                        override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
-                        override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
-                        override fun onRemoveStream(p0: MediaStream?) {}
-                        override fun onDataChannel(p0: DataChannel?) {}
-                        override fun onRenegotiationNeeded() {}
-                        override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
-                    }
-                )
+            // Check if participant already exists
+            if (participants.containsKey(peerId)) {
+                return Result.failure(Exception("Participant $peerId already in call"))
             }
 
-            // Set remote description
-            peerConnection?.setRemoteDescription(offer)
+            // Create local tracks if not created yet (shared across all participants)
+            if (localAudioTrack == null) {
+                localAudioTrack = peerConnectionFactory.createAudioTrack("audio", audioSource)
+            }
 
-            // Add local tracks
-            localAudioTrack = peerConnectionFactory.createAudioTrack("audio", audioSource)
-            peerConnection?.addTrack(localAudioTrack)
+            if (callType == CallType.VIDEO && localVideoTrack == null) {
+                initializeVideoCapture()
+                localVideoTrack = peerConnectionFactory.createVideoTrack("video", videoSource)
+            }
 
-            // Create answer
-            val answerConstraints = MediaConstraints()
-            val answer = peerConnection?.createAnswer(answerConstraints)
-                ?: return Result.failure(Exception("Failed to create answer"))
+            // Create peer connection for this participant
+            val rtcConfig = PeerConnection.RTCConfiguration(iceServers).apply {
+                bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE
+                rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE
+                tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED
+            }
 
-            peerConnection?.setLocalDescription(answer)
+            val peerConnection = peerConnectionFactory.createPeerConnection(
+                rtcConfig,
+                createPeerConnectionObserver(peerId)
+            ) ?: return Result.failure(Exception("Failed to create peer connection for $peerId"))
 
-            configureAudioRouting()
+            // Add local tracks to this peer connection
+            peerConnection.addTrack(localAudioTrack)
+            if (callType == CallType.VIDEO && localVideoTrack != null) {
+                peerConnection.addTrack(localVideoTrack)
+            }
 
-            Timber.d("Call answered")
-            Result.success(answer)
+            // Store participant
+            val participant = CallParticipant(
+                peerId = peerId,
+                peerConnection = peerConnection
+            )
+            participants[peerId] = participant
+
+            // Create offer if we're the initiator
+            val sdpConstraints = MediaConstraints().apply {
+                mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
+                mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo",
+                    if (callType == CallType.VIDEO) "true" else "false"))
+            }
+
+            val sdp = if (isInitiator) {
+                val offer = peerConnection.createOffer(sdpConstraints)
+                    ?: return Result.failure(Exception("Failed to create offer for $peerId"))
+                peerConnection.setLocalDescription(offer)
+                offer
+            } else {
+                // For answer, we'll receive the offer later via handleRemoteOffer
+                return Result.failure(Exception("Not initiator - call handleRemoteOffer first"))
+            }
+
+            // Configure audio routing on first participant
+            if (participants.size == 1) {
+                configureAudioRouting()
+            }
+
+            Timber.d("Added participant: $peerId (total: ${participants.size})")
+            Result.success(sdp)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to answer call")
+            Timber.e(e, "Failed to add participant $peerId")
             Result.failure(e)
         }
     }
 
     /**
-     * End the active call.
+     * Handle remote offer from a participant and create answer.
+     */
+    suspend fun handleRemoteOffer(
+        peerId: String,
+        offer: SessionDescription,
+        callType: CallType = currentCallType
+    ): Result<SessionDescription> {
+        return try {
+            if (!isInitialized) {
+                initialize().getOrThrow()
+            }
+
+            // Create local tracks if needed
+            if (localAudioTrack == null) {
+                localAudioTrack = peerConnectionFactory.createAudioTrack("audio", audioSource)
+            }
+
+            if (callType == CallType.VIDEO && localVideoTrack == null) {
+                initializeVideoCapture()
+                localVideoTrack = peerConnectionFactory.createVideoTrack("video", videoSource)
+            }
+
+            // Create peer connection
+            val rtcConfig = PeerConnection.RTCConfiguration(iceServers)
+            val peerConnection = peerConnectionFactory.createPeerConnection(
+                rtcConfig,
+                createPeerConnectionObserver(peerId)
+            ) ?: return Result.failure(Exception("Failed to create peer connection"))
+
+            // Add local tracks
+            peerConnection.addTrack(localAudioTrack)
+            if (callType == CallType.VIDEO && localVideoTrack != null) {
+                peerConnection.addTrack(localVideoTrack)
+            }
+
+            // Store participant
+            val participant = CallParticipant(
+                peerId = peerId,
+                peerConnection = peerConnection
+            )
+            participants[peerId] = participant
+
+            // Set remote description (offer)
+            peerConnection.setRemoteDescription(offer)
+
+            // Create answer
+            val answerConstraints = MediaConstraints()
+            val answer = peerConnection.createAnswer(answerConstraints)
+                ?: return Result.failure(Exception("Failed to create answer"))
+
+            peerConnection.setLocalDescription(answer)
+
+            // Configure audio routing on first participant
+            if (participants.size == 1) {
+                configureAudioRouting()
+            }
+
+            Timber.d("Handled offer from $peerId, created answer")
+            Result.success(answer)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to handle offer from $peerId")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Handle remote answer from a participant.
+     */
+    fun handleRemoteAnswer(peerId: String, answer: SessionDescription): Result<Unit> {
+        return try {
+            val participant = participants[peerId]
+                ?: return Result.failure(Exception("Participant $peerId not found"))
+
+            participant.peerConnection.setRemoteDescription(answer)
+            Timber.d("Set remote answer for $peerId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to set remote answer for $peerId")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Add ICE candidate for a specific participant.
+     */
+    fun addIceCandidate(peerId: String, candidate: IceCandidate): Result<Unit> {
+        return try {
+            val participant = participants[peerId]
+                ?: return Result.failure(Exception("Participant $peerId not found"))
+
+            participant.peerConnection.addIceCandidate(candidate)
+            Timber.d("Added ICE candidate for $peerId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to add ICE candidate for $peerId")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Remove a participant from the call.
+     */
+    fun removeParticipant(peerId: String): Result<Unit> {
+        return try {
+            val participant = participants.remove(peerId)
+                ?: return Result.failure(Exception("Participant $peerId not found"))
+
+            participant.peerConnection.close()
+            Timber.d("Removed participant: $peerId (remaining: ${participants.size})")
+
+            onParticipantLeftCallback?.invoke(peerId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to remove participant $peerId")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get list of current participants.
+     */
+    fun getParticipants(): List<String> {
+        return participants.keys.toList()
+    }
+
+    /**
+     * Legacy method: Answer an incoming call (backward compatibility).
+     */
+    suspend fun answerCall(
+        offer: SessionDescription,
+        onIceCandidate: (IceCandidate) -> Unit,
+        onRemoteStream: (MediaStream) -> Unit
+    ): Result<SessionDescription> {
+        // Set legacy callbacks
+        this.onIceCandidateCallback = { _, candidate -> onIceCandidate(candidate) }
+        this.onRemoteStreamCallback = { _, stream -> onRemoteStream(stream) }
+
+        // Use first peer ID as "caller"
+        val callerId = "caller"
+        return handleRemoteOffer(callerId, offer, CallType.VOICE)
+    }
+
+    /**
+     * End the active call - closes all peer connections.
      */
     fun endCall(): Result<Unit> {
         return try {
+            // Close all participant connections
+            participants.values.forEach { participant ->
+                try {
+                    participant.peerConnection.close()
+                } catch (e: Exception) {
+                    Timber.e(e, "Error closing connection for ${participant.peerId}")
+                }
+            }
+            participants.clear()
+
+            // Disable and clean up local tracks
             localAudioTrack?.setEnabled(false)
             localVideoTrack?.setEnabled(false)
 
-            // Only stop video capture if it was initialized (video calls only)
+            // Only stop video capture if it was initialized
             if (::videoCapturer.isInitialized) {
                 videoCapturer.stopCapture()
             }
 
-            peerConnection?.close()
-            peerConnection = null
-
             localAudioTrack = null
             localVideoTrack = null
-            remoteVideoTrack = null
 
             // Reset audio routing
             audioManager.mode = AudioManager.MODE_NORMAL
             @Suppress("DEPRECATION")
             audioManager.isSpeakerphoneOn = false
 
-            Timber.d("Call ended")
+            Timber.d("Call ended, all participants removed")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to end call")
@@ -279,7 +413,7 @@ class CallManager @Inject constructor(
     }
 
     /**
-     * Toggle audio mute.
+     * Toggle audio mute (affects all participants).
      */
     fun setAudioEnabled(enabled: Boolean): Result<Unit> {
         return try {
@@ -293,14 +427,17 @@ class CallManager @Inject constructor(
     }
 
     /**
-     * Toggle video.
+     * Toggle video (affects all participants).
      */
     fun setVideoEnabled(enabled: Boolean): Result<Unit> {
         return try {
             if (enabled && localVideoTrack == null) {
                 initializeVideoCapture()
                 localVideoTrack = peerConnectionFactory.createVideoTrack("video", videoSource)
-                peerConnection?.addTrack(localVideoTrack)
+                // Add video track to all existing connections
+                participants.values.forEach { participant ->
+                    participant.peerConnection.addTrack(localVideoTrack)
+                }
             }
 
             localVideoTrack?.setEnabled(enabled)
@@ -332,7 +469,7 @@ class CallManager @Inject constructor(
      */
     fun switchCamera(): Result<Unit> {
         return try {
-            if (videoCapturer is CameraVideoCapturer) {
+            if (::videoCapturer.isInitialized && videoCapturer is CameraVideoCapturer) {
                 (videoCapturer as CameraVideoCapturer).switchCamera(null)
                 Timber.d("Camera switched")
             }
@@ -340,6 +477,67 @@ class CallManager @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Failed to switch camera")
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Create peer connection observer for a specific participant.
+     */
+    private fun createPeerConnectionObserver(peerId: String): PeerConnection.Observer {
+        return object : PeerConnection.Observer {
+            override fun onIceCandidate(candidate: IceCandidate?) {
+                candidate?.let {
+                    onIceCandidateCallback?.invoke(peerId, it)
+                }
+            }
+
+            override fun onAddStream(stream: MediaStream?) {
+                stream?.let {
+                    // Store remote tracks
+                    val participant = participants[peerId]
+                    if (participant != null) {
+                        if (it.audioTracks.isNotEmpty()) {
+                            participant.remoteAudioTrack = it.audioTracks[0]
+                            participant.isAudioEnabled = true
+                        }
+                        if (it.videoTracks.isNotEmpty()) {
+                            participant.remoteVideoTrack = it.videoTracks[0]
+                            participant.isVideoEnabled = true
+                        }
+                    }
+
+                    onRemoteStreamCallback?.invoke(peerId, it)
+                }
+            }
+
+            override fun onRemoveStream(stream: MediaStream?) {
+                Timber.d("Stream removed from $peerId")
+            }
+
+            override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
+                Timber.d("Connection state changed for $peerId: $newState")
+
+                // Handle disconnection
+                if (newState == PeerConnection.PeerConnectionState.DISCONNECTED ||
+                    newState == PeerConnection.PeerConnectionState.FAILED ||
+                    newState == PeerConnection.PeerConnectionState.CLOSED) {
+                    removeParticipant(peerId)
+                }
+            }
+
+            override fun onIceConnectionChange(state: PeerConnection.IceConnectionState?) {
+                Timber.d("ICE connection state for $peerId: $state")
+            }
+
+            override fun onSignalingChange(state: PeerConnection.SignalingState?) {}
+            override fun onIceConnectionReceivingChange(receiving: Boolean) {}
+            override fun onIceGatheringChange(state: PeerConnection.IceGatheringState?) {}
+            override fun onIceCandidatesRemoved(candidates: Array<out IceCandidate>?) {}
+            override fun onDataChannel(dataChannel: DataChannel?) {}
+            override fun onRenegotiationNeeded() {
+                Timber.d("Renegotiation needed for $peerId")
+            }
+            override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {}
         }
     }
 
@@ -370,7 +568,7 @@ class CallManager @Inject constructor(
     }
 }
 
-// Extension function to create offer/answer synchronously
+// Extension functions for synchronous SDP operations
 private suspend fun PeerConnection.createOffer(constraints: MediaConstraints): SessionDescription? {
     return kotlinx.coroutines.suspendCancellableCoroutine { cont ->
         createOffer(object : SdpObserver {
