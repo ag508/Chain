@@ -113,22 +113,18 @@ private fun ChatDetailContent(
                     .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 8.dp)
             ) {
                 ChatHeader(
-                    chatId = chat.id,
                     chatName = chat.name,
                     chatType = chat.type,
-                    isOnline = false, // TODO: Get real online status
-                    isTyping = false, // TODO: Get real typing status
-                    lastSeen = null, // TODO: Get real last seen
-                    participantCount = if (chat.type == ChatType.GROUP) chat.participants.size else null,
                     onBackClick = onBackClick,
                     onHeaderClick = {
                         // TODO: Navigate to profile/group info
                     },
                     onVoiceCallClick = onVoiceCallClick,
                     onVideoCallClick = onVideoCallClick,
-                    onMoreClick = {
-                        // TODO: Show more menu
-                    }
+                    isOnline = false, // TODO: Get real online status
+                    isTyping = false, // TODO: Get real typing status
+                    lastSeen = null, // TODO: Get real last seen
+                    participantCount = if (chat.type == ChatType.GROUP) chat.participants.size else null
                 )
             }
 

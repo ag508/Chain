@@ -25,19 +25,17 @@ import com.chain.app.presentation.theme.*
  */
 @Composable
 fun ChatHeader(
-    chatId: String,
     chatName: String,
     chatType: ChatType,
-    isOnline: Boolean = false,
-    isTyping: Boolean = false,
-    lastSeen: Long? = null,
-    participantCount: Int? = null,
     onBackClick: () -> Unit,
     onHeaderClick: () -> Unit,
     onVoiceCallClick: () -> Unit,
     onVideoCallClick: () -> Unit,
-    onMoreClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isOnline: Boolean = false,
+    isTyping: Boolean = false,
+    lastSeen: Long? = null,
+    participantCount: Int? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
