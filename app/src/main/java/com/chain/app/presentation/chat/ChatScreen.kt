@@ -160,39 +160,61 @@ fun ChatListScreen(
                 }
             }
 
-            // Chat content
+            // Content area - Shows Chats or Calls based on currentTab
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
-                Crossfade(targetState = uiState, label = "chat_state") { state ->
-                    when (state) {
-                        is ChatListUiState.Loading -> CenterProgress()
-                        is ChatListUiState.Success -> {
-                            if (state.chats.isEmpty()) {
-                                EmptyChatPlaceholder(viewModel)
-                            } else {
-                                ChatList(state.chats, onChatClick)
+                Crossfade(targetState = currentTab, label = "tab_content") { tab ->
+                    when (tab) {
+                        "chats" -> {
+                            // Chat list content
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Crossfade(targetState = uiState, label = "chat_state") { state ->
+                                    when (state) {
+                                        is ChatListUiState.Loading -> CenterProgress()
+                                        is ChatListUiState.Success -> {
+                                            if (state.chats.isEmpty()) {
+                                                EmptyChatPlaceholder(viewModel)
+                                            } else {
+                                                ChatList(state.chats, onChatClick)
+                                            }
+                                        }
+                                        is ChatListUiState.Error -> ErrorChatPlaceholder(state.message, onRetry = viewModel::refresh)
+                                    }
+                                }
+
+                                // Floating action button for adding contacts/groups
+                                GlassFAB(
+                                    onClick = { showAddDialog = true },
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .padding(16.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Add contact or group",
+                                        tint = GlassText
+                                    )
+                                }
                             }
                         }
-                        is ChatListUiState.Error -> ErrorChatPlaceholder(state.message, onRetry = viewModel::refresh)
+                        "calls" -> {
+                            // Call history content
+                            com.chain.app.presentation.call.CallTabScreen(
+                                onVoiceCallClick = { peerId ->
+                                    // Navigate to voice call screen
+                                    // TODO: Navigate with peerId
+                                },
+                                onVideoCallClick = { peerId ->
+                                    // Navigate to video call screen
+                                    // TODO: Navigate with peerId and video=true
+                                }
+                            )
+                        }
                     }
-                }
-
-                // Floating action button for adding contacts/groups
-                GlassFAB(
-                    onClick = { showAddDialog = true },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add contact or group",
-                        tint = GlassText
-                    )
                 }
             }
 
