@@ -31,11 +31,12 @@ fun ContactSearchScreen(
     onBackClick: () -> Unit,
     onContactSelected: (String) -> Unit,
     onQRCodeClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ContactSearchViewModel = hiltViewModel()
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    var searchResults by remember { mutableStateOf<List<ContactSearchResult>>(emptyList()) }
-    var isSearching by remember { mutableStateOf(false) }
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
 
     // Background gradient
     val bgBrush = Brush.linearGradient(
@@ -108,21 +109,9 @@ fun ContactSearchScreen(
             SearchBar(
                 query = searchQuery,
                 onQueryChange = { query ->
-                    searchQuery = query
-                    // TODO: Trigger actual search when backend is connected
-                    if (query.length >= 3) {
-                        isSearching = true
-                        // Simulate search results
-                        searchResults = listOf(
-                            ContactSearchResult("+1234567890", "John Doe", null, false),
-                            ContactSearchResult("+9876543210", "Jane Smith", null, false)
-                        )
-                        isSearching = false
-                    } else {
-                        searchResults = emptyList()
-                    }
+                    viewModel.searchContacts(query)
                 },
-                onSearch = { /* Trigger search */ },
+                onSearch = { viewModel.searchContacts(searchQuery) },
                 placeholder = "Search by phone number..."
             )
         }
@@ -155,7 +144,18 @@ fun ContactSearchScreen(
                 else -> {
                     ContactSearchResults(
                         results = searchResults,
-                        onContactClick = onContactSelected
+                        onContactClick = { phoneNumber ->
+                            // Add contact and then navigate
+                            viewModel.addContact(
+                                phoneNumber = phoneNumber,
+                                onSuccess = { contact ->
+                                    onContactSelected(phoneNumber)
+                                },
+                                onError = { error ->
+                                    // TODO: Show error message
+                                }
+                            )
+                        }
                     )
                 }
             }
