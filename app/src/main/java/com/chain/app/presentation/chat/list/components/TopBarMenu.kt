@@ -2,6 +2,7 @@ package com.chain.app.presentation.chat.list.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,10 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.chain.app.presentation.theme.glass
-import com.chain.app.presentation.theme.glassIconButton
+import com.chain.app.presentation.theme.*
 
 @Composable
 fun TopBarMenu(
@@ -35,103 +35,110 @@ fun TopBarMenu(
             Icon(
                 imageVector = Icons.Default.MoreVert,
                 contentDescription = "Menu",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = GlassText
             )
         }
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            offset = DpOffset(0.dp, 8.dp),
-            modifier = Modifier.width(200.dp)
-        ) {
-            // Profile item
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Profile",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                onClick = {
-                    expanded = false
-                    onProfileClick()
-                },
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
+        // Custom glassmorphic dropdown menu
+        if (expanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        onClick = { expanded = false },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    )
+            ) {
+                // Menu content
+                Column(
+                    modifier = Modifier
+                        .width(200.dp)
+                        .align(Alignment.TopEnd)
+                        .padding(top = 48.dp, end = 0.dp)
+                        .glass(shape = RoundedCornerShape(16.dp))
+                        .padding(vertical = 8.dp)
+                ) {
+                    // Profile item
+                    MenuItemGlass(
+                        icon = Icons.Default.Person,
+                        text = "Profile",
+                        onClick = {
+                            expanded = false
+                            onProfileClick()
+                        }
+                    )
 
-            Divider(
-                modifier = Modifier.padding(horizontal = 8.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-            )
+                    // Divider
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .padding(horizontal = 12.dp)
+                            .background(GlassBorder)
+                    )
 
-            // Settings item
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Settings",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                onClick = {
-                    expanded = false
-                    onSettingsClick()
-                },
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
+                    // Settings item
+                    MenuItemGlass(
+                        icon = Icons.Default.Settings,
+                        text = "Settings",
+                        onClick = {
+                            expanded = false
+                            onSettingsClick()
+                        }
+                    )
 
-            Divider(
-                modifier = Modifier.padding(horizontal = 8.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-            )
+                    // Divider
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .padding(horizontal = 12.dp)
+                            .background(GlassBorder)
+                    )
 
-            // Logout item
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ExitToApp,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                        Text(
-                            text = "Logout",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                onClick = {
-                    expanded = false
-                    onLogoutClick()
-                },
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
+                    // Logout item
+                    MenuItemGlass(
+                        icon = Icons.Default.ExitToApp,
+                        text = "Logout",
+                        onClick = {
+                            expanded = false
+                            onLogoutClick()
+                        },
+                        isDestructive = true
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun MenuItemGlass(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit,
+    isDestructive: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isDestructive) ChainError else GlassText,
+            modifier = Modifier.size(20.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (isDestructive) ChainError else GlassText
+        )
     }
 }
