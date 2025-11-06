@@ -29,11 +29,17 @@ import com.chain.app.presentation.theme.*
 @Composable
 fun ChatScreen(
     onChatClick: (Chat) -> Unit = {},
-    onNewChatClick: () -> Unit = {}
+    onNewChatClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {}
 ) {
     ChatListScreen(
         onChatClick = onChatClick,
-        onNewChatClick = onNewChatClick
+        onNewChatClick = onNewChatClick,
+        onProfileClick = onProfileClick,
+        onSettingsClick = onSettingsClick,
+        onLogoutClick = onLogoutClick
     )
 }
 
