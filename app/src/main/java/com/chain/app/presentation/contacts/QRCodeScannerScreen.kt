@@ -20,14 +20,8 @@ import com.chain.app.presentation.components.glass.GlassButton
 import com.chain.app.presentation.theme.*
 
 /**
- * QR Code Scanner Screen for adding contacts via QR code
- *
- * Note: Actual camera integration requires:
- * - CameraX library
- * - ML Kit Barcode Scanning
- * - Camera permissions
- *
- * This is a placeholder UI that will be connected when camera functionality is implemented
+ * QR Code Scanner Screen for adding contacts via QR code.
+ * Uses CameraX and ML Kit for real-time barcode scanning.
  */
 @Composable
 fun QRCodeScannerScreen(
@@ -37,7 +31,6 @@ fun QRCodeScannerScreen(
     modifier: Modifier = Modifier
 ) {
     var isScanningActive by remember { mutableStateOf(true) }
-    var hasPermission by remember { mutableStateOf(false) }
 
     // Background gradient
     val bgBrush = Brush.linearGradient(
@@ -104,23 +97,15 @@ fun QRCodeScannerScreen(
                 }
             }
 
-            // Camera preview area (placeholder)
+            // Camera preview area
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(20.dp)
             ) {
-                if (!hasPermission) {
-                    // Permission request UI
-                    CameraPermissionRequest(
-                        onRequestPermission = {
-                            // TODO: Request camera permission
-                            hasPermission = true
-                        }
-                    )
-                } else if (isScanningActive) {
-                    // Scanning active UI
+                if (isScanningActive) {
+                    // Scanning active UI with real camera
                     QRCodeScannerView(
                         onQRCodeDetected = { qrData ->
                             isScanningActive = false
@@ -231,95 +216,93 @@ private fun QRCodeScannerView(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // Camera preview would go here
-        // For now, show a placeholder
+        // Real camera preview with barcode scanning
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color.Black.copy(alpha = 0.8f)),
-            contentAlignment = Alignment.Center
         ) {
-            // Scanning frame
+            CameraPreview(
+                onQRCodeScanned = onQRCodeDetected,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Overlay scanning frame
             Box(
                 modifier = Modifier
-                    .size(250.dp)
-                    .border(
-                        width = 3.dp,
-                        color = GlassAccent,
-                        shape = RoundedCornerShape(16.dp)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                // Scanning frame
+                Box(
+                    modifier = Modifier
+                        .size(250.dp)
+                        .border(
+                            width = 3.dp,
+                            color = GlassAccent,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                )
+
+                // Corner indicators
+                Box(modifier = Modifier.size(250.dp)) {
+                    // Top-left corner
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .size(40.dp, 5.dp)
+                            .background(GlassAccent, RoundedCornerShape(topStart = 16.dp))
                     )
-            )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .size(5.dp, 40.dp)
+                            .background(GlassAccent, RoundedCornerShape(topStart = 16.dp))
+                    )
 
-            // Corner indicators
-            Box(modifier = Modifier.size(250.dp)) {
-                // Top-left corner
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .size(40.dp, 5.dp)
-                        .background(GlassAccent, RoundedCornerShape(topStart = 16.dp))
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .size(5.dp, 40.dp)
-                        .background(GlassAccent, RoundedCornerShape(topStart = 16.dp))
-                )
+                    // Top-right corner
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(40.dp, 5.dp)
+                            .background(GlassAccent, RoundedCornerShape(topEnd = 16.dp))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(5.dp, 40.dp)
+                            .background(GlassAccent, RoundedCornerShape(topEnd = 16.dp))
+                    )
 
-                // Top-right corner
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(40.dp, 5.dp)
-                        .background(GlassAccent, RoundedCornerShape(topEnd = 16.dp))
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(5.dp, 40.dp)
-                        .background(GlassAccent, RoundedCornerShape(topEnd = 16.dp))
-                )
+                    // Bottom-left corner
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .size(40.dp, 5.dp)
+                            .background(GlassAccent, RoundedCornerShape(bottomStart = 16.dp))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .size(5.dp, 40.dp)
+                            .background(GlassAccent, RoundedCornerShape(bottomStart = 16.dp))
+                    )
 
-                // Bottom-left corner
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .size(40.dp, 5.dp)
-                        .background(GlassAccent, RoundedCornerShape(bottomStart = 16.dp))
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .size(5.dp, 40.dp)
-                        .background(GlassAccent, RoundedCornerShape(bottomStart = 16.dp))
-                )
-
-                // Bottom-right corner
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(40.dp, 5.dp)
-                        .background(GlassAccent, RoundedCornerShape(bottomEnd = 16.dp))
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(5.dp, 40.dp)
-                        .background(GlassAccent, RoundedCornerShape(bottomEnd = 16.dp))
-                )
+                    // Bottom-right corner
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(40.dp, 5.dp)
+                            .background(GlassAccent, RoundedCornerShape(bottomEnd = 16.dp))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(5.dp, 40.dp)
+                            .background(GlassAccent, RoundedCornerShape(bottomEnd = 16.dp))
+                    )
+                }
             }
-
-            // Scanning line animation (placeholder)
-            Text(
-                text = "📷 Camera Preview\n(Coming Soon)",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = GlassText,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 300.dp)
-            )
         }
     }
 }
