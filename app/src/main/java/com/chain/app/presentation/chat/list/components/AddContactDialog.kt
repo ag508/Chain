@@ -61,28 +61,26 @@ fun AddContactDialog(
                         onClick = { selectedTab = 0 },
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp)
+                            .height(56.dp)
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp)
+                            modifier = Modifier.padding(horizontal = 2.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Contact",
                                 color = if (selectedTab == 0)
                                     MaterialTheme.colorScheme.primary
                                 else
                                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1
                             )
                         }
@@ -92,28 +90,26 @@ fun AddContactDialog(
                         onClick = { selectedTab = 1 },
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp)
+                            .height(56.dp)
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp)
+                            modifier = Modifier.padding(horizontal = 2.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Group,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Group",
                                 color = if (selectedTab == 1)
                                     MaterialTheme.colorScheme.primary
                                 else
                                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1
                             )
                         }
