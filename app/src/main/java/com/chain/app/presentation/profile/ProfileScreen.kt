@@ -26,8 +26,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.User
 import com.chain.app.presentation.components.glass.GlassButton
 import com.chain.app.presentation.components.glass.GlassTextField
+import com.chain.app.presentation.contacts.QRCodeGenerator
 import com.chain.app.presentation.theme.*
-import com.chain.app.presentation.util.QRCodeGenerator
 
 @Composable
 fun ProfileScreen(
@@ -242,9 +242,7 @@ private fun ProfileContent(
                 displayName = user.displayName,
                 publicKey = user.publicKey
             )
-            val qrBitmap = QRCodeGenerator.generateQRCode(qrData, size = 200)
-
-            if (qrBitmap != null) {
+            QRCodeGenerator.generateQRCode(qrData, size = 200)?.let { qrBitmap ->
                 Image(
                     bitmap = qrBitmap.asImageBitmap(),
                     contentDescription = "QR Code",
