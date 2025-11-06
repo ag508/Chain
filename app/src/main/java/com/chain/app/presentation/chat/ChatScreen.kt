@@ -33,7 +33,8 @@ fun ChatScreen(
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
-    onCreateGroupClick: () -> Unit = {}
+    onCreateGroupClick: () -> Unit = {},
+    onScanQRCodeClick: () -> Unit = {}
 ) {
     ChatListScreen(
         onChatClick = onChatClick,
@@ -41,7 +42,8 @@ fun ChatScreen(
         onProfileClick = onProfileClick,
         onSettingsClick = onSettingsClick,
         onLogoutClick = onLogoutClick,
-        onCreateGroupClick = onCreateGroupClick
+        onCreateGroupClick = onCreateGroupClick,
+        onScanQRCodeClick = onScanQRCodeClick
     )
 }
 
@@ -54,7 +56,8 @@ fun ChatListScreen(
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
-    onCreateGroupClick: () -> Unit = {}
+    onCreateGroupClick: () -> Unit = {},
+    onScanQRCodeClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -249,6 +252,10 @@ fun ChatListScreen(
                 onCreateGroup = {
                     showAddDialog = false
                     onCreateGroupClick()
+                },
+                onScanQRCode = {
+                    showAddDialog = false
+                    onScanQRCodeClick()
                 }
             )
         }

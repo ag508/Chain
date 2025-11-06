@@ -184,6 +184,9 @@ fun ChainApp(
                 },
                 onCreateGroupClick = {
                     navController.navigate(NavRoutes.CreateGroup.route)
+                },
+                onScanQRCodeClick = {
+                    navController.navigate(NavRoutes.QRCodeScanner.route)
                 }
             )
         }

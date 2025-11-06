@@ -20,6 +20,7 @@ fun AddContactDialog(
     onDismiss: () -> Unit,
     onAddContact: (phoneNumber: String) -> Unit,
     onCreateGroup: () -> Unit,
+    onScanQRCode: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -185,7 +186,10 @@ fun AddContactDialog(
                             )
 
                             GlassButton(
-                                onClick = { /* TODO: Implement QR scanner */ },
+                                onClick = {
+                                    onDismiss()
+                                    onScanQRCode()
+                                },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(
