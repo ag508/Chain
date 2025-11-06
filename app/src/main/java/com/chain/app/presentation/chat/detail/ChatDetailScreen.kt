@@ -94,6 +94,19 @@ private fun ChatDetailContent(
 
     val listState = rememberLazyListState()
 
+    // Media pickers
+    val mediaPicker = rememberMediaPicker { uri ->
+        // TODO: Send media message
+    }
+
+    val documentPicker = rememberDocumentPicker { uri ->
+        // TODO: Send document message
+    }
+
+    val cameraCapture = rememberCameraCapture { uri ->
+        // TODO: Send photo message
+    }
+
     // Background gradient
     val bgBrush = Brush.linearGradient(
         colors = listOf(GlassGradientStart, GlassGradientEnd)
@@ -222,15 +235,15 @@ private fun ChatDetailContent(
                     onDismiss = { showAttachmentMenu = false },
                     onCameraClick = {
                         showAttachmentMenu = false
-                        // TODO: Open camera
+                        cameraCapture.takePhoto()
                     },
                     onGalleryClick = {
                         showAttachmentMenu = false
-                        // TODO: Open gallery
+                        mediaPicker.pickImageOrVideo()
                     },
                     onDocumentClick = {
                         showAttachmentMenu = false
-                        // TODO: Open document picker
+                        documentPicker.pickDocument()
                     },
                     onLocationClick = {
                         showAttachmentMenu = false

@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -12,11 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.chain.app.domain.model.Message
 import com.chain.app.domain.model.MessageStatus
+import com.chain.app.domain.model.MessageType
 import com.chain.app.presentation.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -92,12 +98,45 @@ fun MessageBubble(
                     )
                 }
 
-                // Message content
-                Text(
-                    text = message.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                // Message content based on type
+                when (message.type) {
+                    MessageType.IMAGE -> {
+                        ImageMessageContent(
+                            imageUrl = message.content,
+                            caption = message.metadata?.get("caption") as? String,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    MessageType.VIDEO -> {
+                        VideoMessageContent(
+                            videoUrl = message.content,
+                            caption = message.metadata?.get("caption") as? String,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    MessageType.AUDIO -> {
+                        AudioMessageContent(
+                            audioUrl = message.content,
+                            duration = message.metadata?.get("duration") as? Long ?: 0L,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    MessageType.DOCUMENT -> {
+                        DocumentMessageContent(
+                            fileName = message.metadata?.get("fileName") as? String ?: "Document",
+                            fileSize = message.metadata?.get("fileSize") as? Long ?: 0L,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    else -> {
+                        // Text message
+                        Text(
+                            text = message.content,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
 
                 // Message metadata (time + status)
                 Row(
@@ -200,6 +239,188 @@ private fun MessageReactions(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ImageMessageContent(
+    imageUrl: String,
+    caption: String?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Image
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = "Image message",
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 300.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            contentScale = ContentScale.Crop
+        )
+
+        // Caption (if any)
+        caption?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun VideoMessageContent(
+    videoUrl: String,
+    caption: String?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Video thumbnail with play icon overlay
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 300.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.Black.copy(alpha = 0.1f))
+        ) {
+            // TODO: Load video thumbnail
+            AsyncImage(
+                model = videoUrl,
+                contentDescription = "Video message",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+
+            // Play icon overlay
+            Icon(
+                imageVector = Icons.Default.PlayCircle,
+                contentDescription = "Play video",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(64.dp)
+                    .align(Alignment.Center)
+            )
+        }
+
+        // Caption (if any)
+        caption?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun AudioMessageContent(
+    audioUrl: String,
+    duration: Long,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Play/Pause button
+        Icon(
+            imageVector = Icons.Default.PlayArrow,
+            contentDescription = "Play audio",
+            tint = GlassAccent,
+            modifier = Modifier.size(32.dp)
+        )
+
+        // Waveform placeholder
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(GlassAccent.copy(alpha = 0.1f))
+        )
+
+        // Duration
+        Text(
+            text = formatDuration(duration),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
+private fun DocumentMessageContent(
+    fileName: String,
+    fileSize: Long,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(GlassAccent.copy(alpha = 0.1f))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Document icon
+        Icon(
+            imageVector = Icons.Default.InsertDriveFile,
+            contentDescription = "Document",
+            tint = GlassAccent,
+            modifier = Modifier.size(40.dp)
+        )
+
+        // File info
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = fileName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
+            Text(
+                text = formatFileSize(fileSize),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+
+        // Download icon
+        Icon(
+            imageVector = Icons.Default.Download,
+            contentDescription = "Download",
+            tint = GlassAccent,
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+private fun formatDuration(durationMs: Long): String {
+    val seconds = (durationMs / 1000) % 60
+    val minutes = (durationMs / (1000 * 60)) % 60
+    return String.format("%d:%02d", minutes, seconds)
+}
+
+private fun formatFileSize(bytes: Long): String {
+    return when {
+        bytes < 1024 -> "$bytes B"
+        bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+        else -> String.format("%.1f MB", bytes / (1024.0 * 1024.0))
     }
 }
 
