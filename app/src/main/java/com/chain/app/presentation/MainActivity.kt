@@ -235,12 +235,28 @@ fun ChainApp(
             com.chain.app.presentation.contacts.QRCodeScannerScreen(
                 onBackClick = { navController.popBackStack() },
                 onQRCodeScanned = { qrData ->
-                    // TODO: Process QR code and add contact
+                    // Parse QR code and navigate to contact search to add
+                    val parsedData = com.chain.app.presentation.contacts.QRCodeGenerator.parseUserQRData(qrData)
+                    if (parsedData != null) {
+                        val phoneNumber = parsedData["phone"]
+                        if (phoneNumber != null) {
+                            // Navigate back and show success message
+                            navController.popBackStack()
+                            // The contact will be added via ContactSearchScreen or AddContactDialog
+                        }
+                    }
                     navController.popBackStack()
                 },
                 onShowMyQRCode = {
-                    // TODO: Show user's QR code
+                    navController.navigate(NavRoutes.MyQRCode.route)
                 }
+            )
+        }
+
+        // My QR code screen
+        composable(NavRoutes.MyQRCode.route) {
+            com.chain.app.presentation.contacts.MyQRCodeScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
 
