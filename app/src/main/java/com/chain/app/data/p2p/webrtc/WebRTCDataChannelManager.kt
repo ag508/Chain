@@ -336,6 +336,10 @@ class WebRTCDataChannelManager @Inject constructor(
             Timber.d("ICE connection receiving change for $peerId: $receiving")
         }
 
+        override fun onIceCandidatesRemoved(iceCandidates: Array<out IceCandidate>?) {
+            Timber.d("ICE candidates removed for $peerId: ${iceCandidates?.size ?: 0}")
+        }
+
         override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
             newState?.let { state ->
                 Timber.d("Peer connection state for $peerId: $state")

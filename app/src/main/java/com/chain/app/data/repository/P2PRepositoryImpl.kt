@@ -132,8 +132,8 @@ class P2PRepositoryImpl @Inject constructor(
             // Initialize WebRTC
             webrtcManager.initialize().getOrThrow()
 
-            // Bootstrap DHT
-            dhtManager.bootstrap().getOrThrow()
+            // Bootstrap DHT (with empty bootstrap nodes for now)
+            dhtManager.bootstrap(emptyList()).getOrThrow()
 
             // Start mDNS discovery
             mdnsManager.startDiscovery(localPeerId, localPublicKey).getOrThrow()
