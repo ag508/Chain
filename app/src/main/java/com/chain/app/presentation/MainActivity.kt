@@ -167,14 +167,10 @@ fun ChainApp(
                     navController.navigate(NavRoutes.ContactSearch.route)
                 },
                 onProfileClick = {
-                    // TODO: Navigate to profile when ProfileScreen is implemented
-                    // For now, just log
-                    println("Profile clicked - screen not yet implemented")
+                    navController.navigate(NavRoutes.Profile.route)
                 },
                 onSettingsClick = {
-                    // TODO: Navigate to settings when SettingsScreen is implemented
-                    // For now, just log
-                    println("Settings clicked - screen not yet implemented")
+                    navController.navigate(NavRoutes.Settings.route)
                 },
                 onLogoutClick = {
                     mainViewModel.logout()
@@ -235,6 +231,24 @@ fun ChainApp(
                 onShowMyQRCode = {
                     // TODO: Show user's QR code
                 }
+            )
+        }
+
+        // Profile screen
+        composable(NavRoutes.Profile.route) {
+            com.chain.app.presentation.profile.ProfileScreen(
+                onBackClick = { navController.popBackStack() },
+                onEditClick = { /* Edit mode is handled within the screen */ }
+            )
+        }
+
+        // Settings screen
+        composable(NavRoutes.Settings.route) {
+            com.chain.app.presentation.settings.SettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onAccountSettingsClick = { /* TODO: Navigate to account settings */ },
+                onPrivacySettingsClick = { /* TODO: Navigate to privacy settings */ },
+                onNotificationSettingsClick = { /* TODO: Navigate to notification settings */ }
             )
         }
 
