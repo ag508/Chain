@@ -49,6 +49,7 @@ fun GroupSetupScreen(
         modifier = modifier
             .fillMaxSize()
             .background(brush = bgBrush)
+            .systemBarsPadding()
     ) {
         // Header
         Box(

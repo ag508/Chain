@@ -66,6 +66,7 @@ fun CreateGroupScreen(
         modifier = modifier
             .fillMaxSize()
             .background(brush = bgBrush)
+            .systemBarsPadding()
     ) {
         // Header
         Box(

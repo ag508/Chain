@@ -59,6 +59,7 @@ fun ChatListScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = bgBrush)
+            .systemBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Glassmorphic header with rounded corners

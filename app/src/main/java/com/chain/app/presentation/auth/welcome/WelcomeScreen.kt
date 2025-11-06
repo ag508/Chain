@@ -78,6 +78,7 @@ fun WelcomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(gradientBackground)
+            .systemBarsPadding()
             .padding(horizontal = 24.dp, vertical = 40.dp)
     ) {
         Column(
