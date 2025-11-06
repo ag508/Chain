@@ -2,6 +2,7 @@ package com.chain.app.presentation.call
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.CallType
 import com.chain.app.presentation.theme.*
+
+// Define vibrant red color for end call
+private val VibrantRed = Color(0xFFFF3B30)
+private val OnlineGreen = Color(0xFF34C759)
+private val ReconnectingRed = Color(0xFFFF3B30)
 
 @Composable
 fun VoiceCallScreen(
@@ -207,7 +213,7 @@ private fun IncomingCallContent(
             CallActionButton(
                 icon = Icons.Default.CallEnd,
                 label = "Reject",
-                backgroundColor = MaterialTheme.colorScheme.error,
+                backgroundColor = VibrantRed,
                 onClick = onReject
             )
 
@@ -215,7 +221,7 @@ private fun IncomingCallContent(
             CallActionButton(
                 icon = Icons.Default.Call,
                 label = "Accept",
-                backgroundColor = Color(0xFF34C759), // Green
+                backgroundColor = OnlineGreen,
                 onClick = onAccept
             )
         }
@@ -275,7 +281,7 @@ private fun OutgoingCallContent(
         CallActionButton(
             icon = Icons.Default.CallEnd,
             label = "End Call",
-            backgroundColor = MaterialTheme.colorScheme.error,
+            backgroundColor = VibrantRed,
             onClick = onEndCall
         )
     }
@@ -291,6 +297,9 @@ private fun InCallContent(
     onSpeakerToggle: () -> Unit,
     onEndCall: () -> Unit
 ) {
+    // TODO: Get actual connection state from WebRTC
+    var isOnline by remember { mutableStateOf(true) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -298,7 +307,8 @@ private fun InCallContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Spacer(modifier = Modifier.height(80.dp))
+        // Connection status at the top
+        ConnectionStatus(isOnline = isOnline)
 
         // Contact info and duration
         Column(
@@ -361,6 +371,14 @@ private fun InCallContent(
                     onClick = onMuteToggle
                 )
 
+                // Add person button
+                CallControlButton(
+                    icon = Icons.Default.PersonAdd,
+                    label = "Add",
+                    isActive = false,
+                    onClick = { /* TODO: Navigate to contact picker */ }
+                )
+
                 // Speaker button
                 CallControlButton(
                     icon = if (isSpeakerOn) Icons.Default.VolumeUp else Icons.Default.VolumeDown,
@@ -370,11 +388,11 @@ private fun InCallContent(
                 )
             }
 
-            // End call button
+            // End call button (no label)
             CallActionButton(
                 icon = Icons.Default.CallEnd,
-                label = "End Call",
-                backgroundColor = MaterialTheme.colorScheme.error,
+                label = null,
+                backgroundColor = VibrantRed,
                 onClick = onEndCall
             )
         }
@@ -445,7 +463,7 @@ private fun ErrorContent(
         Icon(
             imageVector = Icons.Default.Error,
             contentDescription = "Error",
-            tint = MaterialTheme.colorScheme.error,
+            tint = VibrantRed,
             modifier = Modifier.size(80.dp)
         )
 
@@ -482,7 +500,7 @@ private fun ErrorContent(
 @Composable
 private fun CallActionButton(
     icon: ImageVector,
-    label: String,
+    label: String?,
     backgroundColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -501,17 +519,19 @@ private fun CallActionButton(
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = label,
+                contentDescription = label ?: "Action",
                 tint = Color.White,
                 modifier = Modifier.size(36.dp)
             )
         }
 
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = GlassText
-        )
+        if (label != null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = GlassText
+            )
+        }
     }
 }
 
@@ -528,32 +548,80 @@ private fun CallControlButton(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
-        IconButton(
-            onClick = onClick,
+        Box(
             modifier = Modifier
                 .size(64.dp)
-                .glass()
-                .then(
+                .clip(CircleShape)
+                .background(
                     if (isActive) {
-                        Modifier.background(
-                            GlassAccent.copy(alpha = 0.3f),
-                            CircleShape
-                        )
-                    } else Modifier
+                        GlassAccent.copy(alpha = 0.2f)
+                    } else {
+                        Color.White.copy(alpha = 0.1f)
+                    }
                 )
+                .border(
+                    width = 2.dp,
+                    color = if (isActive) GlassAccent else Color.White.copy(alpha = 0.2f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = if (isActive) GlassAccent else GlassText,
-                modifier = Modifier.size(32.dp)
-            )
+            IconButton(onClick = onClick) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = if (isActive) GlassAccent else GlassText.copy(alpha = 0.9f),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
 
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = GlassText
+            color = if (isActive) GlassAccent else GlassText.copy(alpha = 0.8f),
+            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+private fun ConnectionStatus(isOnline: Boolean) {
+    val statusColor = if (isOnline) OnlineGreen else ReconnectingRed
+    val statusText = if (isOnline) "Online" else "Reconnecting..."
+
+    // Pulsing animation for reconnecting status
+    val infiniteTransition = rememberInfiniteTransition(label = "reconnecting_pulse")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    Row(
+        modifier = Modifier
+            .glass()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Status dot
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(statusColor.copy(alpha = if (isOnline) 1f else alpha))
+        )
+
+        Text(
+            text = statusText,
+            style = MaterialTheme.typography.bodyMedium,
+            color = statusColor,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
