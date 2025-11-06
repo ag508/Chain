@@ -165,13 +165,13 @@ private fun ContactSearchItem(
 
         // Call action buttons
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // Voice call button
             IconButton(
                 onClick = onVoiceCallClick,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF34C759).copy(alpha = 0.2f))
                     .border(1.dp, Color(0xFF34C759).copy(alpha = 0.3f), CircleShape)
@@ -180,7 +180,7 @@ private fun ContactSearchItem(
                     imageVector = Icons.Default.Phone,
                     contentDescription = "Voice call",
                     tint = Color(0xFF34C759),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
 
@@ -188,7 +188,7 @@ private fun ContactSearchItem(
             IconButton(
                 onClick = onVideoCallClick,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
                     .background(GlassAccent.copy(alpha = 0.2f))
                     .border(1.dp, GlassAccent.copy(alpha = 0.3f), CircleShape)
@@ -197,7 +197,7 @@ private fun ContactSearchItem(
                     imageVector = Icons.Default.Videocam,
                     contentDescription = "Video call",
                     tint = GlassAccent,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
@@ -239,19 +239,26 @@ private fun CallHistoryItem(
     viewModel: CallTabViewModel,
     onCallClick: () -> Unit
 ) {
+    // Observe contacts for reactive updates
+    val contacts by viewModel.contacts.collectAsState()
+
     // Determine call type based on status
     // Note: In a real app, compare call.initiator with current userId
     val isIncoming = call.status == CallStatus.RINGING || call.status == CallStatus.CONNECTED
     val isMissed = call.status == CallStatus.MISSED
     val isMultiParty = call.participants.size > 2
-    val callerName = viewModel.getContactName(call.initiator)
+
+    // Get caller name from contacts list
+    val callerName = remember(call.initiator, contacts) {
+        contacts.find { it.userId == call.initiator }?.displayName ?: call.initiator
+    }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .glass(shape = RoundedCornerShape(12.dp))
             .clickable(onClick = onCallClick)
-            .padding(16.dp),
+            .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

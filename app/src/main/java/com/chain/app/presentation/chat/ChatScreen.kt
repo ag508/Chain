@@ -34,7 +34,9 @@ fun ChatScreen(
     onSettingsClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onCreateGroupClick: () -> Unit = {},
-    onScanQRCodeClick: () -> Unit = {}
+    onScanQRCodeClick: () -> Unit = {},
+    onVoiceCallClick: (String) -> Unit = {},
+    onVideoCallClick: (String) -> Unit = {}
 ) {
     ChatListScreen(
         onChatClick = onChatClick,
@@ -43,7 +45,9 @@ fun ChatScreen(
         onSettingsClick = onSettingsClick,
         onLogoutClick = onLogoutClick,
         onCreateGroupClick = onCreateGroupClick,
-        onScanQRCodeClick = onScanQRCodeClick
+        onScanQRCodeClick = onScanQRCodeClick,
+        onVoiceCallClick = onVoiceCallClick,
+        onVideoCallClick = onVideoCallClick
     )
 }
 
@@ -57,7 +61,9 @@ fun ChatListScreen(
     onSettingsClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onCreateGroupClick: () -> Unit = {},
-    onScanQRCodeClick: () -> Unit = {}
+    onScanQRCodeClick: () -> Unit = {},
+    onVoiceCallClick: (String) -> Unit = {},
+    onVideoCallClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -204,14 +210,8 @@ fun ChatListScreen(
                         "calls" -> {
                             // Call history content
                             com.chain.app.presentation.call.CallTabScreen(
-                                onVoiceCallClick = { peerId ->
-                                    // Navigate to voice call screen
-                                    // TODO: Navigate with peerId
-                                },
-                                onVideoCallClick = { peerId ->
-                                    // Navigate to video call screen
-                                    // TODO: Navigate with peerId and video=true
-                                },
+                                onVoiceCallClick = onVoiceCallClick,
+                                onVideoCallClick = onVideoCallClick,
                                 searchQuery = searchQuery
                             )
                         }
