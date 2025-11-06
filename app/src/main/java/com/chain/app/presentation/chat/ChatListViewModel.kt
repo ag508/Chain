@@ -6,8 +6,10 @@ import com.chain.app.domain.model.Chat
 import com.chain.app.domain.model.Contact
 import com.chain.app.domain.repository.ChatRepository
 import com.chain.app.domain.usecase.GetChatsUseCase
+import com.chain.app.domain.usecase.auth.GetCurrentUserIdUseCase
 import com.chain.app.domain.usecase.contact.AddContactUseCase
 import com.chain.app.domain.usecase.contact.SearchContactByPhoneUseCase
+import com.chain.app.domain.usecase.debug.SeedSampleDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -23,7 +25,9 @@ class ChatListViewModel @Inject constructor(
     private val getChatsUseCase: GetChatsUseCase,
     private val searchContactByPhoneUseCase: SearchContactByPhoneUseCase,
     private val addContactUseCase: AddContactUseCase,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
+    private val seedSampleDataUseCase: SeedSampleDataUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ChatListUiState>(ChatListUiState.Loading)
@@ -147,6 +151,26 @@ class ChatListViewModel @Inject constructor(
                     onError(error.message ?: "Failed to create chat")
                 }
             )
+        }
+    }
+
+    /**
+     * Seed sample data for testing (debug function).
+     * Creates sample contacts, chats, and messages.
+     */
+    fun seedSampleData(onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val userId = getCurrentUserIdUseCase()
+                if (userId != null) {
+                    seedSampleDataUseCase(userId)
+                    onSuccess()
+                } else {
+                    onError("User not authenticated")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Failed to seed data")
+            }
         }
     }
 }
