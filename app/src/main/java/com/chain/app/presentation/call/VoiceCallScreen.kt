@@ -32,8 +32,8 @@ fun VoiceCallScreen(
     peerId: String?,
     isIncoming: Boolean = false,
     onCallEnded: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: CallViewModel = hiltViewModel()
+    viewModel: CallViewModel = hiltViewModel(),
+    modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isMuted by viewModel.isMuted.collectAsState()
@@ -104,8 +104,7 @@ fun VoiceCallScreen(
             }
             is CallUiState.Ended -> {
                 EndedContent(
-                    duration = state.duration,
-                    onClose = onCallEnded
+                    duration = state.duration
                 )
             }
             is CallUiState.Error -> {
@@ -439,8 +438,7 @@ private fun InCallContent(
 
 @Composable
 private fun EndedContent(
-    duration: String,
-    onClose: () -> Unit
+    duration: String
 ) {
     Column(
         modifier = Modifier
