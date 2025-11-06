@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.chain.app.presentation.components.glass.GlassTextField
@@ -120,13 +121,14 @@ fun MessageInputBar(
                 enter = scaleIn() + fadeIn(),
                 exit = scaleOut() + fadeOut()
             ) {
-                // Send button
-                IconButton(
-                    onClick = onSendMessage,
+                // Send button - Improved appearance and functionality
+                Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
                         .background(GlassAccent)
+                        .clickable { onSendMessage() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Send,
@@ -221,14 +223,51 @@ private fun VoiceRecordButton(
     onStop: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    IconButton(
-        onClick = { if (isRecording) onStop() else onStart() },
+    // Pulsing animation for recording state
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(800),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(800),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "scale"
+    )
+
+    Box(
         modifier = modifier
             .size(48.dp)
             .clip(CircleShape)
             .background(
-                if (isRecording) MaterialTheme.colorScheme.error else GlassAccent.copy(alpha = 0.2f)
+                if (isRecording) {
+                    MaterialTheme.colorScheme.error.copy(alpha = pulseAlpha)
+                } else {
+                    GlassAccent.copy(alpha = 0.5f)
+                }
             )
+            .clickable { if (isRecording) onStop() else onStart() }
+            .then(
+                if (isRecording) {
+                    Modifier.graphicsLayer {
+                        scaleX = pulseScale
+                        scaleY = pulseScale
+                    }
+                } else {
+                    Modifier
+                }
+            ),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
@@ -256,8 +295,7 @@ fun AttachmentMenu(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .glass(shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+            .glassDialog(shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)) // More opaque glass effect
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

@@ -209,32 +209,39 @@ private fun ChatDetailContent(
             }
         }
 
-        // Attachment menu modal
+        // Attachment menu modal - with opaque background
         if (showAttachmentMenu) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f)),
+                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))
+                    .clickable { showAttachmentMenu = false },
                 contentAlignment = Alignment.BottomCenter
             ) {
                 AttachmentMenu(
                     onDismiss = { showAttachmentMenu = false },
                     onCameraClick = {
+                        showAttachmentMenu = false
                         // TODO: Open camera
                     },
                     onGalleryClick = {
+                        showAttachmentMenu = false
                         // TODO: Open gallery
                     },
                     onDocumentClick = {
+                        showAttachmentMenu = false
                         // TODO: Open document picker
                     },
                     onLocationClick = {
+                        showAttachmentMenu = false
                         // TODO: Open location picker
                     },
                     onContactClick = {
+                        showAttachmentMenu = false
                         // TODO: Open contact picker
                     },
                     onPollClick = {
+                        showAttachmentMenu = false
                         // TODO: Create poll
                     }
                 )
