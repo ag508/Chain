@@ -32,14 +32,16 @@ fun ChatScreen(
     onNewChatClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {},
+    onCreateGroupClick: () -> Unit = {}
 ) {
     ChatListScreen(
         onChatClick = onChatClick,
         onNewChatClick = onNewChatClick,
         onProfileClick = onProfileClick,
         onSettingsClick = onSettingsClick,
-        onLogoutClick = onLogoutClick
+        onLogoutClick = onLogoutClick,
+        onCreateGroupClick = onCreateGroupClick
     )
 }
 
@@ -51,13 +53,15 @@ fun ChatListScreen(
     onNewChatClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {},
+    onCreateGroupClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     var currentTab by remember { mutableStateOf("chats") }
     var showAddDialog by remember { mutableStateOf(false) }
     var showSearchBar by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     // Background gradient
     val bgBrush = Brush.linearGradient(
@@ -230,14 +234,70 @@ fun ChatListScreen(
             AddContactDialog(
                 onDismiss = { showAddDialog = false },
                 onAddContact = { phoneNumber ->
-                    // TODO: Implement add contact functionality
-                    // For now, just close the dialog
+                    showAddDialog = false
+                    viewModel.addContactByPhone(
+                        phoneNumber = phoneNumber,
+                        onSuccess = { chat ->
+                            // Navigate to the newly created chat
+                            onChatClick(chat)
+                        },
+                        onError = { error ->
+                            errorMessage = error
+                        }
+                    )
                 },
                 onCreateGroup = {
-                    // TODO: Implement create group functionality
-                    // For now, just close the dialog
+                    showAddDialog = false
+                    onCreateGroupClick()
                 }
             )
+        }
+
+        // Show error message if any
+        errorMessage?.let { message ->
+            LaunchedEffect(message) {
+                // Auto-dismiss error after 3 seconds
+                kotlinx.coroutines.delay(3000)
+                errorMessage = null
+            }
+
+            // Simple error snackbar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glass(shape = RoundedCornerShape(16.dp)),
+                    color = ChainError.copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = GlassText,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { errorMessage = null }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Dismiss",
+                                tint = GlassText
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

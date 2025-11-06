@@ -180,6 +180,9 @@ fun ChainApp(
                     navController.navigate(NavRoutes.Welcome.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onCreateGroupClick = {
+                    navController.navigate(NavRoutes.CreateGroup.route)
                 }
             )
         }
