@@ -167,39 +167,41 @@ private fun ContactSearchItem(
 
         // Call action buttons
         Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Voice call button
-            IconButton(
-                onClick = onVoiceCallClick,
+            Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF34C759).copy(alpha = 0.2f))
                     .border(1.dp, Color(0xFF34C759).copy(alpha = 0.3f), CircleShape)
+                    .clickable(onClick = onVoiceCallClick),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Phone,
                     contentDescription = "Voice call",
                     tint = Color(0xFF34C759),
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
             // Video call button
-            IconButton(
-                onClick = onVideoCallClick,
+            Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .background(GlassAccent.copy(alpha = 0.2f))
                     .border(1.dp, GlassAccent.copy(alpha = 0.3f), CircleShape)
+                    .clickable(onClick = onVideoCallClick),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Videocam,
                     contentDescription = "Video call",
                     tint = GlassAccent,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
