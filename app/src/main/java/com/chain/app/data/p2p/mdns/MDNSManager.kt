@@ -14,10 +14,10 @@ import timber.log.Timber
 import java.net.InetAddress
 import javax.inject.Inject
 import javax.inject.Singleton
-import javax.jmdns.JmDNS
-import javax.jmdns.ServiceEvent
-import javax.jmdns.ServiceInfo
-import javax.jmdns.ServiceListener
+import org.jmdns.JmDNS
+import org.jmdns.ServiceEvent
+import org.jmdns.ServiceInfo
+import org.jmdns.ServiceListener
 
 /**
  * Manages mDNS (Multicast DNS) for local network peer discovery.
