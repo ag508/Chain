@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,8 +32,8 @@ import java.util.*
 fun CallTabScreen(
     onVoiceCallClick: (String) -> Unit,
     onVideoCallClick: (String) -> Unit,
-    viewModel: CallTabViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: CallTabViewModel = hiltViewModel()
 ) {
     val callHistory by viewModel.callHistory.collectAsState()
     val contacts by viewModel.contacts.collectAsState()
@@ -50,8 +49,6 @@ fun CallTabScreen(
         CallSearchBar(
             query = searchQuery,
             onQueryChange = viewModel::updateSearchQuery,
-            onSearchToggle = { viewModel.toggleSearch() },
-            isSearching = isSearching,
             modifier = Modifier.padding(vertical = 12.dp)
         )
 
@@ -94,8 +91,6 @@ fun CallTabScreen(
 private fun CallSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    onSearchToggle: () -> Unit,
-    isSearching: Boolean,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -522,8 +517,8 @@ private fun formatDuration(millis: Long): String {
     val hours = (millis / (1000 * 60 * 60))
 
     return when {
-        hours > 0 -> String.format("%d:%02d:%02d", hours, minutes, seconds)
-        minutes > 0 -> String.format("%d:%02d", minutes, seconds)
+        hours > 0 -> String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+        minutes > 0 -> String.format(Locale.US, "%d:%02d", minutes, seconds)
         else -> "${seconds}s"
     }
 }
