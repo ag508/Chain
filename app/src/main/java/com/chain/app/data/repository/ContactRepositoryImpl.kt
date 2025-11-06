@@ -1,5 +1,6 @@
 package com.chain.app.data.repository
 
+import android.util.Log
 import com.chain.app.data.local.dao.ContactDao
 import com.chain.app.data.local.entity.ContactEntity
 import com.chain.app.domain.model.Contact
@@ -8,6 +9,8 @@ import com.chain.app.domain.repository.ContactRepository
 import com.chain.app.domain.repository.P2PRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.json.JSONObject
+import java.security.MessageDigest
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
@@ -38,35 +41,89 @@ class ContactRepositoryImpl @Inject constructor(
     }
 
     override suspend fun searchContactByPhone(phoneNumber: String): Contact? {
+        Log.d(TAG, "Searching for contact with phone: $phoneNumber")
+
         // First check if contact already exists locally
         val existingContact = contactDao.getContactByPhoneNumber(phoneNumber)
         if (existingContact != null) {
+            Log.d(TAG, "Found existing contact locally")
             return existingContact.toDomainModel()
         }
 
-        // TODO: Search for contact via P2P network using DHT
-        // 1. Hash the phone number
-        // 2. Query DHT for peer with that hash
-        // 3. If found, create a Contact object with the peer's info
-        // For now, return null (not found)
+        // Search for contact via P2P network using DHT
+        return try {
+            // 1. Hash the phone number for DHT lookup
+            val phoneHash = hashPhoneNumber(phoneNumber)
+            Log.d(TAG, "Hashed phone number: $phoneHash")
 
-        // Example implementation when P2P discovery is ready:
-        // val phoneHash = hashPhoneNumber(phoneNumber)
-        // val peerInfo = p2pRepository.findPeerByKey(phoneHash)
-        // if (peerInfo != null) {
-        //     return Contact(
-        //         id = UUID.randomUUID().toString(),
-        //         userId = peerInfo.id,
-        //         phoneNumber = phoneNumber,
-        //         displayName = peerInfo.displayName ?: "Unknown",
-        //         avatar = null,
-        //         publicKey = peerInfo.publicKey,
-        //         addedAt = Date(),
-        //         isBlocked = false
-        //     )
-        // }
+            // 2. Query DHT for peer info with that hash
+            val result = p2pRepository.lookupInDHT(phoneHash)
+            result.fold(
+                onSuccess = { peerInfoJson ->
+                    if (peerInfoJson != null) {
+                        Log.d(TAG, "Found peer info in DHT: $peerInfoJson")
+                        // 3. Parse peer info and create Contact object
+                        parsePeerInfoToContact(peerInfoJson, phoneNumber)
+                    } else {
+                        Log.d(TAG, "No peer info found in DHT for phone: $phoneNumber")
+                        null
+                    }
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Failed to lookup in DHT", error)
+                    null
+                }
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during P2P contact search", e)
+            null
+        }
+    }
 
-        return null
+    /**
+     * Hash phone number using SHA-256 for DHT lookup.
+     * This provides privacy - the actual phone number is not stored in the DHT.
+     */
+    private fun hashPhoneNumber(phoneNumber: String): String {
+        val cleanedPhone = phoneNumber.replace(Regex("[^0-9+]"), "")
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashBytes = digest.digest(cleanedPhone.toByteArray())
+        return hashBytes.joinToString("") { "%02x".format(it) }
+    }
+
+    /**
+     * Parse peer info JSON from DHT into a Contact object.
+     * Expected JSON format:
+     * {
+     *   "userId": "peer_id",
+     *   "displayName": "John Doe",
+     *   "publicKey": "base64_encoded_public_key",
+     *   "avatar": "url_or_null"
+     * }
+     */
+    private fun parsePeerInfoToContact(peerInfoJson: String, phoneNumber: String): Contact? {
+        return try {
+            val json = JSONObject(peerInfoJson)
+            Contact(
+                id = UUID.randomUUID().toString(),
+                userId = json.getString("userId"),
+                phoneNumber = phoneNumber,
+                displayName = json.optString("displayName", "Unknown User"),
+                avatar = json.optString("avatar", null),
+                publicKey = json.optString("publicKey", null),
+                addedAt = Date(),
+                isBlocked = false,
+                lastSeen = null,
+                status = UserStatus.OFFLINE // Will be updated when peer connects
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse peer info JSON", e)
+            null
+        }
+    }
+
+    companion object {
+        private const val TAG = "ContactRepositoryImpl"
     }
 
     override suspend fun addContact(contact: Contact): Result<Unit> {

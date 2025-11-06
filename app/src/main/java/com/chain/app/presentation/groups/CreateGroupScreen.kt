@@ -30,20 +30,25 @@ import com.chain.app.presentation.theme.*
 fun CreateGroupScreen(
     onBackClick: () -> Unit,
     onNextClick: (List<String>) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: CreateGroupViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedContacts by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    // TODO: Get actual contacts from repository
-    val contacts = remember {
-        listOf(
-            GroupContact("1", "Alice Johnson", "+1234567890", null),
-            GroupContact("2", "Bob Smith", "+9876543210", null),
-            GroupContact("3", "Carol White", "+5555555555", null),
-            GroupContact("4", "David Brown", "+4444444444", null),
-            GroupContact("5", "Eve Davis", "+3333333333", null)
-        )
+    val contactsFromRepo by viewModel.contacts.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    // Convert domain Contact model to GroupContact for UI
+    val contacts = remember(contactsFromRepo) {
+        contactsFromRepo.map { contact ->
+            GroupContact(
+                id = contact.userId,
+                name = contact.displayName,
+                phoneNumber = contact.phoneNumber,
+                avatar = contact.avatar
+            )
+        }
     }
 
     val filteredContacts = remember(searchQuery, contacts) {
@@ -179,25 +184,63 @@ fun CreateGroupScreen(
         }
 
         // Contacts list
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            items(filteredContacts) { contact ->
-                ContactSelectItem(
-                    contact = contact,
-                    isSelected = selectedContacts.contains(contact.id),
-                    onToggle = {
-                        selectedContacts = if (selectedContacts.contains(contact.id)) {
-                            selectedContacts - contact.id
-                        } else {
-                            selectedContacts + contact.id
+            when {
+                isLoading -> {
+                    CircularProgressIndicator(color = GlassAccent)
+                }
+                filteredContacts.isEmpty() -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.People,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = GlassText.copy(alpha = 0.3f)
+                        )
+                        Text(
+                            text = if (searchQuery.isNotEmpty()) "No contacts found" else "No contacts yet",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = GlassText.copy(alpha = 0.6f)
+                        )
+                        if (searchQuery.isEmpty()) {
+                            Text(
+                                text = "Add some contacts first",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlassTextSecondary
+                            )
                         }
                     }
-                )
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(filteredContacts) { contact ->
+                            ContactSelectItem(
+                                contact = contact,
+                                isSelected = selectedContacts.contains(contact.id),
+                                onToggle = {
+                                    selectedContacts = if (selectedContacts.contains(contact.id)) {
+                                        selectedContacts - contact.id
+                                    } else {
+                                        selectedContacts + contact.id
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }
 

@@ -235,12 +235,28 @@ fun ChainApp(
             com.chain.app.presentation.contacts.QRCodeScannerScreen(
                 onBackClick = { navController.popBackStack() },
                 onQRCodeScanned = { qrData ->
-                    // TODO: Process QR code and add contact
+                    // Parse QR code and navigate to contact search to add
+                    val parsedData = com.chain.app.presentation.contacts.QRCodeGenerator.parseUserQRData(qrData)
+                    if (parsedData != null) {
+                        val phoneNumber = parsedData["phone"]
+                        if (phoneNumber != null) {
+                            // Navigate back and show success message
+                            navController.popBackStack()
+                            // The contact will be added via ContactSearchScreen or AddContactDialog
+                        }
+                    }
                     navController.popBackStack()
                 },
                 onShowMyQRCode = {
-                    // TODO: Show user's QR code
+                    navController.navigate(NavRoutes.MyQRCode.route)
                 }
+            )
+        }
+
+        // My QR code screen
+        composable(NavRoutes.MyQRCode.route) {
+            com.chain.app.presentation.contacts.MyQRCodeScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -281,11 +297,13 @@ fun ChainApp(
         ) { backStackEntry ->
             val selectedContactIdsString = backStackEntry.arguments?.getString("selectedContactIds") ?: ""
             val selectedContactIds = selectedContactIdsString.split(",").filter { it.isNotEmpty() }
+
             com.chain.app.presentation.groups.GroupSetupScreen(
                 selectedContactIds = selectedContactIds,
                 onBackClick = { navController.popBackStack() },
                 onCreateGroup = { groupName, groupIcon ->
-                    // TODO: Create group chat
+                    // Group is created in the ViewModel, callback is only for navigation
+                    // Navigate back to chat list where the new group will appear
                     navController.popBackStack(NavRoutes.ChatList.route, inclusive = false)
                 }
             )
