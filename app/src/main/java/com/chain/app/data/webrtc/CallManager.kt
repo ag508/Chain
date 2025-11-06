@@ -263,7 +263,8 @@ class CallManager @Inject constructor(
 
             // Reset audio routing
             audioManager.mode = AudioManager.MODE_NORMAL
-            audioManager.setSpeakerphoneOn(false)
+            @Suppress("DEPRECATION")
+            audioManager.isSpeakerphoneOn = false
 
             Timber.d("Call ended")
             Result.success(Unit)
@@ -279,7 +280,6 @@ class CallManager @Inject constructor(
     fun setAudioEnabled(enabled: Boolean): Result<Unit> {
         return try {
             localAudioTrack?.setEnabled(enabled)
-            _isAudioEnabled.value = enabled
             Timber.d("Audio ${if (enabled) "enabled" else "disabled"}")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -313,7 +313,8 @@ class CallManager @Inject constructor(
      */
     fun setSpeakerEnabled(enabled: Boolean): Result<Unit> {
         return try {
-            audioManager.setSpeakerphoneOn(enabled)
+            @Suppress("DEPRECATION")
+            audioManager.isSpeakerphoneOn = enabled
             Timber.d("Speaker ${if (enabled) "enabled" else "disabled"}")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -360,7 +361,8 @@ class CallManager @Inject constructor(
 
     private fun configureAudioRouting() {
         audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-        audioManager.setSpeakerphoneOn(false)
+        @Suppress("DEPRECATION")
+        audioManager.isSpeakerphoneOn = false
     }
 }
 
