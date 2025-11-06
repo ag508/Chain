@@ -252,7 +252,11 @@ class CallManager @Inject constructor(
         return try {
             localAudioTrack?.setEnabled(false)
             localVideoTrack?.setEnabled(false)
-            videoCapturer.stopCapture()
+
+            // Only stop video capture if it was initialized (video calls only)
+            if (::videoCapturer.isInitialized) {
+                videoCapturer.stopCapture()
+            }
 
             peerConnection?.close()
             peerConnection = null
