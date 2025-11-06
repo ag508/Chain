@@ -173,10 +173,10 @@ dependencies {
 
     // P2P Networking - Pure P2P approach (no blockchain)
     // DHT for global peer discovery
-    implementation("com.offbynull.kademlia:kademlia:1.0.0")
+    implementation("de.cgrotz:kademlia:1.0.1")
 
     // mDNS/Bonjour for local network discovery
-    implementation("javax.jmdns:jmdns:3.5.8")
+    implementation("org.jmdns:jmdns:3.5.8")
 
     // IPFS Java library for DHT bootstrap nodes (optional, for wider network)
     implementation("com.github.ipfs:java-ipfs-http-client:v1.3.3")
