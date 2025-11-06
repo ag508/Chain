@@ -1,5 +1,6 @@
 package com.chain.app.presentation.chat
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chain.app.domain.model.Chat
@@ -159,16 +160,25 @@ class ChatListViewModel @Inject constructor(
      * Creates sample contacts, chats, and messages.
      */
     fun seedSampleData(onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        Log.d("ChatListViewModel", "seedSampleData() called")
         viewModelScope.launch {
             try {
+                Log.d("ChatListViewModel", "Getting current user ID...")
                 val userId = getCurrentUserIdUseCase()
+                Log.d("ChatListViewModel", "Current user ID: $userId")
+
                 if (userId != null) {
+                    Log.d("ChatListViewModel", "Calling seedSampleDataUseCase...")
                     seedSampleDataUseCase(userId)
+                    Log.d("ChatListViewModel", "seedSampleDataUseCase completed successfully")
                     onSuccess()
+                    Log.d("ChatListViewModel", "onSuccess callback called")
                 } else {
+                    Log.e("ChatListViewModel", "User not authenticated")
                     onError("User not authenticated")
                 }
             } catch (e: Exception) {
+                Log.e("ChatListViewModel", "Error seeding data", e)
                 onError(e.message ?: "Failed to seed data")
             }
         }

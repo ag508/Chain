@@ -1,5 +1,6 @@
 package com.chain.app.domain.usecase.debug
 
+import android.util.Log
 import com.chain.app.data.local.dao.ChatDao
 import com.chain.app.data.local.dao.ContactDao
 import com.chain.app.data.local.dao.MessageDao
@@ -20,11 +21,20 @@ class SeedSampleDataUseCase @Inject constructor(
     private val messageDao: MessageDao
 ) {
     suspend operator fun invoke(currentUserId: String) {
-        // Check if data already exists
-        val existingContacts = contactDao.getContactById("sample-contact-1")
-        if (existingContacts != null) {
-            // Data already seeded
-            return
+        Log.d("SeedSampleData", "Starting seed with userId: $currentUserId")
+
+        try {
+            // Check if data already exists
+            Log.d("SeedSampleData", "Checking for existing contacts...")
+            val existingContacts = contactDao.getContactById("sample-contact-1")
+            if (existingContacts != null) {
+                Log.d("SeedSampleData", "Sample data already exists, skipping")
+                return
+            }
+            Log.d("SeedSampleData", "No existing data found, proceeding with seed")
+        } catch (e: Exception) {
+            Log.e("SeedSampleData", "Error checking existing contacts", e)
+            throw e
         }
 
         // Create sample contacts
@@ -65,7 +75,14 @@ class SeedSampleDataUseCase @Inject constructor(
         )
 
         // Insert contacts
-        contacts.forEach { contactDao.insertContact(it) }
+        Log.d("SeedSampleData", "Inserting ${contacts.size} contacts...")
+        try {
+            contacts.forEach { contactDao.insertContact(it) }
+            Log.d("SeedSampleData", "Contacts inserted successfully")
+        } catch (e: Exception) {
+            Log.e("SeedSampleData", "Error inserting contacts", e)
+            throw e
+        }
 
         // Create sample chats
         val chat1Id = "sample-chat-1"
@@ -127,9 +144,17 @@ class SeedSampleDataUseCase @Inject constructor(
         )
 
         // Insert chats
-        chats.forEach { chatDao.insertChat(it) }
+        Log.d("SeedSampleData", "Inserting ${chats.size} chats...")
+        try {
+            chats.forEach { chatDao.insertChat(it) }
+            Log.d("SeedSampleData", "Chats inserted successfully")
+        } catch (e: Exception) {
+            Log.e("SeedSampleData", "Error inserting chats", e)
+            throw e
+        }
 
         // Create sample messages for Chat 1 (Alice)
+        Log.d("SeedSampleData", "Creating sample messages...")
         val messagesChat1 = listOf(
             MessageEntity(
                 id = UUID.randomUUID().toString(),
@@ -358,8 +383,33 @@ class SeedSampleDataUseCase @Inject constructor(
         )
 
         // Insert all messages
-        messageDao.insertMessages(messagesChat1)
-        messageDao.insertMessages(messagesChat2)
-        messageDao.insertMessages(messagesChat3)
+        Log.d("SeedSampleData", "Inserting messages for chat 1 (${messagesChat1.size} messages)...")
+        try {
+            messageDao.insertMessages(messagesChat1)
+            Log.d("SeedSampleData", "Chat 1 messages inserted")
+        } catch (e: Exception) {
+            Log.e("SeedSampleData", "Error inserting chat 1 messages", e)
+            throw e
+        }
+
+        Log.d("SeedSampleData", "Inserting messages for chat 2 (${messagesChat2.size} messages)...")
+        try {
+            messageDao.insertMessages(messagesChat2)
+            Log.d("SeedSampleData", "Chat 2 messages inserted")
+        } catch (e: Exception) {
+            Log.e("SeedSampleData", "Error inserting chat 2 messages", e)
+            throw e
+        }
+
+        Log.d("SeedSampleData", "Inserting messages for chat 3 (${messagesChat3.size} messages)...")
+        try {
+            messageDao.insertMessages(messagesChat3)
+            Log.d("SeedSampleData", "Chat 3 messages inserted")
+        } catch (e: Exception) {
+            Log.e("SeedSampleData", "Error inserting chat 3 messages", e)
+            throw e
+        }
+
+        Log.d("SeedSampleData", "Sample data seeding completed successfully!")
     }
 }
