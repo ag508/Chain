@@ -64,6 +64,11 @@ object DatabaseModule {
         return database.callDao()
     }
 
+    @Provides
+    fun provideContactDao(database: ChainDatabase): ContactDao {
+        return database.contactDao()
+    }
+
     /**
      * Get or generate database encryption passphrase from Android Keystore.
      */

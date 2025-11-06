@@ -17,9 +17,10 @@ import com.chain.app.data.local.entity.*
         MessageEntity::class,
         MessageFts::class,
         ReactionEntity::class,
-        CallEntity::class
+        CallEntity::class,
+        ContactEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(StringListConverter::class)
@@ -29,6 +30,7 @@ abstract class ChainDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun reactionDao(): ReactionDao
     abstract fun callDao(): CallDao
+    abstract fun contactDao(): ContactDao
 
     companion object {
         const val DATABASE_NAME = "chain_database"
