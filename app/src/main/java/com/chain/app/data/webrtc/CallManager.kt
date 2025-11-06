@@ -158,6 +158,7 @@ class CallManager @Inject constructor(
                     override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
                     override fun onIceConnectionReceivingChange(p0: Boolean) {}
                     override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
+                    override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
                     override fun onRemoveStream(p0: MediaStream?) {}
                     override fun onDataChannel(p0: DataChannel?) {}
                     override fun onRenegotiationNeeded() {}
@@ -234,6 +235,7 @@ class CallManager @Inject constructor(
                         override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
                         override fun onIceConnectionReceivingChange(p0: Boolean) {}
                         override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
+                        override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
                         override fun onRemoveStream(p0: MediaStream?) {}
                         override fun onDataChannel(p0: DataChannel?) {}
                         override fun onRenegotiationNeeded() {}
