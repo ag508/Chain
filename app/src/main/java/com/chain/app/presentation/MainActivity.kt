@@ -237,8 +237,7 @@ fun ChainApp(
         // Profile screen
         composable(NavRoutes.Profile.route) {
             com.chain.app.presentation.profile.ProfileScreen(
-                onBackClick = { navController.popBackStack() },
-                onEditClick = { /* Edit mode is handled within the screen */ }
+                onBackClick = { navController.popBackStack() }
             )
         }
 
