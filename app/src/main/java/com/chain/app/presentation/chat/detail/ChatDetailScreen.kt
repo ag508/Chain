@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.domain.model.ChatType
 import com.chain.app.presentation.chat.detail.components.*
 import com.chain.app.presentation.theme.*
+import kotlinx.coroutines.launch
 
 /**
  * Chat detail screen showing conversation with a contact or group
@@ -98,11 +99,21 @@ private fun ChatDetailContent(
         colors = listOf(GlassGradientStart, GlassGradientEnd)
     )
 
+    val coroutineScope = rememberCoroutineScope()
+
+    // Auto-scroll to bottom when new messages arrive
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(brush = bgBrush)
             .systemBarsPadding()
+            .imePadding()
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -168,6 +179,13 @@ private fun ChatDetailContent(
                             onSendMessage(messageText.text.trim())
                             messageText = TextFieldValue("")
                             replyingToMessage = null
+
+                            // Auto-scroll to bottom after sending
+                            coroutineScope.launch {
+                                if (messages.isNotEmpty()) {
+                                    listState.animateScrollToItem(messages.size - 1)
+                                }
+                            }
                         }
                     },
                     onEmojiClick = {
