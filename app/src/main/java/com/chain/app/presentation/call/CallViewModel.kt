@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 sealed class CallUiState {
@@ -307,9 +308,23 @@ class CallViewModel @Inject constructor(
             if (!_callParticipants.value.contains(contact.userId)) {
                 _callParticipants.value = _callParticipants.value + contact.userId
 
-                // TODO: Implement WebRTC multi-party call logic
-                // This would involve creating new peer connections for each participant
-                // and managing the media streams accordingly
+                // Add participant to WebRTC call
+                val callType = when (uiState.value) {
+                    is CallUiState.InCall -> {
+                        ((uiState.value as CallUiState.InCall).session.call.type)
+                    }
+                    else -> CallType.VOICE
+                }
+
+                callRepository.addParticipantToCall(currentCallId ?: "", contact.userId, callType)
+                    .fold(
+                        onSuccess = {
+                            Timber.d("Successfully added ${contact.displayName} to call")
+                        },
+                        onFailure = { error ->
+                            Timber.e(error, "Failed to add ${contact.displayName} to call")
+                        }
+                    )
             }
         }
     }

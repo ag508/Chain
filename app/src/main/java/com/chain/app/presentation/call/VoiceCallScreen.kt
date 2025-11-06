@@ -698,7 +698,7 @@ private fun ContactPickerDialog(
                 Text("Cancel")
             }
         },
-        containerColor = GlassBackground,
+        containerColor = GlassSurface,
         tonalElevation = 8.dp
     )
 }
