@@ -3,6 +3,7 @@ package com.chain.app.data.p2p.webrtc
 import android.content.Context
 import com.chain.app.domain.model.NetworkEvent
 import com.chain.app.domain.model.P2PMessage
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,7 +27,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class WebRTCDataChannelManager @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
