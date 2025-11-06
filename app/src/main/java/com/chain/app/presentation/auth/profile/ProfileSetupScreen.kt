@@ -52,6 +52,7 @@ fun ProfileSetupScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = bgBrush)
+            .systemBarsPadding()
             .padding(top = 60.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
             .verticalScroll(scroll),
         horizontalAlignment = Alignment.CenterHorizontally

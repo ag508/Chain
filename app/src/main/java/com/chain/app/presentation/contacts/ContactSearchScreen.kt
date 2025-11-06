@@ -46,6 +46,7 @@ fun ContactSearchScreen(
         modifier = modifier
             .fillMaxSize()
             .background(brush = bgBrush)
+            .systemBarsPadding()
     ) {
         // Header with back button
         Box(

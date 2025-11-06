@@ -102,6 +102,7 @@ private fun ChatDetailContent(
         modifier = modifier
             .fillMaxSize()
             .background(brush = bgBrush)
+            .systemBarsPadding()
     ) {
         Column(
             modifier = Modifier.fillMaxSize()

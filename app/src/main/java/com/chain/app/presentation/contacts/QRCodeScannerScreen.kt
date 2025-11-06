@@ -48,6 +48,7 @@ fun QRCodeScannerScreen(
         modifier = modifier
             .fillMaxSize()
             .background(brush = bgBrush)
+            .systemBarsPadding()
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
