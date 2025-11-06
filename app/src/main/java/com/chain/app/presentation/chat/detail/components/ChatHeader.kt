@@ -341,7 +341,7 @@ private fun ChatHeaderMenu(
             }
         )
 
-        HorizontalDivider(
+        Divider(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             color = GlassText.copy(alpha = 0.12f)
         )
@@ -372,7 +372,7 @@ private fun ChatHeaderMenu(
             }
         )
 
-        HorizontalDivider(
+        Divider(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             color = GlassText.copy(alpha = 0.12f)
         )
@@ -405,7 +405,7 @@ private fun ChatHeaderMenu(
 
         // Block (only for direct chats)
         if (chatType == ChatType.DIRECT) {
-            HorizontalDivider(
+            Divider(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 color = GlassText.copy(alpha = 0.12f)
             )
