@@ -359,8 +359,9 @@ fun GroupSetupScreen(
                 Text(if (uiState is GroupSetupUiState.Loading) "Creating..." else "Create Group")
             }
         }
+        }
 
-        // Show error message if any
+        // Show error message if any (outside Column, inside outer Box)
         errorMessage?.let { message ->
             LaunchedEffect(message) {
                 kotlinx.coroutines.delay(3000)
@@ -403,7 +404,6 @@ fun GroupSetupScreen(
                     }
                 }
             }
-        }
         }
 
         // Icon picker dialog
