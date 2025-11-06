@@ -32,28 +32,20 @@ import java.util.*
 fun CallTabScreen(
     onVoiceCallClick: (String) -> Unit,
     onVideoCallClick: (String) -> Unit,
+    searchQuery: String = "",
     modifier: Modifier = Modifier,
     viewModel: CallTabViewModel = hiltViewModel()
 ) {
     val callHistory by viewModel.callHistory.collectAsState()
     val contacts by viewModel.contacts.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val isSearching by viewModel.isSearching.collectAsState()
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 20.dp)
     ) {
-        // Search bar for contacts
-        CallSearchBar(
-            query = searchQuery,
-            onQueryChange = viewModel::updateSearchQuery,
-            modifier = Modifier.padding(vertical = 12.dp)
-        )
-
         // Show filtered contacts when searching, otherwise show call history
-        if (isSearching && searchQuery.isNotEmpty()) {
+        if (searchQuery.isNotEmpty()) {
             ContactSearchResults(
                 contacts = contacts.filter {
                     it.displayName.contains(searchQuery, ignoreCase = true) ||
@@ -61,13 +53,9 @@ fun CallTabScreen(
                 },
                 onVoiceCallClick = {
                     onVoiceCallClick(it.userId)
-                    viewModel.toggleSearch()
-                    viewModel.updateSearchQuery("")
                 },
                 onVideoCallClick = {
                     onVideoCallClick(it.userId)
-                    viewModel.toggleSearch()
-                    viewModel.updateSearchQuery("")
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -80,69 +68,8 @@ fun CallTabScreen(
                     calls = callHistory,
                     onCallClick = onVoiceCallClick,
                     onVideoCallClick = onVideoCallClick,
+                    viewModel = viewModel,
                     modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CallSearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .glass(shape = RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.Search,
-            contentDescription = "Search",
-            tint = GlassAccent,
-            modifier = Modifier.size(24.dp)
-        )
-
-        TextField(
-            value = query,
-            onValueChange = onQueryChange,
-            placeholder = {
-                Text(
-                    "Search contacts to call...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = GlassText.copy(alpha = 0.5f)
-                )
-            },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-                focusedTextColor = GlassText,
-                unfocusedTextColor = GlassText
-            ),
-            textStyle = MaterialTheme.typography.bodyMedium,
-            singleLine = true,
-            modifier = Modifier.weight(1f)
-        )
-
-        if (query.isNotEmpty()) {
-            IconButton(
-                onClick = { onQueryChange("") },
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Clear",
-                    tint = GlassText.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -282,6 +209,7 @@ private fun CallHistoryList(
     calls: List<Call>,
     onCallClick: (String) -> Unit,
     onVideoCallClick: (String) -> Unit,
+    viewModel: CallTabViewModel,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -292,6 +220,7 @@ private fun CallHistoryList(
         items(calls) { call ->
             CallHistoryItem(
                 call = call,
+                viewModel = viewModel,
                 onCallClick = {
                     if (call.type == CallType.VIDEO) {
                         onVideoCallClick(call.initiator)
@@ -307,6 +236,7 @@ private fun CallHistoryList(
 @Composable
 private fun CallHistoryItem(
     call: Call,
+    viewModel: CallTabViewModel,
     onCallClick: () -> Unit
 ) {
     // Determine call type based on status
@@ -314,6 +244,7 @@ private fun CallHistoryItem(
     val isIncoming = call.status == CallStatus.RINGING || call.status == CallStatus.CONNECTED
     val isMissed = call.status == CallStatus.MISSED
     val isMultiParty = call.participants.size > 2
+    val callerName = viewModel.getContactName(call.initiator)
 
     Row(
         modifier = Modifier
@@ -384,7 +315,7 @@ private fun CallHistoryItem(
                     )
 
                     Text(
-                        text = call.initiator,
+                        text = callerName,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = GlassText,
