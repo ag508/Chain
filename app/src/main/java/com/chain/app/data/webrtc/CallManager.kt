@@ -4,12 +4,6 @@ import android.content.Context
 import android.media.AudioManager
 import com.chain.app.domain.model.CallType
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import org.webrtc.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -22,8 +16,6 @@ import javax.inject.Singleton
 class CallManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
     // Peer connection factory
     private lateinit var peerConnectionFactory: PeerConnectionFactory
     private lateinit var audioSource: AudioSource
@@ -40,19 +32,6 @@ class CallManager @Inject constructor(
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
-
-    // Call state
-    private val _isAudioEnabled = MutableStateFlow(true)
-    val isAudioEnabled: StateFlow<Boolean> = _isAudioEnabled.asStateFlow()
-
-    private val _isVideoEnabled = MutableStateFlow(false)
-    val isVideoEnabled: StateFlow<Boolean> = _isVideoEnabled.asStateFlow()
-
-    private val _isSpeakerEnabled = MutableStateFlow(false)
-    val isSpeakerEnabled: StateFlow<Boolean> = _isSpeakerEnabled.asStateFlow()
-
-    private val _connectionState = MutableStateFlow<PeerConnection.PeerConnectionState?>(null)
-    val connectionState: StateFlow<PeerConnection.PeerConnectionState?> = _connectionState.asStateFlow()
 
     // STUN/TURN servers
     private val iceServers = listOf(
@@ -150,7 +129,6 @@ class CallManager @Inject constructor(
                     }
 
                     override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
-                        _connectionState.value = newState
                         Timber.d("Connection state changed: $newState")
                     }
 
@@ -175,7 +153,6 @@ class CallManager @Inject constructor(
                 initializeVideoCapture()
                 localVideoTrack = peerConnectionFactory.createVideoTrack("video", videoSource)
                 peerConnection?.addTrack(localVideoTrack)
-                _isVideoEnabled.value = true
             }
 
             // Create offer
@@ -228,7 +205,7 @@ class CallManager @Inject constructor(
                         }
 
                         override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
-                            _connectionState.value = newState
+                            Timber.d("Connection state changed: $newState")
                         }
 
                         override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
@@ -284,14 +261,9 @@ class CallManager @Inject constructor(
             localVideoTrack = null
             remoteVideoTrack = null
 
-            _connectionState.value = null
-            _isAudioEnabled.value = true
-            _isVideoEnabled.value = false
-            _isSpeakerEnabled.value = false
-
             // Reset audio routing
             audioManager.mode = AudioManager.MODE_NORMAL
-            audioManager.isSpeakerphoneOn = false
+            audioManager.setSpeakerphoneOn(false)
 
             Timber.d("Call ended")
             Result.success(Unit)
@@ -328,7 +300,6 @@ class CallManager @Inject constructor(
             }
 
             localVideoTrack?.setEnabled(enabled)
-            _isVideoEnabled.value = enabled
             Timber.d("Video ${if (enabled) "enabled" else "disabled"}")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -342,8 +313,7 @@ class CallManager @Inject constructor(
      */
     fun setSpeakerEnabled(enabled: Boolean): Result<Unit> {
         return try {
-            audioManager.isSpeakerphoneOn = enabled
-            _isSpeakerEnabled.value = enabled
+            audioManager.setSpeakerphoneOn(enabled)
             Timber.d("Speaker ${if (enabled) "enabled" else "disabled"}")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -390,35 +360,7 @@ class CallManager @Inject constructor(
 
     private fun configureAudioRouting() {
         audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-        audioManager.isSpeakerphoneOn = false
-    }
-
-    /**
-     * Add ICE candidate.
-     */
-    fun addIceCandidate(candidate: IceCandidate): Result<Unit> {
-        return try {
-            peerConnection?.addIceCandidate(candidate)
-            Timber.d("ICE candidate added")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to add ICE candidate")
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * Set remote description.
-     */
-    fun setRemoteDescription(sdp: SessionDescription): Result<Unit> {
-        return try {
-            peerConnection?.setRemoteDescription(sdp)
-            Timber.d("Remote description set")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to set remote description")
-            Result.failure(e)
-        }
+        audioManager.setSpeakerphoneOn(false)
     }
 }
 
