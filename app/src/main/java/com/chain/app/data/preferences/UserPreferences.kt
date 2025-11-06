@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
@@ -64,9 +65,7 @@ class UserPreferences(private val context: Context) {
         .map { it[NOTIFICATIONS_ENABLED] ?: true }
 
     suspend fun getUserId(): String? {
-        var result: String? = null
-        context.dataStore.data.map { it[USER_ID] }.collect { result = it }
-        return result
+        return context.dataStore.data.map { it[USER_ID] }.first()
     }
 
     suspend fun setUserId(userId: String) {
@@ -90,9 +89,7 @@ class UserPreferences(private val context: Context) {
     }
 
     suspend fun isBiometricEnabled(): Boolean {
-        var result = false
-        context.dataStore.data.map { it[BIOMETRIC_ENABLED] ?: false }.collect { result = it }
-        return result
+        return context.dataStore.data.map { it[BIOMETRIC_ENABLED] ?: false }.first()
     }
 
     suspend fun setDisplayName(displayName: String) {
