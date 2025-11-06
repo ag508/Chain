@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.chain.app.domain.repository.AuthRepository
+import com.chain.app.domain.usecase.auth.GetCurrentUserIdUseCase
 import com.chain.app.presentation.auth.biometric.BiometricSetupScreen
 import com.chain.app.presentation.auth.otp.OtpScreen
 import com.chain.app.presentation.auth.phone.PhoneNumberScreen
@@ -191,10 +192,11 @@ fun ChainApp(
             )
         ) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
-            // TODO: Get current user ID from auth
+            val currentUserId by mainViewModel.currentUserId.collectAsState()
+
             ChatDetailScreen(
                 chatId = chatId,
-                currentUserId = "current_user_id",
+                currentUserId = currentUserId ?: "unknown",
                 onBackClick = { navController.popBackStack() },
                 onVoiceCallClick = { /* TODO: Start voice call */ },
                 onVideoCallClick = { /* TODO: Start video call */ }
@@ -262,18 +264,23 @@ fun ChainApp(
 }
 
 /**
- * ViewModel to check authentication status.
+ * ViewModel to check authentication status and manage user session.
  */
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase
 ) : ViewModel() {
 
     private val _isAuthenticated = MutableStateFlow(false)
     val isAuthenticated = _isAuthenticated.asStateFlow()
 
+    private val _currentUserId = MutableStateFlow<String?>(null)
+    val currentUserId = _currentUserId.asStateFlow()
+
     init {
         checkAuthStatus()
+        loadCurrentUserId()
     }
 
     private fun checkAuthStatus() {
@@ -282,10 +289,17 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun loadCurrentUserId() {
+        viewModelScope.launch {
+            _currentUserId.value = getCurrentUserIdUseCase()
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
             _isAuthenticated.value = false
+            _currentUserId.value = null
         }
     }
 }
