@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,24 +49,26 @@ fun ChatHeader(
         modifier = modifier
             .fillMaxWidth()
             .glass(shape = RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         AnimatedContent(
             targetState = showSearchBar,
             transitionSpec = {
-                (slideInHorizontally(
-                    animationSpec = tween(400, easing = FastOutSlowInEasing),
-                    initialOffsetX = { fullWidth -> fullWidth }
+                slideInHorizontally(
+                    animationSpec = tween(300, easing = FastOutSlowInEasing),
+                    initialOffsetX = { it }
                 ) + fadeIn(
-                    animationSpec = tween(400, easing = LinearOutSlowInEasing)
-                )) togetherWith (slideOutHorizontally(
-                    animationSpec = tween(400, easing = FastOutSlowInEasing),
-                    targetOffsetX = { fullWidth -> -fullWidth }
+                    animationSpec = tween(300)
+                ) togetherWith slideOutHorizontally(
+                    animationSpec = tween(300, easing = FastOutSlowInEasing),
+                    targetOffsetX = { -it }
                 ) + fadeOut(
-                    animationSpec = tween(400, easing = LinearOutSlowInEasing)
-                ))
+                    animationSpec = tween(300)
+                )
             },
-            label = "search_bar_animation"
+            label = "search_animation",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) { isSearching ->
             if (isSearching) {
                 // Search bar
@@ -218,51 +221,46 @@ fun ChatHeader(
 
                     // Action buttons
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.align(Alignment.CenterVertically)
                     ) {
                         // Search button
                         IconButton(
                             onClick = { showSearchBar = true },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .glassIconButton()
+                            modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = "Search",
                                 tint = GlassText,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
 
                         // Video call button
                         IconButton(
                             onClick = onVideoCallClick,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .glassIconButton()
+                            modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Videocam,
                                 contentDescription = "Video call",
                                 tint = GlassText,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
 
                         // Voice call button
                         IconButton(
                             onClick = onVoiceCallClick,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .glassIconButton()
+                            modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Call,
                                 contentDescription = "Voice call",
                                 tint = GlassText,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
 
@@ -270,15 +268,13 @@ fun ChatHeader(
                         Box {
                             IconButton(
                                 onClick = { showMenu = true },
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .glassIconButton()
+                                modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
                                     contentDescription = "More",
                                     tint = GlassText,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
 
@@ -326,124 +322,122 @@ private fun ChatHeaderMenu(
     onBlock: () -> Unit,
     onViewGroupInfo: () -> Unit
 ) {
-    MaterialTheme(
-        shapes = MaterialTheme.shapes.copy(
-            extraSmall = RoundedCornerShape(16.dp)
-        )
-    ) {
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismiss,
-            offset = DpOffset(0.dp, 4.dp),
+    if (expanded) {
+        Box(
             modifier = Modifier
-                .width(220.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .fillMaxSize()
+                .clickable(
+                    onClick = onDismiss,
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                )
         ) {
-        // View Profile or Group Info
-        DropdownMenuItem(
-            text = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+            Surface(
+                modifier = Modifier
+                    .width(200.dp)
+                    .align(Alignment.TopEnd)
+                    .padding(top = 48.dp, end = 8.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp,
+                shadowElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = if (chatType == ChatType.GROUP) Icons.Default.Group else Icons.Default.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
+                    // View Profile or Group Info
+                    MenuItem(
+                        icon = if (chatType == ChatType.GROUP) Icons.Default.Group else Icons.Default.Person,
                         text = if (chatType == ChatType.GROUP) "Group Info" else "View Profile",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        onClick = {
+                            if (chatType == ChatType.GROUP) onViewGroupInfo() else onViewProfile()
+                            onDismiss()
+                        }
                     )
-                }
-            },
-            onClick = if (chatType == ChatType.GROUP) onViewGroupInfo else onViewProfile
-        )
 
-        Divider(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-        )
-
-        // Search in Chat
-        DropdownMenuItem(
-            text = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                     )
-                    Text(
+
+                    // Search in Chat
+                    MenuItem(
+                        icon = Icons.Default.Search,
                         text = "Search in Chat",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        onClick = {
+                            onSearchInChat()
+                            onDismiss()
+                        }
                     )
-                }
-            },
-            onClick = onSearchInChat
-        )
 
-        Divider(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-        )
-
-        // Mute
-        DropdownMenuItem(
-            text = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.NotificationsOff,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                     )
-                    Text(
+
+                    // Mute
+                    MenuItem(
+                        icon = Icons.Default.NotificationsOff,
                         text = "Mute",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        onClick = {
+                            onMute()
+                            onDismiss()
+                        }
                     )
-                }
-            },
-            onClick = onMute
-        )
 
-        // Block (only for direct chats)
-        if (chatType == ChatType.DIRECT) {
-            Divider(
-                modifier = Modifier.padding(horizontal = 8.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-            )
-
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Block,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
+                    // Block (only for direct chats)
+                    if (chatType == ChatType.DIRECT) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                         )
-                        Text(
+
+                        MenuItem(
+                            icon = Icons.Default.Block,
                             text = "Block",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
+                            onClick = {
+                                onBlock()
+                                onDismiss()
+                            },
+                            textColor = MaterialTheme.colorScheme.error,
+                            iconTint = MaterialTheme.colorScheme.error
                         )
                     }
-                },
-                onClick = onBlock
-            )
+                }
+            }
         }
-        }
+    }
+}
+
+@Composable
+private fun MenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    onClick: () -> Unit,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    iconTint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(20.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = textColor
+        )
     }
 }
 
