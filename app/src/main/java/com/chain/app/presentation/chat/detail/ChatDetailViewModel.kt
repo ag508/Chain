@@ -35,14 +35,17 @@ class ChatDetailViewModel @Inject constructor(
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
 
+    private val _currentUserId = MutableStateFlow<String>("")
+    val currentUserId: StateFlow<String> = _currentUserId.asStateFlow()
+
     private var currentChatId: String = ""
-    private var currentUserId: String = ""
 
     init {
         // Load current user ID
         viewModelScope.launch {
-            currentUserId = userPreferences.getUserId() ?: ""
-            if (currentUserId.isEmpty()) {
+            val userId = userPreferences.getUserId() ?: ""
+            _currentUserId.value = userId
+            if (userId.isEmpty()) {
                 Timber.w("No user ID found in preferences")
             }
         }
@@ -75,14 +78,15 @@ class ChatDetailViewModel @Inject constructor(
     }
 
     fun sendMessage(content: String) {
-        if (content.isBlank() || currentChatId.isEmpty() || currentUserId.isEmpty()) return
+        val userId = _currentUserId.value
+        if (content.isBlank() || currentChatId.isEmpty() || userId.isEmpty()) return
 
         viewModelScope.launch {
             try {
                 sendMessageUseCase(
                     chatId = currentChatId,
                     content = content,
-                    senderId = currentUserId
+                    senderId = userId
                 )
             } catch (e: Exception) {
                 Timber.e(e, "Failed to send message")
@@ -98,7 +102,7 @@ class ChatDetailViewModel @Inject constructor(
                 val message = Message(
                     id = java.util.UUID.randomUUID().toString(),
                     chatId = currentChatId,
-                    senderId = currentUserId,
+                    senderId = _currentUserId.value,
                     content = caption,
                     type = MessageType.IMAGE,
                     timestamp = java.util.Date(),
@@ -124,7 +128,7 @@ class ChatDetailViewModel @Inject constructor(
                 val message = Message(
                     id = java.util.UUID.randomUUID().toString(),
                     chatId = currentChatId,
-                    senderId = currentUserId,
+                    senderId = _currentUserId.value,
                     content = fileName,
                     type = MessageType.DOCUMENT,
                     timestamp = java.util.Date(),
@@ -149,7 +153,7 @@ class ChatDetailViewModel @Inject constructor(
                 val message = Message(
                     id = java.util.UUID.randomUUID().toString(),
                     chatId = currentChatId,
-                    senderId = currentUserId,
+                    senderId = _currentUserId.value,
                     content = address.ifEmpty { "Location: $latitude, $longitude" },
                     type = MessageType.LOCATION,
                     timestamp = java.util.Date(),
@@ -175,7 +179,7 @@ class ChatDetailViewModel @Inject constructor(
                 val message = Message(
                     id = java.util.UUID.randomUUID().toString(),
                     chatId = currentChatId,
-                    senderId = currentUserId,
+                    senderId = _currentUserId.value,
                     content = question,
                     type = MessageType.POLL,
                     timestamp = java.util.Date(),
@@ -200,7 +204,7 @@ class ChatDetailViewModel @Inject constructor(
                 val message = Message(
                     id = java.util.UUID.randomUUID().toString(),
                     chatId = currentChatId,
-                    senderId = currentUserId,
+                    senderId = _currentUserId.value,
                     content = caption,
                     type = MessageType.VIDEO,
                     timestamp = java.util.Date(),
@@ -227,7 +231,7 @@ class ChatDetailViewModel @Inject constructor(
                 val message = Message(
                     id = java.util.UUID.randomUUID().toString(),
                     chatId = currentChatId,
-                    senderId = currentUserId,
+                    senderId = _currentUserId.value,
                     content = "Audio message (${duration}s)",
                     type = MessageType.AUDIO,
                     timestamp = java.util.Date(),
@@ -253,7 +257,7 @@ class ChatDetailViewModel @Inject constructor(
                 val message = Message(
                     id = java.util.UUID.randomUUID().toString(),
                     chatId = currentChatId,
-                    senderId = currentUserId,
+                    senderId = _currentUserId.value,
                     content = name,
                     type = MessageType.CONTACT,
                     timestamp = java.util.Date(),
