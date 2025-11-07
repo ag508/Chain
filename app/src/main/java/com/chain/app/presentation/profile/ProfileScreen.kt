@@ -157,18 +157,22 @@ private fun ProfileContent(
             contentAlignment = Alignment.Center
         ) {
             if (user.avatar != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(user.avatar)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Profile photo",
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(CircleShape),
-                    contentScale = ContentScale.Crop,
-                    error = rememberAsyncImagePainter(Icons.Default.Person)
-                )
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(user.avatar)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Profile photo",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             } else {
                 Box(
                     modifier = Modifier
