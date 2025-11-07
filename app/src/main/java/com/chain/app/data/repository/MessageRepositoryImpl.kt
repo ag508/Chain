@@ -4,6 +4,7 @@ import com.chain.app.data.local.dao.MessageDao
 import com.chain.app.data.local.dao.ReactionDao
 import com.chain.app.data.local.entity.toEntity
 import com.chain.app.data.local.entity.toDomain
+import com.chain.app.data.preferences.UserPreferences
 import com.chain.app.domain.model.*
 import com.chain.app.domain.repository.EncryptionRepository
 import com.chain.app.domain.repository.MessageRepository
@@ -28,10 +29,15 @@ class MessageRepositoryImpl @Inject constructor(
     private val messageDao: MessageDao,
     private val reactionDao: ReactionDao,
     private val p2pRepository: P2PRepository,
-    private val encryptionRepository: EncryptionRepository
+    private val encryptionRepository: EncryptionRepository,
+    private val userPreferences: UserPreferences,
+    private val userDao: com.chain.app.data.local.dao.UserDao
 ) : MessageRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // Track typing status for each chat
+    private val typingStatusMap = mutableMapOf<String, kotlinx.coroutines.flow.MutableStateFlow<Boolean>>()
 
     init {
         // Subscribe to incoming P2P messages
@@ -48,17 +54,33 @@ class MessageRepositoryImpl @Inject constructor(
             messageDao.insertMessage(message.toEntity())
 
             // Try to encrypt message content, fall back to plaintext if no session exists
+            // TODO for Production: Implement automatic session establishment
+            // 1. Check if session exists with recipient
+            // 2. If not, fetch recipient's pre-key bundle via P2P or key server
+            // 3. Initialize session with their bundle using encryptionRepository.initializeSession()
+            // 4. Then encrypt and send
+            // 5. Store session for future messages
             val payloadBytes = try {
                 val encryptedContent = encryptionRepository.encryptMessage(
                     plaintext = message.content,
                     recipientId = message.chatId // Use chatId as recipient
                 ).getOrThrow()
-                encryptedContent.content.toByteArray()
+                // Properly serialize the encrypted message
+                android.util.Base64.decode(encryptedContent.content, android.util.Base64.NO_WRAP)
             } catch (e: org.signal.libsignal.protocol.NoSessionException) {
-                // No session exists yet, send as plaintext
-                // This matches the receiver's current behavior (line 92)
-                Timber.w("No session exists for ${message.chatId}, sending as plaintext")
+                // No session exists yet - in production, this should trigger session establishment
+                // For now, fall back to plaintext to maintain functionality
+                Timber.w("No session exists for ${message.chatId}, sending as plaintext. " +
+                        "Production TODO: Establish session first.")
                 message.content.toByteArray()
+            }
+
+            // Sign the message payload with private key
+            val signature = try {
+                encryptionRepository.signMessage(payloadBytes).getOrThrow()
+            } catch (e: Exception) {
+                Timber.w("Failed to sign message, sending without signature: ${e.message}")
+                ByteArray(0)
             }
 
             // Create P2P message
@@ -69,7 +91,7 @@ class MessageRepositoryImpl @Inject constructor(
                 encryptedPayload = payloadBytes,
                 timestamp = message.timestamp.time,
                 type = P2PMessageType.CHAT_MESSAGE,
-                signature = ByteArray(0) // TODO: Sign with private key
+                signature = signature
             )
 
             // Send via P2P
@@ -95,9 +117,47 @@ class MessageRepositoryImpl @Inject constructor(
         try {
             when (p2pMessage.type) {
                 P2PMessageType.CHAT_MESSAGE -> {
-                    // TODO: Properly deserialize EncryptedMessage and decrypt
-                    // For now, treat payload as plaintext until encryption is fully wired
-                    val decryptedContent = String(p2pMessage.encryptedPayload)
+                    // Verify message signature if present
+                    if (p2pMessage.signature.isNotEmpty()) {
+                        val isValid = try {
+                            encryptionRepository.verifySignature(
+                                payload = p2pMessage.encryptedPayload,
+                                signature = p2pMessage.signature,
+                                senderId = p2pMessage.from
+                            ).getOrElse { false }
+                        } catch (e: Exception) {
+                            Timber.w("Signature verification failed: ${e.message}")
+                            false
+                        }
+
+                        if (!isValid) {
+                            Timber.w("Invalid message signature from ${p2pMessage.from}, rejecting message")
+                            return // Reject message with invalid signature
+                        }
+                        Timber.d("Message signature verified for ${p2pMessage.from}")
+                    }
+
+                    // Try to decrypt the message, fall back to plaintext if decryption fails
+                    val decryptedContent = try {
+                        // Try to decrypt as encrypted message
+                        val encryptedMessage = EncryptedMessage(
+                            content = android.util.Base64.encodeToString(
+                                p2pMessage.encryptedPayload,
+                                android.util.Base64.NO_WRAP
+                            ),
+                            type = MessageType.TEXT,
+                            keyId = "",
+                            timestamp = p2pMessage.timestamp
+                        )
+                        encryptionRepository.decryptMessage(
+                            ciphertext = encryptedMessage,
+                            senderId = p2pMessage.from
+                        ).getOrThrow()
+                    } catch (e: Exception) {
+                        // If decryption fails (no session or plaintext), treat as plaintext
+                        Timber.w("Decryption failed, treating as plaintext: ${e.message}")
+                        String(p2pMessage.encryptedPayload)
+                    }
 
                     // Create message entity
                     // chatId should be the sender's ID so the message appears in chat with them
@@ -131,6 +191,31 @@ class MessageRepositoryImpl @Inject constructor(
                     val messageId = String(p2pMessage.encryptedPayload)
                     updateMessageStatus(messageId, MessageStatus.READ)
                     Timber.d("Message $messageId read")
+                }
+
+                P2PMessageType.TYPING_INDICATOR -> {
+                    val isTyping = String(p2pMessage.encryptedPayload).toBoolean()
+                    val chatId = p2pMessage.from // Typing indicator comes from the sender
+                    typingStatusMap.getOrPut(chatId) {
+                        kotlinx.coroutines.flow.MutableStateFlow(false)
+                    }.value = isTyping
+                    Timber.d("Typing indicator from $chatId: $isTyping")
+                }
+
+                P2PMessageType.PRESENCE_UPDATE -> {
+                    val statusName = String(p2pMessage.encryptedPayload)
+                    val status = try {
+                        UserStatus.valueOf(statusName)
+                    } catch (e: IllegalArgumentException) {
+                        UserStatus.OFFLINE
+                    }
+                    // Update user status in database
+                    userDao.updateUserStatus(
+                        userId = p2pMessage.from,
+                        status = status.name,
+                        lastSeen = p2pMessage.timestamp
+                    )
+                    Timber.d("Presence update from ${p2pMessage.from}: $status")
                 }
 
                 else -> {
@@ -185,9 +270,12 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun addReaction(messageId: String, emoji: String): Result<Unit> {
         return try {
+            val currentUserId = userPreferences.getUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
             val reaction = Reaction(
                 emoji = emoji,
-                userId = "current_user", // TODO: Get from UserRepository
+                userId = currentUserId,
                 timestamp = Date()
             )
             reactionDao.insertReaction(reaction.toEntity(messageId))
@@ -199,7 +287,10 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun removeReaction(messageId: String, emoji: String): Result<Unit> {
         return try {
-            reactionDao.deleteReaction(messageId, emoji, "current_user")
+            val currentUserId = userPreferences.getUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            reactionDao.deleteReaction(messageId, emoji, currentUserId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

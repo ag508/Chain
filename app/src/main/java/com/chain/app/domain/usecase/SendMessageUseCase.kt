@@ -17,7 +17,7 @@ class SendMessageUseCase @Inject constructor(
     suspend operator fun invoke(
         chatId: String,
         content: String,
-        senderId: String = "current_user" // TODO: Get from auth
+        senderId: String
     ): Result<Message> {
         val message = Message(
             id = UUID.randomUUID().toString(),

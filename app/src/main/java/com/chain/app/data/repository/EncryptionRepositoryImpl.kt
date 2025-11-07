@@ -61,4 +61,12 @@ class EncryptionRepositoryImpl @Inject constructor(
         // TODO: Implement group message decryption
         return Result.failure(NotImplementedError("Group message decryption not yet implemented"))
     }
+
+    override suspend fun signMessage(payload: ByteArray): Result<ByteArray> {
+        return signalProtocolManager.signMessage(payload)
+    }
+
+    override suspend fun verifySignature(payload: ByteArray, signature: ByteArray, senderId: String): Result<Boolean> {
+        return signalProtocolManager.verifySignature(payload, signature, senderId)
+    }
 }

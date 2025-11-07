@@ -65,4 +65,24 @@ interface UserRepository {
      * Observe user status changes.
      */
     fun observeUserStatus(userId: String): Flow<UserStatus>
+
+    /**
+     * Update current user's presence status and broadcast to contacts.
+     */
+    suspend fun updatePresence(status: UserStatus): Result<Unit>
+
+    /**
+     * Send typing indicator to a specific chat.
+     */
+    suspend fun sendTypingIndicator(chatId: String, isTyping: Boolean): Result<Unit>
+
+    /**
+     * Observe typing status for a chat.
+     */
+    fun observeTypingStatus(chatId: String): Flow<Boolean>
+
+    /**
+     * Update last seen timestamp.
+     */
+    suspend fun updateLastSeen(): Result<Unit>
 }
