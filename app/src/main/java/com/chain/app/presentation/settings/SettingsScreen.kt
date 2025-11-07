@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.presentation.theme.*
 
+@Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
     onAccountSettingsClick: () -> Unit = {},
@@ -319,6 +320,7 @@ fun SettingsScreen(
     }
 }
 
+@Composable
 private fun SettingsSection(
     title: String,
     modifier: Modifier = Modifier,
@@ -342,6 +344,7 @@ private fun SettingsSection(
     }
 }
 
+@Composable
 private fun SettingsItem(
     icon: ImageVector,
     title: String,
@@ -385,6 +388,7 @@ private fun SettingsItem(
     }
 }
 
+@Composable
 private fun SettingsSwitchItem(
     icon: ImageVector,
     title: String,
@@ -434,6 +438,7 @@ private fun SettingsSwitchItem(
 
 
 
+@Composable
 private fun LogoutDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
