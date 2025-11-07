@@ -19,9 +19,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.chain.app.domain.model.User
 import com.chain.app.presentation.components.glass.GlassButton
 import com.chain.app.presentation.components.glass.GlassTextField
@@ -147,26 +152,37 @@ private fun ProfileContent(
                 .align(Alignment.CenterHorizontally)
                 .size(120.dp)
                 .clip(CircleShape)
-                .glass()
                 .border(3.dp, GlassBorder, CircleShape)
                 .clickable { /* TODO: View full-screen photo */ },
             contentAlignment = Alignment.Center
         ) {
             if (user.avatar != null) {
-                // TODO: Load actual image with Coil
-                Icon(
-                    imageVector = Icons.Default.Person,
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(user.avatar)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = "Profile photo",
-                    tint = GlassText,
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                    error = rememberAsyncImagePainter(Icons.Default.Person)
                 )
             } else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile photo",
-                    tint = GlassText,
-                    modifier = Modifier.size(60.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .glass(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Profile photo",
+                        tint = GlassText,
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
             }
         }
 
@@ -338,17 +354,38 @@ private fun EditProfileContent(
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .glass()
                     .border(3.dp, GlassBorder, CircleShape)
                     .clickable { /* TODO: Change photo */ },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile photo",
-                    tint = GlassText,
-                    modifier = Modifier.size(60.dp)
-                )
+                if (user.avatar != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(user.avatar)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Profile photo",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                        error = rememberAsyncImagePainter(Icons.Default.Person)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .glass(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile photo",
+                            tint = GlassText,
+                            modifier = Modifier.size(60.dp)
+                        )
+                    }
+                }
             }
 
             Box(
