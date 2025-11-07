@@ -605,7 +605,7 @@ private fun ChatDetailContent(
 /**
  * Get current location using FusedLocationProviderClient and share it
  */
-@androidx.annotation.OptIn(com.google.android.gms.common.api.OptIn::class)
+@android.annotation.SuppressLint("MissingPermission")
 private fun getCurrentLocationAndShare(
     context: android.content.Context,
     onSendLocation: (Double, Double, String) -> Unit
@@ -613,7 +613,7 @@ private fun getCurrentLocationAndShare(
     val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
 
     try {
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: android.location.Location? ->
             if (location != null) {
                 val latitude = location.latitude
                 val longitude = location.longitude
@@ -621,6 +621,7 @@ private fun getCurrentLocationAndShare(
                 // Try to get address from coordinates
                 val geocoder = android.location.Geocoder(context, java.util.Locale.getDefault())
                 try {
+                    @Suppress("DEPRECATION")
                     val addresses = geocoder.getFromLocation(latitude, longitude, 1)
                     val address = if (!addresses.isNullOrEmpty()) {
                         val addr = addresses[0]
@@ -644,8 +645,8 @@ private fun getCurrentLocationAndShare(
             } else {
                 Toast.makeText(context, "Unable to get current location", Toast.LENGTH_SHORT).show()
             }
-        }.addOnFailureListener {
-            Toast.makeText(context, "Failed to get location", Toast.LENGTH_SHORT).show()
+        }.addOnFailureListener { exception ->
+            Toast.makeText(context, "Failed to get location: ${exception.message}", Toast.LENGTH_SHORT).show()
         }
     } catch (e: SecurityException) {
         Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
