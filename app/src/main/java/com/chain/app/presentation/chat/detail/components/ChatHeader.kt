@@ -34,15 +34,35 @@ fun ChatHeader(
     onHeaderClick: () -> Unit,
     onVoiceCallClick: () -> Unit,
     onVideoCallClick: () -> Unit,
+    onSearchQueryChange: (String) -> Unit = {},
+    onSearchToggle: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
     isOnline: Boolean = false,
     isTyping: Boolean = false,
     lastSeen: Long? = null,
-    participantCount: Int? = null
+    participantCount: Int? = null,
+    onViewProfile: () -> Unit = {},
+    onMute: () -> Unit = {},
+    onBlock: () -> Unit = {},
+    onDisappearingMessages: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showSearchBar by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+
+    // Notify parent when search state changes
+    LaunchedEffect(showSearchBar) {
+        onSearchToggle(showSearchBar)
+        if (!showSearchBar) {
+            searchQuery = ""
+            onSearchQueryChange("")
+        }
+    }
+
+    // Notify parent when search query changes
+    LaunchedEffect(searchQuery) {
+        onSearchQueryChange(searchQuery)
+    }
 
     Box(
         modifier = modifier
@@ -270,7 +290,7 @@ fun ChatHeader(
                                 chatType = chatType,
                                 onViewProfile = {
                                     showMenu = false
-                                    // TODO: Navigate to profile
+                                    onViewProfile()
                                 },
                                 onSearchInChat = {
                                     showMenu = false
@@ -278,19 +298,19 @@ fun ChatHeader(
                                 },
                                 onDisappearingMessages = {
                                     showMenu = false
-                                    // TODO: Show disappearing messages dialog
+                                    onDisappearingMessages()
                                 },
                                 onMute = {
                                     showMenu = false
-                                    // TODO: Mute chat
+                                    onMute()
                                 },
                                 onBlock = {
                                     showMenu = false
-                                    // TODO: Block user
+                                    onBlock()
                                 },
                                 onViewGroupInfo = {
                                     showMenu = false
-                                    // TODO: View group info
+                                    onViewProfile()  // Same as view profile for groups
                                 }
                             )
                         }

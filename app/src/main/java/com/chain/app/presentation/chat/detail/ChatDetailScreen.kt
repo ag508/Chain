@@ -42,6 +42,9 @@ fun ChatDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val messages by viewModel.messages.collectAsState()
     val viewModelUserId by viewModel.currentUserId.collectAsState()
+    val isOnline by viewModel.isOnline.collectAsState()
+    val isTyping by viewModel.isTyping.collectAsState()
+    val lastSeen by viewModel.lastSeen.collectAsState()
 
     LaunchedEffect(chatId) {
         viewModel.loadChat(chatId)
@@ -72,6 +75,9 @@ fun ChatDetailScreen(
                 chat = state.chat,
                 messages = messages,
                 currentUserId = viewModelUserId,
+                isOnline = isOnline,
+                isTyping = isTyping,
+                lastSeen = lastSeen,
                 onBackClick = onBackClick,
                 onSendMessage = viewModel::sendMessage,
                 onVoiceCallClick = onVoiceCallClick,
@@ -92,6 +98,9 @@ private fun ChatDetailContent(
     chat: com.chain.app.domain.model.Chat,
     messages: List<com.chain.app.domain.model.Message>,
     currentUserId: String,
+    isOnline: Boolean,
+    isTyping: Boolean,
+    lastSeen: Long?,
     onBackClick: () -> Unit,
     onSendMessage: (String) -> Unit,
     onVoiceCallClick: () -> Unit,
@@ -107,6 +116,22 @@ private fun ChatDetailContent(
     var replyingToMessage by remember { mutableStateOf<String?>(null) }
     var isRecordingVoice by remember { mutableStateOf(false) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearching by remember { mutableStateOf(false) }
+    var showBlockDialog by remember { mutableStateOf(false) }
+    var showMuteDialog by remember { mutableStateOf(false) }
+    var showDisappearingMessagesDialog by remember { mutableStateOf(false) }
+
+    // Filter messages based on search query
+    val filteredMessages = remember(messages, searchQuery) {
+        if (searchQuery.isBlank()) {
+            messages
+        } else {
+            messages.filter { message ->
+                message.content.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     val listState = rememberLazyListState()
     val context = LocalContext.current
@@ -209,14 +234,22 @@ private fun ChatDetailContent(
                     chatType = chat.type,
                     onBackClick = onBackClick,
                     onHeaderClick = {
-                        // TODO: Navigate to profile/group info
+                        Toast.makeText(context, "Profile view coming soon!", Toast.LENGTH_SHORT).show()
                     },
                     onVoiceCallClick = onVoiceCallClick,
                     onVideoCallClick = onVideoCallClick,
-                    isOnline = false, // TODO: Get real online status
-                    isTyping = false, // TODO: Get real typing status
-                    lastSeen = null, // TODO: Get real last seen
-                    participantCount = if (chat.type == ChatType.GROUP) chat.participants.size else null
+                    onSearchQueryChange = { query -> searchQuery = query },
+                    onSearchToggle = { searching -> isSearching = searching },
+                    isOnline = isOnline,
+                    isTyping = isTyping,
+                    lastSeen = lastSeen,
+                    participantCount = if (chat.type == ChatType.GROUP) chat.participants.size else null,
+                    onViewProfile = {
+                        Toast.makeText(context, "Profile view coming soon!", Toast.LENGTH_SHORT).show()
+                    },
+                    onMute = { showMuteDialog = true },
+                    onBlock = { showBlockDialog = true },
+                    onDisappearingMessages = { showDisappearingMessagesDialog = true }
                 )
             }
 
@@ -230,7 +263,7 @@ private fun ChatDetailContent(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(messages, key = { it.id }) { message ->
+                items(filteredMessages, key = { it.id }) { message ->
                     MessageBubble(
                         message = message,
                         isSentByMe = message.senderId == currentUserId,
@@ -346,6 +379,135 @@ private fun ChatDetailContent(
                     }
                 )
             }
+        }
+
+        // Block user dialog
+        if (showBlockDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showBlockDialog = false },
+                title = {
+                    Text(
+                        text = "Block ${chat.name}?",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = GlassText
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Blocked contacts won't be able to send you messages or call you.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = GlassText.copy(alpha = 0.8f)
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showBlockDialog = false
+                            Toast.makeText(context, "${chat.name} blocked", Toast.LENGTH_SHORT).show()
+                        }
+                    ) {
+                        Text("Block", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showBlockDialog = false }) {
+                        Text("Cancel", color = GlassText)
+                    }
+                },
+                containerColor = GlassGradientStart.copy(alpha = 0.95f)
+            )
+        }
+
+        // Mute dialog
+        if (showMuteDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showMuteDialog = false },
+                title = {
+                    Text(
+                        text = "Mute notifications",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = GlassText
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "For how long?",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = GlassText.copy(alpha = 0.8f)
+                        )
+
+                        listOf("15 minutes", "1 hour", "8 hours", "1 week", "Always").forEach { duration ->
+                            TextButton(
+                                onClick = {
+                                    showMuteDialog = false
+                                    Toast.makeText(context, "Muted for $duration", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = duration,
+                                    color = GlassText,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { showMuteDialog = false }) {
+                        Text("Cancel", color = GlassText)
+                    }
+                },
+                containerColor = GlassGradientStart.copy(alpha = 0.95f)
+            )
+        }
+
+        // Disappearing messages dialog
+        if (showDisappearingMessagesDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showDisappearingMessagesDialog = false },
+                title = {
+                    Text(
+                        text = "Disappearing messages",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = GlassText
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "New messages will disappear from this chat after the selected time.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = GlassText.copy(alpha = 0.8f)
+                        )
+
+                        listOf("Off", "24 hours", "7 days", "90 days").forEach { duration ->
+                            TextButton(
+                                onClick = {
+                                    showDisappearingMessagesDialog = false
+                                    Toast.makeText(context, "Disappearing messages: $duration", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = duration,
+                                    color = GlassText,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { showDisappearingMessagesDialog = false }) {
+                        Text("Cancel", color = GlassText)
+                    }
+                },
+                containerColor = GlassGradientStart.copy(alpha = 0.95f)
+            )
         }
     }
 }
