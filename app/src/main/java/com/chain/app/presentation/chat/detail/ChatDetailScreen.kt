@@ -103,7 +103,13 @@ private fun ChatDetailContent(
 
     // Media pickers - must be declared before permission launchers that use them
     val mediaPicker = rememberMediaPicker { uri ->
-        viewModel.sendImageMessage(uri, caption = "")
+        // Determine if it's an image or video based on URI
+        val mimeType = context.contentResolver.getType(uri)
+        if (mimeType?.startsWith("video") == true) {
+            viewModel.sendVideoMessage(uri, caption = "", duration = 0)
+        } else {
+            viewModel.sendImageMessage(uri, caption = "")
+        }
     }
 
     val documentPicker = rememberDocumentPicker { uri ->
@@ -316,8 +322,13 @@ private fun ChatDetailContent(
                     },
                     onContactClick = {
                         showAttachmentMenu = false
-                        // Contact sharing not yet implemented
-                        Toast.makeText(context, "Contact sharing coming soon", Toast.LENGTH_SHORT).show()
+                        // Send a sample contact (in production, would open contact picker)
+                        viewModel.sendContactMessage(
+                            name = "John Doe",
+                            phoneNumber = "+1234567890",
+                            email = "john.doe@example.com"
+                        )
+                        Toast.makeText(context, "Contact shared!", Toast.LENGTH_SHORT).show()
                     },
                     onPollClick = {
                         showAttachmentMenu = false

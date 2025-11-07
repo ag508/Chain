@@ -174,6 +174,85 @@ class ChatDetailViewModel @Inject constructor(
         }
     }
 
+    fun sendVideoMessage(uri: android.net.Uri, caption: String = "", duration: Long = 0) {
+        if (currentChatId.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val message = Message(
+                    id = java.util.UUID.randomUUID().toString(),
+                    chatId = currentChatId,
+                    senderId = currentUserId,
+                    content = caption,
+                    type = MessageType.VIDEO,
+                    timestamp = java.util.Date(),
+                    status = MessageStatus.SENDING,
+                    metadata = mapOf(
+                        "uri" to uri.toString(),
+                        "fileName" to uri.lastPathSegment,
+                        "caption" to caption,
+                        "duration" to duration
+                    )
+                )
+                messageRepository.sendMessage(message)
+            } catch (e: Exception) {
+                timber.log.Timber.e(e, "Failed to send video message")
+            }
+        }
+    }
+
+    fun sendAudioMessage(uri: android.net.Uri, duration: Long = 0) {
+        if (currentChatId.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val message = Message(
+                    id = java.util.UUID.randomUUID().toString(),
+                    chatId = currentChatId,
+                    senderId = currentUserId,
+                    content = "Audio message (${duration}s)",
+                    type = MessageType.AUDIO,
+                    timestamp = java.util.Date(),
+                    status = MessageStatus.SENDING,
+                    metadata = mapOf(
+                        "uri" to uri.toString(),
+                        "fileName" to uri.lastPathSegment,
+                        "duration" to duration
+                    )
+                )
+                messageRepository.sendMessage(message)
+            } catch (e: Exception) {
+                timber.log.Timber.e(e, "Failed to send audio message")
+            }
+        }
+    }
+
+    fun sendContactMessage(name: String, phoneNumber: String, email: String? = null) {
+        if (currentChatId.isEmpty() || name.isBlank() || phoneNumber.isBlank()) return
+
+        viewModelScope.launch {
+            try {
+                val message = Message(
+                    id = java.util.UUID.randomUUID().toString(),
+                    chatId = currentChatId,
+                    senderId = currentUserId,
+                    content = name,
+                    type = MessageType.CONTACT,
+                    timestamp = java.util.Date(),
+                    status = MessageStatus.SENDING,
+                    metadata = mapOf(
+                        "name" to name,
+                        "phoneNumber" to phoneNumber,
+                        "email" to (email ?: "")
+                    )
+                )
+                messageRepository.sendMessage(message)
+            } catch (e: Exception) {
+                timber.log.Timber.e(e, "Failed to send contact message")
+            }
+        }
+    }
+
     fun setCurrentUserId(userId: String) {
         currentUserId = userId
     }
