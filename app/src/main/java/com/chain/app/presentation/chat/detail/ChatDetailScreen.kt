@@ -36,6 +36,7 @@ fun ChatDetailScreen(
     onBackClick: () -> Unit,
     onVoiceCallClick: () -> Unit,
     onVideoCallClick: () -> Unit,
+    onViewProfileClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ChatDetailViewModel = hiltViewModel()
 ) {
@@ -82,6 +83,7 @@ fun ChatDetailScreen(
                 onSendMessage = viewModel::sendMessage,
                 onVoiceCallClick = onVoiceCallClick,
                 onVideoCallClick = onVideoCallClick,
+                onViewProfileClick = onViewProfileClick,
                 onSendImage = viewModel::sendImageMessage,
                 onSendVideo = viewModel::sendVideoMessage,
                 onSendDocument = viewModel::sendDocumentMessage,
@@ -105,6 +107,7 @@ private fun ChatDetailContent(
     onSendMessage: (String) -> Unit,
     onVoiceCallClick: () -> Unit,
     onVideoCallClick: () -> Unit,
+    onViewProfileClick: (String) -> Unit,
     onSendImage: (android.net.Uri, String) -> Unit,
     onSendVideo: (android.net.Uri, String, Long) -> Unit,
     onSendDocument: (android.net.Uri, String) -> Unit,
@@ -206,6 +209,13 @@ private fun ChatDetailContent(
 
     val coroutineScope = rememberCoroutineScope()
 
+    // Get the other user's ID for direct chats
+    val otherUserId = remember(chat.participants, currentUserId) {
+        if (chat.type == ChatType.DIRECT) {
+            chat.participants.firstOrNull { it != currentUserId }
+        } else null
+    }
+
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -234,7 +244,12 @@ private fun ChatDetailContent(
                     chatType = chat.type,
                     onBackClick = onBackClick,
                     onHeaderClick = {
-                        Toast.makeText(context, "Profile view coming soon!", Toast.LENGTH_SHORT).show()
+                        otherUserId?.let { userId ->
+                            onViewProfileClick(userId)
+                        } ?: run {
+                            // For group chats, show a toast for now
+                            Toast.makeText(context, "Group info coming soon!", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     onVoiceCallClick = onVoiceCallClick,
                     onVideoCallClick = onVideoCallClick,
@@ -245,7 +260,12 @@ private fun ChatDetailContent(
                     lastSeen = lastSeen,
                     participantCount = if (chat.type == ChatType.GROUP) chat.participants.size else null,
                     onViewProfile = {
-                        Toast.makeText(context, "Profile view coming soon!", Toast.LENGTH_SHORT).show()
+                        otherUserId?.let { userId ->
+                            onViewProfileClick(userId)
+                        } ?: run {
+                            // For group chats, show a toast for now
+                            Toast.makeText(context, "Group info coming soon!", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     onMute = { showMuteDialog = true },
                     onBlock = { showBlockDialog = true },
