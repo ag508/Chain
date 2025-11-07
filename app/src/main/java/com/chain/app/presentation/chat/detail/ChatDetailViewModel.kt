@@ -57,6 +57,7 @@ class ChatDetailViewModel @Inject constructor(
 
     private var currentChatId: String = ""
     private var otherUserId: String? = null
+    private var userStatusObservingJob: kotlinx.coroutines.Job? = null
 
     init {
         // Load current user ID
@@ -87,8 +88,10 @@ class ChatDetailViewModel @Inject constructor(
                         otherUserId = chat.participants.firstOrNull { it != currentUser }
 
                         otherUserId?.let { userId ->
+                            // Cancel previous observation if any
+                            userStatusObservingJob?.cancel()
                             // Observe the other user's status and blocked state
-                            observeUserStatus(userId)
+                            userStatusObservingJob = observeUserStatus(userId)
                         }
                     }
                 }
@@ -120,16 +123,19 @@ class ChatDetailViewModel @Inject constructor(
         }
     }
 
-    private fun observeUserStatus(userId: String) {
-        viewModelScope.launch {
+    private fun observeUserStatus(userId: String): kotlinx.coroutines.Job {
+        return viewModelScope.launch {
             try {
-                userRepository.observeUser(userId).collect { user ->
-                    user?.let {
-                        _isOnline.value = it.status == com.chain.app.domain.model.UserStatus.ONLINE
-                        _lastSeen.value = it.lastSeen.time
-                        _isBlocked.value = it.isBlocked
+                userRepository.observeUser(userId)
+                    .distinctUntilChanged()
+                    .collect { user ->
+                        user?.let {
+                            _isOnline.value = it.status == com.chain.app.domain.model.UserStatus.ONLINE
+                            _lastSeen.value = it.lastSeen.time
+                            _isBlocked.value = it.isBlocked
+                            Timber.d("User $userId status updated: online=${_isOnline.value}, blocked=${_isBlocked.value}")
+                        }
                     }
-                }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to observe user status")
             }
