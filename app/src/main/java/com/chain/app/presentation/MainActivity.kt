@@ -94,8 +94,8 @@ fun ChainApp(
         composable(NavRoutes.PhoneNumber.route) {
             PhoneNumberScreen(
                 onBackClick = { navController.popBackStack() },
-                onOtpSent = { phoneNumber ->
-                    navController.navigate(NavRoutes.OtpVerification.createRoute(phoneNumber))
+                onOtpSent = { phoneNumber, email ->
+                    navController.navigate(NavRoutes.OtpVerification.createRoute(phoneNumber, email))
                 }
             )
         }
@@ -104,15 +104,17 @@ fun ChainApp(
         composable(
             route = NavRoutes.OtpVerification.route,
             arguments = listOf(
-                navArgument("phoneNumber") { type = NavType.StringType }
+                navArgument("phoneNumber") { type = NavType.StringType },
+                navArgument("email") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
+            val email = backStackEntry.arguments?.getString("email") ?: ""
             OtpScreen(
                 phoneNumber = phoneNumber,
                 onBackClick = { navController.popBackStack() },
                 onVerified = { userId ->
-                    navController.navigate(NavRoutes.ProfileSetup.createRoute(userId, phoneNumber)) {
+                    navController.navigate(NavRoutes.ProfileSetup.createRoute(userId, phoneNumber, email)) {
                         // Clear back stack up to welcome
                         popUpTo(NavRoutes.Welcome.route) { inclusive = false }
                     }
@@ -125,15 +127,18 @@ fun ChainApp(
             route = NavRoutes.ProfileSetup.route,
             arguments = listOf(
                 navArgument("userId") { type = NavType.StringType },
-                navArgument("phoneNumber") { type = NavType.StringType }
+                navArgument("phoneNumber") { type = NavType.StringType },
+                navArgument("email") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: "temp_user"
             val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
+            val email = backStackEntry.arguments?.getString("email") ?: ""
 
             ProfileSetupScreen(
                 userId = userId,
                 phoneNumber = phoneNumber,
+                email = email,
                 onProfileCreated = {
                     println("DEBUG MainActivity: onProfileCreated callback triggered, navigating to BiometricSetup")
                     navController.navigate(NavRoutes.BiometricSetup.route) {

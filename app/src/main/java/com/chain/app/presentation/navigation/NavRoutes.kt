@@ -8,11 +8,11 @@ sealed class NavRoutes(val route: String) {
     // Authentication flow
     object Welcome : NavRoutes("welcome")
     object PhoneNumber : NavRoutes("phone_number")
-    object OtpVerification : NavRoutes("otp_verification/{phoneNumber}") {
-        fun createRoute(phoneNumber: String) = "otp_verification/$phoneNumber"
+    object OtpVerification : NavRoutes("otp_verification/{phoneNumber}/{email}") {
+        fun createRoute(phoneNumber: String, email: String) = "otp_verification/$phoneNumber/$email"
     }
-    object ProfileSetup : NavRoutes("profile_setup/{userId}/{phoneNumber}") {
-        fun createRoute(userId: String, phoneNumber: String) = "profile_setup/$userId/$phoneNumber"
+    object ProfileSetup : NavRoutes("profile_setup/{userId}/{phoneNumber}/{email}") {
+        fun createRoute(userId: String, phoneNumber: String, email: String) = "profile_setup/$userId/$phoneNumber/$email"
     }
     object BiometricSetup : NavRoutes("biometric_setup")
 

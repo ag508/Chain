@@ -22,7 +22,7 @@ import com.chain.app.presentation.theme.*
 @Composable
 fun PhoneNumberScreen(
     onBackClick: () -> Unit,
-    onOtpSent: (String) -> Unit,
+    onOtpSent: (String, String) -> Unit,
     viewModel: PhoneNumberViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -30,7 +30,7 @@ fun PhoneNumberScreen(
 
     // When OTP is sent navigate
     LaunchedEffect(state.otpSent) {
-        if (state.otpSent) onOtpSent("${state.countryCode}${state.phoneNumber}")
+        if (state.otpSent) onOtpSent("${state.countryCode}${state.phoneNumber}", state.email)
     }
 
     // Gradient background (135deg from HTML spec)
@@ -71,7 +71,7 @@ fun PhoneNumberScreen(
 
             // Auth title: 28sp bold
             Text(
-                text = "Enter Your Phone",
+                text = "Create Your Account",
                 style = MaterialTheme.typography.displaySmall,
                 color = GlassText
             )
@@ -80,7 +80,7 @@ fun PhoneNumberScreen(
 
             // Auth subtitle: 15sp
             Text(
-                text = "We'll send you a verification code to confirm your number",
+                text = "We'll send you a verification code via email",
                 style = MaterialTheme.typography.bodyMedium,
                 color = GlassTextSecondary,
                 textAlign = TextAlign.Center
@@ -92,7 +92,20 @@ fun PhoneNumberScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Input group
+            // Email field
+            ChainTextField(
+                value = state.email,
+                onValueChange = viewModel::onEmailChanged,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = "Email address",
+                errorMessage = state.emailError,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Email,
+                    autoCorrect = false
+                )
+            )
+
+            // Phone number input group
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -123,7 +136,7 @@ fun PhoneNumberScreen(
             ChainButton(
                 text = if (state.isLoading) "Sending..." else "Continue",
                 onClick = viewModel::onContinueClick,
-                enabled = state.phoneNumber.isNotBlank() && !state.isLoading,
+                enabled = state.email.isNotBlank() && state.phoneNumber.isNotBlank() && !state.isLoading,
                 isAccent = true,
                 isLoading = state.isLoading
             )
