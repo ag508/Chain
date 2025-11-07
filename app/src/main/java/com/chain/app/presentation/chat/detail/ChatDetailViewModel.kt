@@ -113,9 +113,11 @@ class ChatDetailViewModel @Inject constructor(
     private fun observeUserStatus(userId: String) {
         viewModelScope.launch {
             try {
-                userRepository.getUserById(userId).collect { user ->
-                    _isOnline.value = user.status == com.chain.app.domain.model.UserStatus.ONLINE
-                    _lastSeen.value = user.lastSeen.time
+                userRepository.observeUser(userId).collect { user ->
+                    user?.let {
+                        _isOnline.value = it.status == com.chain.app.domain.model.UserStatus.ONLINE
+                        _lastSeen.value = it.lastSeen.time
+                    }
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to observe user status")

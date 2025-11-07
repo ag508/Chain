@@ -57,6 +57,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun observeUser(userId: String): Flow<User?> {
+        return userDao.observeUser(userId).map { entity ->
+            entity?.toDomain()
+        }
+    }
+
     override fun searchUsers(query: String): Flow<List<User>> {
         return userDao.searchUsers(query).map { entities ->
             entities.map { it.toDomain() }
