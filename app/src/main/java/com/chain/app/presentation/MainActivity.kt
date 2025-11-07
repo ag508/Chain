@@ -108,6 +108,7 @@ fun ChainApp(
             val email = backStackEntry.arguments?.getString("email") ?: ""
             OtpScreen(
                 phoneNumber = phoneNumber,
+                email = email,
                 onBackClick = { navController.popBackStack() },
                 onVerified = { userId ->
                     navController.navigate(NavRoutes.ProfileSetup.createRoute(userId, phoneNumber, email)) {
