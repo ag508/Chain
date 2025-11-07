@@ -30,10 +30,14 @@ class MessageRepositoryImpl @Inject constructor(
     private val reactionDao: ReactionDao,
     private val p2pRepository: P2PRepository,
     private val encryptionRepository: EncryptionRepository,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val userDao: com.chain.app.data.local.dao.UserDao
 ) : MessageRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // Track typing status for each chat
+    private val typingStatusMap = mutableMapOf<String, kotlinx.coroutines.flow.MutableStateFlow<Boolean>>()
 
     init {
         // Subscribe to incoming P2P messages
@@ -159,6 +163,31 @@ class MessageRepositoryImpl @Inject constructor(
                     val messageId = String(p2pMessage.encryptedPayload)
                     updateMessageStatus(messageId, MessageStatus.READ)
                     Timber.d("Message $messageId read")
+                }
+
+                P2PMessageType.TYPING_INDICATOR -> {
+                    val isTyping = String(p2pMessage.encryptedPayload).toBoolean()
+                    val chatId = p2pMessage.from // Typing indicator comes from the sender
+                    typingStatusMap.getOrPut(chatId) {
+                        kotlinx.coroutines.flow.MutableStateFlow(false)
+                    }.value = isTyping
+                    Timber.d("Typing indicator from $chatId: $isTyping")
+                }
+
+                P2PMessageType.PRESENCE_UPDATE -> {
+                    val statusName = String(p2pMessage.encryptedPayload)
+                    val status = try {
+                        UserStatus.valueOf(statusName)
+                    } catch (e: IllegalArgumentException) {
+                        UserStatus.OFFLINE
+                    }
+                    // Update user status in database
+                    userDao.updateUserStatus(
+                        userId = p2pMessage.from,
+                        status = status.name,
+                        lastSeen = p2pMessage.timestamp
+                    )
+                    Timber.d("Presence update from ${p2pMessage.from}: $status")
                 }
 
                 else -> {

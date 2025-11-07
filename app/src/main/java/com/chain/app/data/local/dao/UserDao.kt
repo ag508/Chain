@@ -18,6 +18,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE isContact = 1")
     fun getContacts(): Flow<List<UserEntity>>
 
+    @Query("SELECT * FROM users WHERE isContact = 1")
+    suspend fun getContactsList(): List<UserEntity>
+
     @Query("SELECT * FROM users WHERE isBlocked = 1")
     fun getBlockedUsers(): Flow<List<UserEntity>>
 
