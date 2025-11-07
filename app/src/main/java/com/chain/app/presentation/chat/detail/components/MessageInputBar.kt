@@ -335,7 +335,7 @@ fun AttachmentMenu(
                 AttachmentOption(
                     icon = Icons.Default.CameraAlt,
                     label = "Camera",
-                    color = Color(0xFFFF6B6B),
+                    color = ChainSecureGreen,
                     onClick = {
                         onDismiss()
                         onCameraClick()
@@ -345,7 +345,7 @@ fun AttachmentMenu(
                 AttachmentOption(
                     icon = Icons.Default.Photo,
                     label = "Gallery",
-                    color = Color(0xFF4ECDC4),
+                    color = GlassAccent,
                     onClick = {
                         onDismiss()
                         onGalleryClick()
@@ -355,7 +355,7 @@ fun AttachmentMenu(
                 AttachmentOption(
                     icon = Icons.Default.InsertDriveFile,
                     label = "Document",
-                    color = Color(0xFF95A5A6),
+                    color = ChainSecureBlue,
                     onClick = {
                         onDismiss()
                         onDocumentClick()
@@ -370,7 +370,7 @@ fun AttachmentMenu(
                 AttachmentOption(
                     icon = Icons.Default.LocationOn,
                     label = "Location",
-                    color = Color(0xFF6C63FF),
+                    color = ChainSecureGreen,
                     onClick = {
                         onDismiss()
                         onLocationClick()
@@ -380,7 +380,7 @@ fun AttachmentMenu(
                 AttachmentOption(
                     icon = Icons.Default.Person,
                     label = "Contact",
-                    color = Color(0xFFFFA502),
+                    color = GlassAccent,
                     onClick = {
                         onDismiss()
                         onContactClick()
@@ -390,7 +390,7 @@ fun AttachmentMenu(
                 AttachmentOption(
                     icon = Icons.Default.Poll,
                     label = "Poll",
-                    color = Color(0xFFE91E63),
+                    color = ChainSecureBlue,
                     onClick = {
                         onDismiss()
                         onPollClick()
@@ -412,6 +412,7 @@ private fun AttachmentOption(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
+            .glass()
             .clickable(onClick = onClick)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -421,7 +422,15 @@ private fun AttachmentOption(
             modifier = Modifier
                 .size(56.dp)
                 .clip(CircleShape)
-                .background(color.copy(alpha = 0.2f)),
+                .background(
+                    androidx.compose.ui.graphics.Brush.radialGradient(
+                        colors = listOf(
+                            color.copy(alpha = 0.3f),
+                            color.copy(alpha = 0.1f)
+                        )
+                    )
+                )
+                .glassIconButton(),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -435,7 +444,8 @@ private fun AttachmentOption(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = GlassText
+            color = GlassText,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
         )
     }
 }

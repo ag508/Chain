@@ -72,6 +72,108 @@ class ChatDetailViewModel @Inject constructor(
         }
     }
 
+    fun sendImageMessage(uri: android.net.Uri, caption: String = "") {
+        if (currentChatId.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val message = Message(
+                    id = java.util.UUID.randomUUID().toString(),
+                    chatId = currentChatId,
+                    senderId = currentUserId,
+                    content = caption,
+                    type = MessageType.IMAGE,
+                    timestamp = java.util.Date(),
+                    status = MessageStatus.SENDING,
+                    metadata = mapOf(
+                        "uri" to uri.toString(),
+                        "fileName" to uri.lastPathSegment,
+                        "caption" to caption
+                    )
+                )
+                messageRepository.sendMessage(message)
+            } catch (e: Exception) {
+                timber.log.Timber.e(e, "Failed to send image message")
+            }
+        }
+    }
+
+    fun sendDocumentMessage(uri: android.net.Uri, fileName: String) {
+        if (currentChatId.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val message = Message(
+                    id = java.util.UUID.randomUUID().toString(),
+                    chatId = currentChatId,
+                    senderId = currentUserId,
+                    content = fileName,
+                    type = MessageType.DOCUMENT,
+                    timestamp = java.util.Date(),
+                    status = MessageStatus.SENDING,
+                    metadata = mapOf(
+                        "uri" to uri.toString(),
+                        "fileName" to fileName
+                    )
+                )
+                messageRepository.sendMessage(message)
+            } catch (e: Exception) {
+                timber.log.Timber.e(e, "Failed to send document message")
+            }
+        }
+    }
+
+    fun sendLocationMessage(latitude: Double, longitude: Double, address: String = "") {
+        if (currentChatId.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val message = Message(
+                    id = java.util.UUID.randomUUID().toString(),
+                    chatId = currentChatId,
+                    senderId = currentUserId,
+                    content = address.ifEmpty { "Location: $latitude, $longitude" },
+                    type = MessageType.LOCATION,
+                    timestamp = java.util.Date(),
+                    status = MessageStatus.SENDING,
+                    metadata = mapOf(
+                        "latitude" to latitude,
+                        "longitude" to longitude,
+                        "address" to address
+                    )
+                )
+                messageRepository.sendMessage(message)
+            } catch (e: Exception) {
+                timber.log.Timber.e(e, "Failed to send location message")
+            }
+        }
+    }
+
+    fun sendPollMessage(question: String, options: List<String>) {
+        if (currentChatId.isEmpty() || question.isBlank() || options.size < 2) return
+
+        viewModelScope.launch {
+            try {
+                val message = Message(
+                    id = java.util.UUID.randomUUID().toString(),
+                    chatId = currentChatId,
+                    senderId = currentUserId,
+                    content = question,
+                    type = MessageType.POLL,
+                    timestamp = java.util.Date(),
+                    status = MessageStatus.SENDING,
+                    metadata = mapOf(
+                        "options" to options,
+                        "votes" to options.associate { it to 0 }
+                    )
+                )
+                messageRepository.sendMessage(message)
+            } catch (e: Exception) {
+                timber.log.Timber.e(e, "Failed to send poll message")
+            }
+        }
+    }
+
     fun setCurrentUserId(userId: String) {
         currentUserId = userId
     }

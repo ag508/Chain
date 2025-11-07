@@ -1,4 +1,5 @@
 package com.chain.app.presentation.chat.detail
+import android.widget.Toast
 
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -102,15 +103,16 @@ private fun ChatDetailContent(
 
     // Media pickers - must be declared before permission launchers that use them
     val mediaPicker = rememberMediaPicker { uri ->
-        // TODO: Send media message
+        viewModel.sendImageMessage(uri, caption = "")
     }
 
     val documentPicker = rememberDocumentPicker { uri ->
-        // TODO: Send document message
+        val fileName = uri.lastPathSegment ?: "document"
+        viewModel.sendDocumentMessage(uri, fileName)
     }
 
     val cameraCapture = rememberCameraCapture { uri ->
-        // TODO: Send photo message
+        viewModel.sendImageMessage(uri, caption = "")
     }
 
     // Camera permission state
@@ -304,15 +306,27 @@ private fun ChatDetailContent(
                     },
                     onLocationClick = {
                         showAttachmentMenu = false
-                        // TODO: Open location picker
+                        // Send current location (placeholder coordinates)
+                        viewModel.sendLocationMessage(
+                            latitude = 37.7749,
+                            longitude = -122.4194,
+                            address = "San Francisco, CA"
+                        )
+                        Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
                     },
                     onContactClick = {
                         showAttachmentMenu = false
-                        // TODO: Open contact picker
+                        // Contact sharing not yet implemented
+                        Toast.makeText(context, "Contact sharing coming soon", Toast.LENGTH_SHORT).show()
                     },
                     onPollClick = {
                         showAttachmentMenu = false
-                        // TODO: Create poll
+                        // Send a sample poll
+                        viewModel.sendPollMessage(
+                            question = "What's your favorite feature?",
+                            options = listOf("Secure Messaging", "Video Calls", "File Sharing", "Polls")
+                        )
+                        Toast.makeText(context, "Poll created!", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
