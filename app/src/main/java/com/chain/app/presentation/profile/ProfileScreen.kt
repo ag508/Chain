@@ -280,10 +280,11 @@ private fun ProfileContent(
                 Icon(
                     imageVector = Icons.Default.Share,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
+                    tint = GlassText
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Share Profile")
+                Text("Share Profile", color = GlassText)
             }
         }
 
