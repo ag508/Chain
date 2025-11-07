@@ -39,7 +39,8 @@ fun UserEntity.toDomain(): User = User(
     about = about,
     status = UserStatus.valueOf(status),
     lastSeen = Date(lastSeen),
-    devices = emptyList() // Devices would be loaded separately if needed
+    devices = emptyList(), // Devices would be loaded separately if needed
+    isBlocked = isBlocked
 )
 
 /**
