@@ -429,8 +429,7 @@ private fun AttachmentOption(
                             color.copy(alpha = 0.1f)
                         )
                     )
-                )
-                .glassIconButton(),
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(

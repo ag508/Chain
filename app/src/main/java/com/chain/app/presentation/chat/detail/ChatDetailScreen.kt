@@ -189,6 +189,16 @@ private fun ChatDetailContent(
         )
     }
 
+    // Location permission state
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        )
+    }
+
     // Camera permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -209,6 +219,32 @@ private fun ChatDetailContent(
             // Permission granted, start recording
             isRecordingVoice = true
             // TODO: Start voice recording
+        }
+    }
+
+    // Location permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasLocationPermission = isGranted
+        if (isGranted) {
+            // Permission granted, get current location
+            getCurrentLocationAndShare(context, onSendLocation)
+        } else {
+            Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Contact picker launcher
+    val contactPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickContact()
+    ) { uri ->
+        uri?.let {
+            val contactData = getContactData(context, it)
+            contactData?.let { (name, phone, email) ->
+                onSendContact(name, phone, email)
+                Toast.makeText(context, "Contact shared!", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -387,23 +423,15 @@ private fun ChatDetailContent(
                     },
                     onLocationClick = {
                         showAttachmentMenu = false
-                        // Send current location (placeholder coordinates)
-                        onSendLocation(
-                            37.7749,
-                            -122.4194,
-                            "San Francisco, CA"
-                        )
-                        Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
+                        if (hasLocationPermission) {
+                            getCurrentLocationAndShare(context, onSendLocation)
+                        } else {
+                            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        }
                     },
                     onContactClick = {
                         showAttachmentMenu = false
-                        // Send a sample contact (in production, would open contact picker)
-                        onSendContact(
-                            "John Doe",
-                            "+1234567890",
-                            "john.doe@example.com"
-                        )
-                        Toast.makeText(context, "Contact shared!", Toast.LENGTH_SHORT).show()
+                        contactPickerLauncher.launch(null)
                     },
                     onPollClick = {
                         showAttachmentMenu = false
@@ -572,4 +600,126 @@ private fun ChatDetailContent(
             )
         }
     }
+}
+
+/**
+ * Get current location using FusedLocationProviderClient and share it
+ */
+@androidx.annotation.OptIn(com.google.android.gms.common.api.OptIn::class)
+private fun getCurrentLocationAndShare(
+    context: android.content.Context,
+    onSendLocation: (Double, Double, String) -> Unit
+) {
+    val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
+
+    try {
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                val latitude = location.latitude
+                val longitude = location.longitude
+
+                // Try to get address from coordinates
+                val geocoder = android.location.Geocoder(context, java.util.Locale.getDefault())
+                try {
+                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                    val address = if (!addresses.isNullOrEmpty()) {
+                        val addr = addresses[0]
+                        listOfNotNull(
+                            addr.thoroughfare, // Street
+                            addr.locality, // City
+                            addr.adminArea, // State
+                            addr.countryName // Country
+                        ).joinToString(", ")
+                    } else {
+                        "Location: $latitude, $longitude"
+                    }
+
+                    onSendLocation(latitude, longitude, address)
+                    Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    // Geocoder failed, send with coordinates only
+                    onSendLocation(latitude, longitude, "Location: $latitude, $longitude")
+                    Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(context, "Unable to get current location", Toast.LENGTH_SHORT).show()
+            }
+        }.addOnFailureListener {
+            Toast.makeText(context, "Failed to get location", Toast.LENGTH_SHORT).show()
+        }
+    } catch (e: SecurityException) {
+        Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
+    }
+}
+
+/**
+ * Get contact data from contact URI
+ */
+private fun getContactData(
+    context: android.content.Context,
+    contactUri: android.net.Uri
+): Triple<String, String, String?>? {
+    try {
+        val cursor = context.contentResolver.query(
+            contactUri,
+            null,
+            null,
+            null,
+            null
+        )
+
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(android.provider.ContactsContract.Contacts.DISPLAY_NAME)
+                val idIndex = it.getColumnIndex(android.provider.ContactsContract.Contacts._ID)
+
+                val name = if (nameIndex >= 0) it.getString(nameIndex) else "Unknown"
+                val contactId = if (idIndex >= 0) it.getString(idIndex) else return null
+
+                // Get phone number
+                val phoneCursor = context.contentResolver.query(
+                    android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    null,
+                    "${android.provider.ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+                    arrayOf(contactId),
+                    null
+                )
+
+                var phone = ""
+                phoneCursor?.use { pc ->
+                    if (pc.moveToFirst()) {
+                        val phoneIndex = pc.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
+                        phone = if (phoneIndex >= 0) pc.getString(phoneIndex) else ""
+                    }
+                }
+
+                // Get email (optional)
+                val emailCursor = context.contentResolver.query(
+                    android.provider.ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                    null,
+                    "${android.provider.ContactsContract.CommonDataKinds.Email.CONTACT_ID} = ?",
+                    arrayOf(contactId),
+                    null
+                )
+
+                var email: String? = null
+                emailCursor?.use { ec ->
+                    if (ec.moveToFirst()) {
+                        val emailIndex = ec.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Email.ADDRESS)
+                        email = if (emailIndex >= 0) ec.getString(emailIndex) else null
+                    }
+                }
+
+                return if (phone.isNotBlank()) {
+                    Triple(name, phone, email)
+                } else {
+                    null
+                }
+            }
+        }
+    } catch (e: Exception) {
+        Toast.makeText(context, "Failed to read contact", Toast.LENGTH_SHORT).show()
+    }
+
+    return null
 }
