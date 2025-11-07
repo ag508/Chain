@@ -102,28 +102,29 @@ fun MessageBubble(
                 when (message.type) {
                     MessageType.IMAGE -> {
                         ImageMessageContent(
-                            imageUrl = message.content,
+                            imageUri = message.metadata?.get("uri") as? String ?: message.content,
                             caption = message.metadata?.get("caption") as? String,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
                     MessageType.VIDEO -> {
                         VideoMessageContent(
-                            videoUrl = message.content,
+                            videoUri = message.metadata?.get("uri") as? String ?: message.content,
                             caption = message.metadata?.get("caption") as? String,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
                     MessageType.AUDIO -> {
                         AudioMessageContent(
-                            audioUrl = message.content,
+                            audioUri = message.metadata?.get("uri") as? String ?: message.content,
                             duration = message.metadata?.get("duration") as? Long ?: 0L,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
                     MessageType.DOCUMENT -> {
                         DocumentMessageContent(
-                            fileName = message.metadata?.get("fileName") as? String ?: "Document",
+                            documentUri = message.metadata?.get("uri") as? String,
+                            fileName = message.metadata?.get("fileName") as? String ?: message.content,
                             fileSize = message.metadata?.get("fileSize") as? Long ?: 0L,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -244,7 +245,7 @@ private fun MessageReactions(
 
 @Composable
 private fun ImageMessageContent(
-    imageUrl: String,
+    imageUri: String,
     caption: String?,
     modifier: Modifier = Modifier
 ) {
@@ -252,9 +253,9 @@ private fun ImageMessageContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Image
+        // Image loaded from URI
         AsyncImage(
-            model = imageUrl,
+            model = imageUri,
             contentDescription = "Image message",
             modifier = Modifier
                 .fillMaxWidth()
@@ -265,18 +266,20 @@ private fun ImageMessageContent(
 
         // Caption (if any)
         caption?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            if (it.isNotBlank()) {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun VideoMessageContent(
-    videoUrl: String,
+    videoUri: String,
     caption: String?,
     modifier: Modifier = Modifier
 ) {
@@ -292,9 +295,9 @@ private fun VideoMessageContent(
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.Black.copy(alpha = 0.1f))
         ) {
-            // TODO: Load video thumbnail
+            // Load video thumbnail from URI
             AsyncImage(
-                model = videoUrl,
+                model = videoUri,
                 contentDescription = "Video message",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -313,18 +316,20 @@ private fun VideoMessageContent(
 
         // Caption (if any)
         caption?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            if (it.isNotBlank()) {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun AudioMessageContent(
-    audioUrl: String,
+    audioUri: String,
     duration: Long,
     modifier: Modifier = Modifier
 ) {
@@ -333,7 +338,7 @@ private fun AudioMessageContent(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Play/Pause button
+        // Play/Pause button (TODO: implement actual audio playback)
         Icon(
             imageVector = Icons.Default.PlayArrow,
             contentDescription = "Play audio",
@@ -361,6 +366,7 @@ private fun AudioMessageContent(
 
 @Composable
 private fun DocumentMessageContent(
+    documentUri: String?,
     fileName: String,
     fileSize: Long,
     modifier: Modifier = Modifier
@@ -393,17 +399,19 @@ private fun DocumentMessageContent(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1
             )
-            Text(
-                text = formatFileSize(fileSize),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            if (fileSize > 0) {
+                Text(
+                    text = formatFileSize(fileSize),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
         }
 
-        // Download icon
+        // Download/Open icon (TODO: implement actual file opening)
         Icon(
-            imageVector = Icons.Default.Download,
-            contentDescription = "Download",
+            imageVector = if (documentUri != null) Icons.Default.OpenInNew else Icons.Default.Download,
+            contentDescription = if (documentUri != null) "Open document" else "Download",
             tint = GlassAccent,
             modifier = Modifier.size(24.dp)
         )
