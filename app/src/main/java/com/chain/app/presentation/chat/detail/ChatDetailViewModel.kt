@@ -33,19 +33,26 @@ class ChatDetailViewModel @Inject constructor(
 
     fun loadChat(chatId: String) {
         currentChatId = chatId
+
+        // Load chat info in separate coroutine
         viewModelScope.launch {
             try {
-                // Load chat info
                 getChatByIdUseCase(chatId).collect { chat ->
                     _uiState.value = ChatDetailUiState.Success(chat)
                 }
+            } catch (e: Exception) {
+                _uiState.value = ChatDetailUiState.Error(e.message ?: "Failed to load chat")
+            }
+        }
 
-                // Load messages
+        // Load messages in separate coroutine so it doesn't block
+        viewModelScope.launch {
+            try {
                 getMessagesForChatUseCase(chatId).collect { messageList ->
                     _messages.value = messageList.sortedBy { it.timestamp }
                 }
             } catch (e: Exception) {
-                _uiState.value = ChatDetailUiState.Error(e.message ?: "Failed to load chat")
+                // Messages failed to load, but keep the chat info
             }
         }
     }
