@@ -19,6 +19,11 @@ interface UserRepository {
     suspend fun getUser(userId: String): Result<User>
 
     /**
+     * Observe a user by ID with real-time updates.
+     */
+    fun observeUser(userId: String): Flow<User?>
+
+    /**
      * Search users by name or ID.
      */
     fun searchUsers(query: String): Flow<List<User>>
