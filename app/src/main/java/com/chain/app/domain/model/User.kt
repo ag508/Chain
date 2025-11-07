@@ -11,6 +11,7 @@ data class User(
     val email: String? = null,
     val displayName: String,
     val avatar: String? = null,
+    val about: String? = null,
     val publicKey: String? = null,
     val status: UserStatus = UserStatus.OFFLINE,
     val lastSeen: Date = Date(),

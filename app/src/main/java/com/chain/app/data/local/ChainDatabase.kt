@@ -20,7 +20,7 @@ import com.chain.app.data.local.entity.*
         CallEntity::class,
         ContactEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(StringListConverter::class)

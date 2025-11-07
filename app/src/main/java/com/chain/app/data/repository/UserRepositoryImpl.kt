@@ -65,7 +65,8 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun updateProfile(
         displayName: String?,
-        avatar: String?
+        avatar: String?,
+        about: String?
     ): Result<User> {
         return try {
             val userId = userPreferences.getUserId()
@@ -76,7 +77,8 @@ class UserRepositoryImpl @Inject constructor(
 
             val updatedUser = currentUser.copy(
                 displayName = displayName ?: currentUser.displayName,
-                avatar = avatar ?: currentUser.avatar
+                avatar = avatar ?: currentUser.avatar,
+                about = about ?: currentUser.about
             )
 
             userDao.updateUser(updatedUser)

@@ -28,7 +28,8 @@ interface UserRepository {
      */
     suspend fun updateProfile(
         displayName: String? = null,
-        avatar: String? = null
+        avatar: String? = null,
+        about: String? = null
     ): Result<User>
 
     /**
