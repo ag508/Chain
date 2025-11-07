@@ -44,7 +44,6 @@ fun ChatDetailScreen(
 
     LaunchedEffect(chatId) {
         viewModel.loadChat(chatId)
-        viewModel.setCurrentUserId(currentUserId)
     }
 
     when (val state = uiState) {
@@ -76,6 +75,11 @@ fun ChatDetailScreen(
                 onSendMessage = viewModel::sendMessage,
                 onVoiceCallClick = onVoiceCallClick,
                 onVideoCallClick = onVideoCallClick,
+                onSendImage = viewModel::sendImageMessage,
+                onSendVideo = viewModel::sendVideoMessage,
+                onSendDocument = viewModel::sendDocumentMessage,
+                onSendLocation = viewModel::sendLocationMessage,
+                onSendContact = viewModel::sendContactMessage,
                 modifier = modifier
             )
         }
@@ -91,6 +95,11 @@ private fun ChatDetailContent(
     onSendMessage: (String) -> Unit,
     onVoiceCallClick: () -> Unit,
     onVideoCallClick: () -> Unit,
+    onSendImage: (android.net.Uri, String) -> Unit,
+    onSendVideo: (android.net.Uri, String, Long) -> Unit,
+    onSendDocument: (android.net.Uri, String) -> Unit,
+    onSendLocation: (Double, Double, String) -> Unit,
+    onSendContact: (String, String, String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var messageText by remember { mutableStateOf(TextFieldValue("")) }
@@ -106,19 +115,19 @@ private fun ChatDetailContent(
         // Determine if it's an image or video based on URI
         val mimeType = context.contentResolver.getType(uri)
         if (mimeType?.startsWith("video") == true) {
-            viewModel.sendVideoMessage(uri, caption = "", duration = 0)
+            onSendVideo(uri, "", 0)
         } else {
-            viewModel.sendImageMessage(uri, caption = "")
+            onSendImage(uri, "")
         }
     }
 
     val documentPicker = rememberDocumentPicker { uri ->
         val fileName = uri.lastPathSegment ?: "document"
-        viewModel.sendDocumentMessage(uri, fileName)
+        onSendDocument(uri, fileName)
     }
 
     val cameraCapture = rememberCameraCapture { uri ->
-        viewModel.sendImageMessage(uri, caption = "")
+        onSendImage(uri, "")
     }
 
     // Camera permission state
@@ -313,31 +322,26 @@ private fun ChatDetailContent(
                     onLocationClick = {
                         showAttachmentMenu = false
                         // Send current location (placeholder coordinates)
-                        viewModel.sendLocationMessage(
-                            latitude = 37.7749,
-                            longitude = -122.4194,
-                            address = "San Francisco, CA"
+                        onSendLocation(
+                            37.7749,
+                            -122.4194,
+                            "San Francisco, CA"
                         )
                         Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
                     },
                     onContactClick = {
                         showAttachmentMenu = false
                         // Send a sample contact (in production, would open contact picker)
-                        viewModel.sendContactMessage(
-                            name = "John Doe",
-                            phoneNumber = "+1234567890",
-                            email = "john.doe@example.com"
+                        onSendContact(
+                            "John Doe",
+                            "+1234567890",
+                            "john.doe@example.com"
                         )
                         Toast.makeText(context, "Contact shared!", Toast.LENGTH_SHORT).show()
                     },
                     onPollClick = {
                         showAttachmentMenu = false
-                        // Send a sample poll
-                        viewModel.sendPollMessage(
-                            question = "What's your favorite feature?",
-                            options = listOf("Secure Messaging", "Video Calls", "File Sharing", "Polls")
-                        )
-                        Toast.makeText(context, "Poll created!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Poll feature coming soon!", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
