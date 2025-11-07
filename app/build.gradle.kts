@@ -98,6 +98,7 @@ android {
             excludes += "/META-INF/DEPENDENCIES"
             excludes += "/META-INF/LICENSE"
             excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/LICENSE.md"
             excludes += "/META-INF/license.txt"
             excludes += "/META-INF/NOTICE"
             excludes += "/META-INF/NOTICE.txt"
