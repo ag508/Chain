@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.chain.app.domain.model.Message
-import com.chain.app.presentation.components.glass.glass
 import com.chain.app.presentation.theme.*
 
 /**

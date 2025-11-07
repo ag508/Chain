@@ -222,9 +222,11 @@ class DHTManager @Inject constructor() {
                     // Convert KademliaNode to Peer
                     val peer = Peer(
                         id = node.id.joinToString("") { "%02x".format(it) },
-                        address = node.address,
-                        port = node.port,
-                        lastSeen = node.lastSeen
+                        address = "${node.address}:${node.port}",
+                        publicKey = "", // Will be exchanged during handshake
+                        lastSeen = node.lastSeen,
+                        reliability = 1.0, // Default to full reliability for DHT peers
+                        isOnline = true
                     )
                     discoveredPeers.add(peer)
                     knownPeers[peer.id] = peer

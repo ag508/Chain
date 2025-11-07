@@ -62,6 +62,7 @@ val CallMissed = Color(0xFFFF3333)
 
 // ===== BRAND COLORS (if needed for specific elements) =====
 val ChainSecureGreen = Color(0xFF00C781)
+val ChainSecureBlue = Color(0xFF00A3FF)
 
 // ===== BACKWARD COMPATIBILITY =====
 // Map old color names to glassmorphic equivalents for gradual migration

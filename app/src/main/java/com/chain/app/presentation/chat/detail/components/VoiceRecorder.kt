@@ -29,10 +29,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.chain.app.presentation.components.glass.glass
 import com.chain.app.presentation.theme.*
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -41,10 +40,11 @@ import java.io.IOException
 /**
  * Voice recording button with slide-to-cancel functionality.
  */
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun VoiceRecordButton(
     onRecordingComplete: (Uri, Long) -> Unit,
+    hasPermission: Boolean,
+    onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -54,8 +54,6 @@ fun VoiceRecordButton(
     var recordingDuration by remember { mutableStateOf(0L) }
     var recorder: MediaRecorder? by remember { mutableStateOf(null) }
     var outputFile: File? by remember { mutableStateOf(null) }
-
-    val audioPermission = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
     // Pulsing animation
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -131,7 +129,7 @@ fun VoiceRecordButton(
     } else {
         IconButton(
             onClick = {
-                if (audioPermission.hasPermission) {
+                if (hasPermission) {
                     // Start recording
                     scope.launch {
                         val file = createAudioFile(context)
@@ -161,7 +159,7 @@ fun VoiceRecordButton(
                         }
                     }
                 } else {
-                    audioPermission.launchPermissionRequest()
+                    onRequestPermission()
                 }
             },
             modifier = modifier
