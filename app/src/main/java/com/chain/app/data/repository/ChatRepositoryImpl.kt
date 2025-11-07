@@ -3,6 +3,7 @@ package com.chain.app.data.repository
 import com.chain.app.data.local.dao.ChatDao
 import com.chain.app.data.local.entity.toEntity
 import com.chain.app.data.local.entity.toDomain
+import com.chain.app.data.preferences.UserPreferences
 import com.chain.app.domain.model.Chat
 import com.chain.app.domain.model.ChatType
 import com.chain.app.domain.model.GroupChat
@@ -19,7 +20,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class ChatRepositoryImpl @Inject constructor(
-    private val chatDao: ChatDao
+    private val chatDao: ChatDao,
+    private val userPreferences: UserPreferences
 ) : ChatRepository {
 
     override fun getChats(): Flow<List<Chat>> {
@@ -48,12 +50,16 @@ class ChatRepositoryImpl @Inject constructor(
                 return Result.success(existing.toDomain())
             }
 
+            // Get current user ID
+            val currentUserId = userPreferences.getUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
             // Create new chat
             val chat = Chat(
                 id = UUID.randomUUID().toString(),
                 type = ChatType.DIRECT,
                 name = "", // Will be set to user's display name
-                participants = listOf("current_user", userId),
+                participants = listOf(currentUserId, userId),
                 createdAt = Date(),
                 updatedAt = Date()
             )

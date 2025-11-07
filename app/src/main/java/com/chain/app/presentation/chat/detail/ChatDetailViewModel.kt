@@ -2,14 +2,19 @@ package com.chain.app.presentation.chat.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chain.app.data.preferences.UserPreferences
 import com.chain.app.domain.model.Chat
 import com.chain.app.domain.model.Message
+import com.chain.app.domain.model.MessageStatus
+import com.chain.app.domain.model.MessageType
+import com.chain.app.domain.repository.MessageRepository
 import com.chain.app.domain.usecase.GetChatByIdUseCase
 import com.chain.app.domain.usecase.GetMessagesForChatUseCase
 import com.chain.app.domain.usecase.SendMessageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -19,7 +24,9 @@ import javax.inject.Inject
 class ChatDetailViewModel @Inject constructor(
     private val getChatByIdUseCase: GetChatByIdUseCase,
     private val getMessagesForChatUseCase: GetMessagesForChatUseCase,
-    private val sendMessageUseCase: SendMessageUseCase
+    private val sendMessageUseCase: SendMessageUseCase,
+    private val messageRepository: MessageRepository,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ChatDetailUiState>(ChatDetailUiState.Loading)
@@ -29,7 +36,17 @@ class ChatDetailViewModel @Inject constructor(
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
 
     private var currentChatId: String = ""
-    private var currentUserId: String = "" // TODO: Get from auth
+    private var currentUserId: String = ""
+
+    init {
+        // Load current user ID
+        viewModelScope.launch {
+            currentUserId = userPreferences.getUserId() ?: ""
+            if (currentUserId.isEmpty()) {
+                Timber.w("No user ID found in preferences")
+            }
+        }
+    }
 
     fun loadChat(chatId: String) {
         currentChatId = chatId
@@ -58,16 +75,17 @@ class ChatDetailViewModel @Inject constructor(
     }
 
     fun sendMessage(content: String) {
-        if (content.isBlank() || currentChatId.isEmpty()) return
+        if (content.isBlank() || currentChatId.isEmpty() || currentUserId.isEmpty()) return
 
         viewModelScope.launch {
             try {
                 sendMessageUseCase(
                     chatId = currentChatId,
-                    content = content
+                    content = content,
+                    senderId = currentUserId
                 )
             } catch (e: Exception) {
-                // TODO: Show error to user
+                Timber.e(e, "Failed to send message")
             }
         }
     }
@@ -93,7 +111,7 @@ class ChatDetailViewModel @Inject constructor(
                 )
                 messageRepository.sendMessage(message)
             } catch (e: Exception) {
-                timber.log.Timber.e(e, "Failed to send image message")
+                Timber.e(e, "Failed to send image message")
             }
         }
     }
@@ -118,7 +136,7 @@ class ChatDetailViewModel @Inject constructor(
                 )
                 messageRepository.sendMessage(message)
             } catch (e: Exception) {
-                timber.log.Timber.e(e, "Failed to send document message")
+                Timber.e(e, "Failed to send document message")
             }
         }
     }
@@ -144,7 +162,7 @@ class ChatDetailViewModel @Inject constructor(
                 )
                 messageRepository.sendMessage(message)
             } catch (e: Exception) {
-                timber.log.Timber.e(e, "Failed to send location message")
+                Timber.e(e, "Failed to send location message")
             }
         }
     }
@@ -169,7 +187,7 @@ class ChatDetailViewModel @Inject constructor(
                 )
                 messageRepository.sendMessage(message)
             } catch (e: Exception) {
-                timber.log.Timber.e(e, "Failed to send poll message")
+                Timber.e(e, "Failed to send poll message")
             }
         }
     }
@@ -196,7 +214,7 @@ class ChatDetailViewModel @Inject constructor(
                 )
                 messageRepository.sendMessage(message)
             } catch (e: Exception) {
-                timber.log.Timber.e(e, "Failed to send video message")
+                Timber.e(e, "Failed to send video message")
             }
         }
     }
@@ -222,7 +240,7 @@ class ChatDetailViewModel @Inject constructor(
                 )
                 messageRepository.sendMessage(message)
             } catch (e: Exception) {
-                timber.log.Timber.e(e, "Failed to send audio message")
+                Timber.e(e, "Failed to send audio message")
             }
         }
     }
@@ -248,13 +266,9 @@ class ChatDetailViewModel @Inject constructor(
                 )
                 messageRepository.sendMessage(message)
             } catch (e: Exception) {
-                timber.log.Timber.e(e, "Failed to send contact message")
+                Timber.e(e, "Failed to send contact message")
             }
         }
-    }
-
-    fun setCurrentUserId(userId: String) {
-        currentUserId = userId
     }
 }
 
