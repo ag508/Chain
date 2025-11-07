@@ -100,9 +100,10 @@ class MessageRepositoryImpl @Inject constructor(
                     val decryptedContent = String(p2pMessage.encryptedPayload)
 
                     // Create message entity
+                    // chatId should be the sender's ID so the message appears in chat with them
                     val message = Message(
                         id = p2pMessage.id,
-                        chatId = p2pMessage.to, // Assuming direct message for now
+                        chatId = p2pMessage.from, // Use sender ID as chatId for direct messages
                         senderId = p2pMessage.from,
                         content = decryptedContent,
                         type = MessageType.TEXT,
@@ -117,7 +118,7 @@ class MessageRepositoryImpl @Inject constructor(
                     // Send delivery receipt
                     p2pRepository.sendDeliveryReceipt(message.id, message.senderId)
 
-                    Timber.d("Received and saved message: ${message.id}")
+                    Timber.d("Received and saved message: ${message.id} from ${p2pMessage.from}")
                 }
 
                 P2PMessageType.DELIVERY_RECEIPT -> {

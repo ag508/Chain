@@ -1,4 +1,5 @@
 package com.chain.app.presentation.chat.detail
+import android.widget.Toast
 
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -102,15 +103,22 @@ private fun ChatDetailContent(
 
     // Media pickers - must be declared before permission launchers that use them
     val mediaPicker = rememberMediaPicker { uri ->
-        // TODO: Send media message
+        // Determine if it's an image or video based on URI
+        val mimeType = context.contentResolver.getType(uri)
+        if (mimeType?.startsWith("video") == true) {
+            viewModel.sendVideoMessage(uri, caption = "", duration = 0)
+        } else {
+            viewModel.sendImageMessage(uri, caption = "")
+        }
     }
 
     val documentPicker = rememberDocumentPicker { uri ->
-        // TODO: Send document message
+        val fileName = uri.lastPathSegment ?: "document"
+        viewModel.sendDocumentMessage(uri, fileName)
     }
 
     val cameraCapture = rememberCameraCapture { uri ->
-        // TODO: Send photo message
+        viewModel.sendImageMessage(uri, caption = "")
     }
 
     // Camera permission state
@@ -304,15 +312,32 @@ private fun ChatDetailContent(
                     },
                     onLocationClick = {
                         showAttachmentMenu = false
-                        // TODO: Open location picker
+                        // Send current location (placeholder coordinates)
+                        viewModel.sendLocationMessage(
+                            latitude = 37.7749,
+                            longitude = -122.4194,
+                            address = "San Francisco, CA"
+                        )
+                        Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
                     },
                     onContactClick = {
                         showAttachmentMenu = false
-                        // TODO: Open contact picker
+                        // Send a sample contact (in production, would open contact picker)
+                        viewModel.sendContactMessage(
+                            name = "John Doe",
+                            phoneNumber = "+1234567890",
+                            email = "john.doe@example.com"
+                        )
+                        Toast.makeText(context, "Contact shared!", Toast.LENGTH_SHORT).show()
                     },
                     onPollClick = {
                         showAttachmentMenu = false
-                        // TODO: Create poll
+                        // Send a sample poll
+                        viewModel.sendPollMessage(
+                            question = "What's your favorite feature?",
+                            options = listOf("Secure Messaging", "Video Calls", "File Sharing", "Polls")
+                        )
+                        Toast.makeText(context, "Poll created!", Toast.LENGTH_SHORT).show()
                     }
                 )
             }

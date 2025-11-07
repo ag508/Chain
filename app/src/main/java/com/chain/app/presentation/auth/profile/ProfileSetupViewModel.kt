@@ -24,8 +24,8 @@ class ProfileSetupViewModel @Inject constructor(
     private val _state = MutableStateFlow(ProfileSetupState())
     val state = _state.asStateFlow()
 
-    fun setUserData(userId: String, phoneNumber: String) {
-        _state.update { it.copy(userId = userId, phoneNumber = phoneNumber) }
+    fun setUserData(userId: String, phoneNumber: String, email: String) {
+        _state.update { it.copy(userId = userId, phoneNumber = phoneNumber, email = email) }
     }
 
     fun onNameChanged(name: String) {
@@ -57,10 +57,11 @@ class ProfileSetupViewModel @Inject constructor(
 
             val userId = _state.value.userId
             val phoneNumber = _state.value.phoneNumber
+            val email = _state.value.email
 
-            println("DEBUG ProfileSetup: userId=$userId, phoneNumber=$phoneNumber")
+            println("DEBUG ProfileSetup: userId=$userId, phoneNumber=$phoneNumber, email=$email")
 
-            if (userId == null || phoneNumber == null) {
+            if (userId == null || phoneNumber == null || email == null) {
                 println("DEBUG ProfileSetup: User data missing!")
                 _state.update {
                     it.copy(
@@ -79,6 +80,7 @@ class ProfileSetupViewModel @Inject constructor(
             val result = authRepository.createUserProfile(
                 userId = userId,
                 phoneNumber = phoneNumber,
+                email = email,
                 displayName = _state.value.name,
                 avatar = avatarUrl
             )
@@ -134,6 +136,7 @@ class ProfileSetupViewModel @Inject constructor(
 data class ProfileSetupState(
     val userId: String? = null,
     val phoneNumber: String? = null,
+    val email: String? = null,
     val name: String = "",
     val nameError: String? = null,
     val profileImageUri: Uri? = null,

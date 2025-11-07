@@ -14,6 +14,7 @@ data class UserEntity(
     @PrimaryKey
     val id: String,
     val phoneNumber: String,
+    val email: String? = null,
     val displayName: String,
     val avatar: String?,
     val publicKey: String?,
@@ -30,6 +31,7 @@ data class UserEntity(
 fun UserEntity.toDomain(): User = User(
     id = id,
     phoneNumber = phoneNumber,
+    email = email,
     publicKey = publicKey,
     displayName = displayName,
     avatar = avatar,
@@ -44,6 +46,7 @@ fun UserEntity.toDomain(): User = User(
 fun User.toEntity(isContact: Boolean = false, isBlocked: Boolean = false): UserEntity = UserEntity(
     id = id,
     phoneNumber = phoneNumber,
+    email = email,
     publicKey = publicKey,
     displayName = displayName,
     avatar = avatar,

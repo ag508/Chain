@@ -24,6 +24,7 @@ import com.chain.app.presentation.theme.*
 fun ProfileSetupScreen(
     userId: String,
     phoneNumber: String,
+    email: String,
     onProfileCreated: () -> Unit,
     viewModel: ProfileSetupViewModel = hiltViewModel()
 ) {
@@ -31,8 +32,8 @@ fun ProfileSetupScreen(
     val scroll = rememberScrollState()
 
     LaunchedEffect(Unit) {
-        println("DEBUG ProfileScreen: Initializing with userId=$userId, phoneNumber=$phoneNumber")
-        viewModel.setUserData(userId, phoneNumber)
+        println("DEBUG ProfileScreen: Initializing with userId=$userId, phoneNumber=$phoneNumber, email=$email")
+        viewModel.setUserData(userId, phoneNumber, email)
     }
 
     LaunchedEffect(state.profileCreated) {

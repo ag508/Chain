@@ -30,7 +30,8 @@ class AuthRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val userDao: UserDao,
     private val userPreferences: UserPreferences,
-    private val signalProtocolManager: SignalProtocolManager
+    private val signalProtocolManager: SignalProtocolManager,
+    private val emailService: com.chain.app.data.email.EmailService
 ) : AuthRepository {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
@@ -46,18 +47,23 @@ class AuthRepositoryImpl @Inject constructor(
         return userPreferences.getUserId()
     }
 
-    override suspend fun sendOtp(phoneNumber: String): Result<Unit> {
+    override suspend fun sendOtp(phoneNumber: String, email: String): Result<Unit> {
         return try {
-            // Simulate API call delay
-            delay(1000)
-
-            // In a real app, this would call a backend API to send SMS
-            // For demo purposes, we'll generate a random OTP and store it
+            // Generate OTP
             val otp = generateOtp()
             otpStorage[phoneNumber] = otp
 
+            // Send OTP via email
+            val emailResult = emailService.sendOtpEmail(email, otp)
+
+            if (emailResult.isFailure) {
+                return Result.failure(
+                    emailResult.exceptionOrNull() ?: Exception("Failed to send OTP email")
+                )
+            }
+
             // In development, log the OTP (remove in production!)
-            println("DEBUG: OTP for $phoneNumber is $otp")
+            println("DEBUG: OTP for $phoneNumber / $email is $otp")
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -96,6 +102,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun createUserProfile(
         userId: String,
         phoneNumber: String,
+        email: String,
         displayName: String,
         avatar: String?
     ): Result<User> {
@@ -104,6 +111,7 @@ class AuthRepositoryImpl @Inject constructor(
             val userEntity = UserEntity(
                 id = userId,
                 phoneNumber = phoneNumber,
+                email = email,
                 displayName = displayName,
                 avatar = avatar,
                 publicKey = null, // Will be set during encryption initialization
@@ -126,6 +134,7 @@ class AuthRepositoryImpl @Inject constructor(
             val user = User(
                 id = userId,
                 phoneNumber = phoneNumber,
+                email = email,
                 displayName = displayName,
                 avatar = avatar,
                 publicKey = null,

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chain.app.domain.repository.AuthRepository
 import com.chain.app.domain.usecase.auth.ValidatePhoneNumberUseCase
+import com.chain.app.domain.usecase.auth.ValidatePhoneNumberUseCase.ValidationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,11 +32,22 @@ class PhoneNumberViewModel @Inject constructor(
         _state.update { it.copy(countryCode = countryCode) }
     }
 
-    fun onContinueClick() {
-        val validation = validatePhoneNumber(_state.value.phoneNumber)
+    fun onEmailChanged(email: String) {
+        _state.update { it.copy(email = email, emailError = null) }
+    }
 
-        if (!validation.successful) {
-            _state.update { it.copy(phoneNumberError = validation.errorMessage) }
+    fun onContinueClick() {
+        // Validate phone number
+        val phoneValidation = validatePhoneNumber(_state.value.phoneNumber)
+        if (!phoneValidation.successful) {
+            _state.update { it.copy(phoneNumberError = phoneValidation.errorMessage) }
+            return
+        }
+
+        // Validate email
+        val emailValidation = validateEmail(_state.value.email)
+        if (!emailValidation.successful) {
+            _state.update { it.copy(emailError = emailValidation.errorMessage) }
             return
         }
 
@@ -47,7 +59,8 @@ class PhoneNumberViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
 
             val fullPhoneNumber = "${_state.value.countryCode}${_state.value.phoneNumber}"
-            val result = authRepository.sendOtp(fullPhoneNumber)
+            val email = _state.value.email
+            val result = authRepository.sendOtp(fullPhoneNumber, email)
 
             if (result.isSuccess) {
                 _state.update {
@@ -67,6 +80,19 @@ class PhoneNumberViewModel @Inject constructor(
         }
     }
 
+    private fun validateEmail(email: String): ValidationResult {
+        if (email.isBlank()) {
+            return ValidationResult(successful = false, errorMessage = "Email is required")
+        }
+
+        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
+        if (!email.matches(emailRegex)) {
+            return ValidationResult(successful = false, errorMessage = "Invalid email address")
+        }
+
+        return ValidationResult(successful = true)
+    }
+
     fun clearError() {
         _state.update { it.copy(error = null) }
     }
@@ -75,7 +101,9 @@ class PhoneNumberViewModel @Inject constructor(
 data class PhoneNumberState(
     val phoneNumber: String = "",
     val countryCode: String = "+1",
+    val email: String = "",
     val phoneNumberError: String? = null,
+    val emailError: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
     val otpSent: Boolean = false

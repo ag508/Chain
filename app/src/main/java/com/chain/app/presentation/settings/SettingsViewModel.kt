@@ -13,7 +13,6 @@ import javax.inject.Inject
 data class AppSettings(
     val biometricEnabled: Boolean = false,
     val notificationsEnabled: Boolean = true,
-    val themeMode: String = "system", // "light", "dark", "system"
     val soundEnabled: Boolean = true,
     val vibrationEnabled: Boolean = true,
     val readReceipts: Boolean = true,
@@ -22,7 +21,8 @@ data class AppSettings(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val authRepository: com.chain.app.domain.repository.AuthRepository
 ) : ViewModel() {
 
     private val _settings = MutableStateFlow(AppSettings())
@@ -36,12 +36,21 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val biometric = userPreferences.isBiometricEnabled()
             userPreferences.notificationsEnabled.collect { notifs ->
-                userPreferences.themeMode.collect { theme ->
-                    _settings.value = AppSettings(
-                        biometricEnabled = biometric,
-                        notificationsEnabled = notifs,
-                        themeMode = theme
-                    )
+                userPreferences.soundEnabled.collect { sound ->
+                    userPreferences.vibrationEnabled.collect { vibration ->
+                        userPreferences.readReceipts.collect { readReceipts ->
+                            userPreferences.onlineStatus.collect { onlineStatus ->
+                                _settings.value = AppSettings(
+                                    biometricEnabled = biometric,
+                                    notificationsEnabled = notifs,
+                                    soundEnabled = sound,
+                                    vibrationEnabled = vibration,
+                                    readReceipts = readReceipts,
+                                    onlineStatus = onlineStatus
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -61,26 +70,40 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setThemeMode(mode: String) {
+    fun setSoundEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            userPreferences.setThemeMode(mode)
-            _settings.value = _settings.value.copy(themeMode = mode)
+            userPreferences.setSoundEnabled(enabled)
+            _settings.value = _settings.value.copy(soundEnabled = enabled)
         }
     }
 
-    fun setSoundEnabled(enabled: Boolean) {
-        _settings.value = _settings.value.copy(soundEnabled = enabled)
-    }
-
     fun setVibrationEnabled(enabled: Boolean) {
-        _settings.value = _settings.value.copy(vibrationEnabled = enabled)
+        viewModelScope.launch {
+            userPreferences.setVibrationEnabled(enabled)
+            _settings.value = _settings.value.copy(vibrationEnabled = enabled)
+        }
     }
 
     fun setReadReceipts(enabled: Boolean) {
-        _settings.value = _settings.value.copy(readReceipts = enabled)
+        viewModelScope.launch {
+            userPreferences.setReadReceipts(enabled)
+            _settings.value = _settings.value.copy(readReceipts = enabled)
+        }
     }
 
     fun setOnlineStatus(enabled: Boolean) {
-        _settings.value = _settings.value.copy(onlineStatus = enabled)
+        viewModelScope.launch {
+            userPreferences.setOnlineStatus(enabled)
+            _settings.value = _settings.value.copy(onlineStatus = enabled)
+        }
+    }
+
+    fun logout(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val result = authRepository.logout()
+            if (result.isSuccess) {
+                onSuccess()
+            }
+        }
     }
 }

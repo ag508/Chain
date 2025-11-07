@@ -19,9 +19,9 @@ interface AuthRepository {
     suspend fun getCurrentUserId(): String?
 
     /**
-     * Send OTP to the given phone number.
+     * Send OTP to the given phone number and email.
      */
-    suspend fun sendOtp(phoneNumber: String): Result<Unit>
+    suspend fun sendOtp(phoneNumber: String, email: String): Result<Unit>
 
     /**
      * Verify OTP code for the given phone number.
@@ -34,6 +34,7 @@ interface AuthRepository {
     suspend fun createUserProfile(
         userId: String,
         phoneNumber: String,
+        email: String,
         displayName: String,
         avatar: String? = null
     ): Result<User>

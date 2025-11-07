@@ -26,6 +26,10 @@ class UserPreferences(private val context: Context) {
         private val BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
         private val THEME_MODE = stringPreferencesKey("theme_mode")
         private val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        private val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+        private val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
+        private val READ_RECEIPTS = booleanPreferencesKey("read_receipts")
+        private val ONLINE_STATUS = booleanPreferencesKey("online_status")
     }
 
     val userId: Flow<String?> = context.dataStore.data
@@ -63,6 +67,18 @@ class UserPreferences(private val context: Context) {
 
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data
         .map { it[NOTIFICATIONS_ENABLED] ?: true }
+
+    val soundEnabled: Flow<Boolean> = context.dataStore.data
+        .map { it[SOUND_ENABLED] ?: true }
+
+    val vibrationEnabled: Flow<Boolean> = context.dataStore.data
+        .map { it[VIBRATION_ENABLED] ?: true }
+
+    val readReceipts: Flow<Boolean> = context.dataStore.data
+        .map { it[READ_RECEIPTS] ?: true }
+
+    val onlineStatus: Flow<Boolean> = context.dataStore.data
+        .map { it[ONLINE_STATUS] ?: true }
 
     suspend fun getUserId(): String? {
         return context.dataStore.data.map { it[USER_ID] }.first()
@@ -119,6 +135,30 @@ class UserPreferences(private val context: Context) {
     suspend fun setNotificationsEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[NOTIFICATIONS_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setSoundEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[SOUND_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setVibrationEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[VIBRATION_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setReadReceipts(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[READ_RECEIPTS] = enabled
+        }
+    }
+
+    suspend fun setOnlineStatus(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[ONLINE_STATUS] = enabled
         }
     }
 
