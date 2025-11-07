@@ -23,6 +23,7 @@ class OtpViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val phoneNumber: String = savedStateHandle.get<String>("phoneNumber") ?: ""
+    private val email: String = savedStateHandle.get<String>("email") ?: ""
 
     private val _state = MutableStateFlow(OtpState(phoneNumber = phoneNumber))
     val state = _state.asStateFlow()
@@ -84,7 +85,7 @@ class OtpViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
-            val result = authRepository.sendOtp(phoneNumber)
+            val result = authRepository.sendOtp(phoneNumber, email)
 
             if (result.isSuccess) {
                 _state.update {
