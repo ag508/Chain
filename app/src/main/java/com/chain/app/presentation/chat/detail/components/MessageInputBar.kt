@@ -127,7 +127,7 @@ fun MessageInputBar(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(GlassAccent)
+                        .background(ChainSecureGreen)
                         .clickable { onSendMessage() },
                     contentAlignment = Alignment.Center
                 ) {

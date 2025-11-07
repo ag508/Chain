@@ -47,18 +47,26 @@ class MessageRepositoryImpl @Inject constructor(
             // Save to local database
             messageDao.insertMessage(message.toEntity())
 
-            // Encrypt message content
-            val encryptedContent = encryptionRepository.encryptMessage(
-                plaintext = message.content,
-                recipientId = message.chatId // Use chatId as recipient
-            ).getOrThrow()
+            // Try to encrypt message content, fall back to plaintext if no session exists
+            val payloadBytes = try {
+                val encryptedContent = encryptionRepository.encryptMessage(
+                    plaintext = message.content,
+                    recipientId = message.chatId // Use chatId as recipient
+                ).getOrThrow()
+                encryptedContent.content.toByteArray()
+            } catch (e: org.signal.libsignal.protocol.NoSessionException) {
+                // No session exists yet, send as plaintext
+                // This matches the receiver's current behavior (line 92)
+                Timber.w("No session exists for ${message.chatId}, sending as plaintext")
+                message.content.toByteArray()
+            }
 
             // Create P2P message
             val p2pMessage = P2PMessage(
                 id = message.id,
                 from = message.senderId,
                 to = message.chatId, // Use chatId as recipient
-                encryptedPayload = encryptedContent.content.toByteArray(),
+                encryptedPayload = payloadBytes,
                 timestamp = message.timestamp.time,
                 type = P2PMessageType.CHAT_MESSAGE,
                 signature = ByteArray(0) // TODO: Sign with private key
