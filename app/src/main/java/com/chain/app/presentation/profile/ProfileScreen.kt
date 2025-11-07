@@ -372,8 +372,7 @@ private fun EditProfileContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape),
-                        contentScale = ContentScale.Crop,
-                        error = rememberAsyncImagePainter(Icons.Default.Person)
+                        contentScale = ContentScale.Crop
                     )
                 } else {
                     Box(
