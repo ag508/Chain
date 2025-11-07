@@ -18,9 +18,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.chain.app.presentation.theme.glassCard
-import com.chain.app.presentation.theme.glassButton
-import com.chain.app.presentation.theme.glassTextField
+import com.chain.app.presentation.theme.*
 
 /**
  * Glass-styled card component.
@@ -142,7 +140,7 @@ fun GlassTextField(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = GlassText.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
             )
         }
@@ -157,7 +155,7 @@ fun GlassTextField(
                 .padding(16.dp),
             enabled = enabled,
             readOnly = readOnly,
-            textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
+            textStyle = textStyle.copy(color = GlassText),
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
@@ -185,7 +183,7 @@ fun GlassTextField(
                             Text(
                                 text = placeholder,
                                 style = textStyle,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                color = GlassText.copy(alpha = 0.5f)
                             )
                         }
                         innerTextField()
@@ -209,7 +207,7 @@ fun GlassTextField(
                 color = if (isError) {
                     MaterialTheme.colorScheme.error
                 } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    GlassText.copy(alpha = 0.6f)
                 },
                 modifier = Modifier.padding(top = 4.dp, start = 4.dp)
             )

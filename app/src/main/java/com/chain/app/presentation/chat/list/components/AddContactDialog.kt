@@ -151,7 +151,7 @@ fun AddContactDialog(
                                     onClick = onDismiss,
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Cancel")
+                                    Text("Cancel", color = GlassText)
                                 }
 
                                 GlassButton(
@@ -167,10 +167,11 @@ fun AddContactDialog(
                                     Icon(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(20.dp),
+                                        tint = GlassText
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Add")
+                                    Text("Add", color = GlassText)
                                 }
                             }
 
@@ -197,10 +198,11 @@ fun AddContactDialog(
                                 Icon(
                                     imageVector = Icons.Default.QrCodeScanner,
                                     contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp),
+                                    tint = GlassText
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Scan QR Code")
+                                Text("Scan QR Code", color = GlassText)
                             }
                         }
                     }
@@ -243,7 +245,7 @@ fun AddContactDialog(
                                     onClick = onDismiss,
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Cancel")
+                                    Text("Cancel", color = GlassText)
                                 }
 
                                 GlassButton(
@@ -256,10 +258,11 @@ fun AddContactDialog(
                                     Icon(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(20.dp),
+                                        tint = GlassText
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Create")
+                                    Text("Create", color = GlassText)
                                 }
                             }
                         }
