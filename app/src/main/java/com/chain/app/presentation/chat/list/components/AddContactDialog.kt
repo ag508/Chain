@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.chain.app.presentation.components.glass.GlassButton
 import com.chain.app.presentation.components.glass.GlassTextField
-import com.chain.app.presentation.theme.glassDialog
+import com.chain.app.presentation.theme.*
 
 @Composable
 fun AddContactDialog(
@@ -50,7 +50,7 @@ fun AddContactDialog(
                 Text(
                     text = "Add Contact or Group",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = GlassText
                 )
 
                 // Tab selector
@@ -72,15 +72,16 @@ fun AddContactDialog(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(16.dp),
+                                tint = if (selectedTab == 0) GlassAccent else GlassText.copy(alpha = 0.6f)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Contact",
                                 color = if (selectedTab == 0)
-                                    MaterialTheme.colorScheme.primary
+                                    GlassAccent
                                 else
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    GlassText.copy(alpha = 0.6f),
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1
                             )
@@ -101,15 +102,16 @@ fun AddContactDialog(
                             Icon(
                                 imageVector = Icons.Default.Group,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(16.dp),
+                                tint = if (selectedTab == 1) GlassAccent else GlassText.copy(alpha = 0.6f)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Group",
                                 color = if (selectedTab == 1)
-                                    MaterialTheme.colorScheme.primary
+                                    GlassAccent
                                 else
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    GlassText.copy(alpha = 0.6f),
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1
                             )
@@ -134,7 +136,7 @@ fun AddContactDialog(
                                     Icon(
                                         imageVector = Icons.Default.Phone,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        tint = GlassText.copy(alpha = 0.6f)
                                     )
                                 },
                                 singleLine = true
@@ -175,13 +177,13 @@ fun AddContactDialog(
                             // Alternative options
                             Divider(
                                 modifier = Modifier.padding(vertical = 8.dp),
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                                color = GlassText.copy(alpha = 0.1f)
                             )
 
                             Text(
                                 text = "OR",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                color = GlassText.copy(alpha = 0.6f),
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
 
@@ -214,20 +216,20 @@ fun AddContactDialog(
                                 imageVector = Icons.Default.Group,
                                 contentDescription = null,
                                 modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                tint = GlassAccent.copy(alpha = 0.6f)
                             )
 
                             Text(
                                 text = "Create a new group",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = GlassText,
                                 textAlign = TextAlign.Center
                             )
 
                             Text(
                                 text = "Add members, set group name, and start chatting",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                color = GlassText.copy(alpha = 0.7f),
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth(0.9f)
                             )
