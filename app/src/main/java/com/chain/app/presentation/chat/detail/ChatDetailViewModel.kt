@@ -26,7 +26,8 @@ class ChatDetailViewModel @Inject constructor(
     private val getMessagesForChatUseCase: GetMessagesForChatUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
     private val messageRepository: MessageRepository,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val userRepository: com.chain.app.domain.repository.UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ChatDetailUiState>(ChatDetailUiState.Loading)
@@ -38,7 +39,17 @@ class ChatDetailViewModel @Inject constructor(
     private val _currentUserId = MutableStateFlow<String>("")
     val currentUserId: StateFlow<String> = _currentUserId.asStateFlow()
 
+    private val _isOnline = MutableStateFlow(false)
+    val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
+
+    private val _isTyping = MutableStateFlow(false)
+    val isTyping: StateFlow<Boolean> = _isTyping.asStateFlow()
+
+    private val _lastSeen = MutableStateFlow<Long?>(null)
+    val lastSeen: StateFlow<Long?> = _lastSeen.asStateFlow()
+
     private var currentChatId: String = ""
+    private var otherUserId: String? = null
 
     init {
         // Load current user ID
@@ -59,6 +70,17 @@ class ChatDetailViewModel @Inject constructor(
             try {
                 getChatByIdUseCase(chatId).collect { chat ->
                     _uiState.value = ChatDetailUiState.Success(chat)
+
+                    // For direct chats, get the other user ID and observe their status
+                    if (chat.type == com.chain.app.domain.model.ChatType.DIRECT) {
+                        val currentUser = _currentUserId.value
+                        otherUserId = chat.participants.firstOrNull { it != currentUser }
+
+                        otherUserId?.let { userId ->
+                            // Observe the other user's status
+                            observeUserStatus(userId)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.value = ChatDetailUiState.Error(e.message ?: "Failed to load chat")
@@ -73,6 +95,30 @@ class ChatDetailViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 // Messages failed to load, but keep the chat info
+            }
+        }
+
+        // Observe typing status for this chat
+        viewModelScope.launch {
+            try {
+                userRepository.observeTypingStatus(chatId).collect { isTyping ->
+                    _isTyping.value = isTyping
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to observe typing status")
+            }
+        }
+    }
+
+    private fun observeUserStatus(userId: String) {
+        viewModelScope.launch {
+            try {
+                userRepository.getUserById(userId).collect { user ->
+                    _isOnline.value = user.status == com.chain.app.domain.model.UserStatus.ONLINE
+                    _lastSeen.value = user.lastSeen.time
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to observe user status")
             }
         }
     }

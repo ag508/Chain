@@ -42,6 +42,9 @@ fun ChatDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val messages by viewModel.messages.collectAsState()
     val viewModelUserId by viewModel.currentUserId.collectAsState()
+    val isOnline by viewModel.isOnline.collectAsState()
+    val isTyping by viewModel.isTyping.collectAsState()
+    val lastSeen by viewModel.lastSeen.collectAsState()
 
     LaunchedEffect(chatId) {
         viewModel.loadChat(chatId)
@@ -72,6 +75,9 @@ fun ChatDetailScreen(
                 chat = state.chat,
                 messages = messages,
                 currentUserId = viewModelUserId,
+                isOnline = isOnline,
+                isTyping = isTyping,
+                lastSeen = lastSeen,
                 onBackClick = onBackClick,
                 onSendMessage = viewModel::sendMessage,
                 onVoiceCallClick = onVoiceCallClick,
@@ -92,6 +98,9 @@ private fun ChatDetailContent(
     chat: com.chain.app.domain.model.Chat,
     messages: List<com.chain.app.domain.model.Message>,
     currentUserId: String,
+    isOnline: Boolean,
+    isTyping: Boolean,
+    lastSeen: Long?,
     onBackClick: () -> Unit,
     onSendMessage: (String) -> Unit,
     onVoiceCallClick: () -> Unit,
@@ -231,9 +240,9 @@ private fun ChatDetailContent(
                     onVideoCallClick = onVideoCallClick,
                     onSearchQueryChange = { query -> searchQuery = query },
                     onSearchToggle = { searching -> isSearching = searching },
-                    isOnline = false, // TODO: Get real online status
-                    isTyping = false, // TODO: Get real typing status
-                    lastSeen = null, // TODO: Get real last seen
+                    isOnline = isOnline,
+                    isTyping = isTyping,
+                    lastSeen = lastSeen,
                     participantCount = if (chat.type == ChatType.GROUP) chat.participants.size else null,
                     onViewProfile = {
                         Toast.makeText(context, "Profile view coming soon!", Toast.LENGTH_SHORT).show()
