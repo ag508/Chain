@@ -1,5 +1,11 @@
 package com.chain.app.presentation.profile
 
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -32,6 +39,8 @@ import com.chain.app.presentation.components.glass.GlassButton
 import com.chain.app.presentation.components.glass.GlassTextField
 import com.chain.app.presentation.contacts.QRCodeGenerator
 import com.chain.app.presentation.theme.*
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun ProfileScreen(
@@ -64,10 +73,11 @@ fun ProfileScreen(
                     EditProfileContent(
                         user = state.user,
                         onBackClick = { viewModel.cancelEditing() },
-                        onSave = { displayName, avatar ->
+                        onSave = { displayName, avatar, about ->
                             viewModel.updateProfile(
                                 displayName = displayName,
                                 avatar = avatar,
+                                about = about,
                                 onSuccess = { /* Show success message */ },
                                 onError = { /* Show error message */ }
                             )
@@ -98,6 +108,8 @@ private fun ProfileContent(
     onBackClick: () -> Unit,
     onEditClick: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -223,7 +235,7 @@ private fun ProfileContent(
             ProfileInfoCard(
                 icon = Icons.Default.Info,
                 label = "About",
-                value = "Hey there! I'm using Chain."
+                value = user.about ?: "Hey there! I'm using Chain."
             )
 
             ProfileInfoCard(
@@ -260,31 +272,65 @@ private fun ProfileContent(
                 displayName = user.displayName,
                 publicKey = user.publicKey
             )
-            QRCodeGenerator.generateQRCode(qrData, size = 200)?.let { qrBitmap ->
+            val qrBitmap = remember(user.id, user.phoneNumber, user.displayName) {
+                QRCodeGenerator.generateQRCode(qrData, size = 400)
+            }
+
+            qrBitmap?.let { bitmap ->
                 Image(
-                    bitmap = qrBitmap.asImageBitmap(),
+                    bitmap = bitmap.asImageBitmap(),
                     contentDescription = "QR Code",
                     modifier = Modifier
                         .size(200.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surface)
                 )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            GlassButton(
-                onClick = { /* TODO: Share profile */ },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = GlassText
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Share Profile", color = GlassText)
+                GlassButton(
+                    onClick = {
+                        try {
+                            // Save QR code to cache directory
+                            val cachePath = File(context.cacheDir, "images")
+                            cachePath.mkdirs()
+                            val file = File(cachePath, "qr_code.png")
+                            val outputStream = FileOutputStream(file)
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                            outputStream.flush()
+                            outputStream.close()
+
+                            // Get URI using FileProvider
+                            val contentUri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                file
+                            )
+
+                            // Create share intent
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "image/png"
+                                putExtra(Intent.EXTRA_STREAM, contentUri)
+                                putExtra(Intent.EXTRA_TEXT, "Add me on Chain! Phone: ${user.phoneNumber}")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+
+                            context.startActivity(Intent.createChooser(shareIntent, "Share QR Code"))
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = GlassText
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Share Profile", color = GlassText)
+                }
             }
         }
 
@@ -296,10 +342,20 @@ private fun ProfileContent(
 private fun EditProfileContent(
     user: User,
     onBackClick: () -> Unit,
-    onSave: (String, String?) -> Unit
+    onSave: (String, String?, String?) -> Unit
 ) {
     var displayName by remember { mutableStateOf(user.displayName) }
+    var about by remember { mutableStateOf(user.about ?: "") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            selectedImageUri = it
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -336,7 +392,11 @@ private fun EditProfileContent(
             TextButton(
                 onClick = {
                     if (displayName.isNotBlank()) {
-                        onSave(displayName, null)
+                        onSave(
+                            displayName,
+                            selectedImageUri?.toString(),
+                            about.takeIf { it.isNotBlank() }
+                        )
                     } else {
                         errorMessage = "Display name cannot be empty"
                     }
@@ -360,34 +420,54 @@ private fun EditProfileContent(
                     .size(120.dp)
                     .clip(CircleShape)
                     .border(3.dp, GlassBorder, CircleShape)
-                    .clickable { /* TODO: Change photo */ },
+                    .clickable {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                if (user.avatar != null) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(user.avatar)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Profile photo",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .glass(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
+                when {
+                    selectedImageUri != null -> {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(selectedImageUri)
+                                .crossfade(true)
+                                .build(),
                             contentDescription = "Profile photo",
-                            tint = GlassText,
-                            modifier = Modifier.size(60.dp)
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
                         )
+                    }
+                    user.avatar != null -> {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(user.avatar)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Profile photo",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    else -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .glass(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Profile photo",
+                                tint = GlassText,
+                                modifier = Modifier.size(60.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -398,7 +478,11 @@ private fun EditProfileContent(
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(GlassAccent)
-                    .clickable { /* TODO: Change photo */ },
+                    .clickable {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -432,6 +516,22 @@ private fun EditProfileContent(
                     )
                 },
                 modifier = Modifier.fillMaxWidth()
+            )
+
+            GlassTextField(
+                value = about,
+                onValueChange = { about = it },
+                label = "About",
+                placeholder = "Hey there! I'm using Chain.",
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = GlassText.copy(alpha = 0.6f)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3
             )
 
             // Phone number (read-only)

@@ -12,7 +12,8 @@ class UpdateUserProfileUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         displayName: String? = null,
-        avatar: String? = null
+        avatar: String? = null,
+        about: String? = null
     ): Result<User> {
         // Validation
         if (displayName != null && displayName.isBlank()) {
@@ -25,7 +26,8 @@ class UpdateUserProfileUseCase @Inject constructor(
 
         return userRepository.updateProfile(
             displayName = displayName?.trim(),
-            avatar = avatar
+            avatar = avatar,
+            about = about?.trim()
         )
     }
 }

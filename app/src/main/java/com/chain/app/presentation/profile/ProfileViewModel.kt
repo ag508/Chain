@@ -61,6 +61,7 @@ class ProfileViewModel @Inject constructor(
     fun updateProfile(
         displayName: String? = null,
         avatar: String? = null,
+        about: String? = null,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
@@ -68,7 +69,8 @@ class ProfileViewModel @Inject constructor(
             _uiState.value = ProfileUiState.Loading
             updateUserProfileUseCase(
                 displayName = displayName,
-                avatar = avatar
+                avatar = avatar,
+                about = about
             ).fold(
                 onSuccess = { updatedUser ->
                     _uiState.value = ProfileUiState.Success(updatedUser)

@@ -17,6 +17,7 @@ data class UserEntity(
     val email: String? = null,
     val displayName: String,
     val avatar: String?,
+    val about: String? = null,
     val publicKey: String?,
     val status: String,
     val lastSeen: Long,
@@ -35,6 +36,7 @@ fun UserEntity.toDomain(): User = User(
     publicKey = publicKey,
     displayName = displayName,
     avatar = avatar,
+    about = about,
     status = UserStatus.valueOf(status),
     lastSeen = Date(lastSeen),
     devices = emptyList() // Devices would be loaded separately if needed
@@ -50,6 +52,7 @@ fun User.toEntity(isContact: Boolean = false, isBlocked: Boolean = false): UserE
     publicKey = publicKey,
     displayName = displayName,
     avatar = avatar,
+    about = about,
     status = status.name,
     lastSeen = lastSeen.time,
     createdAt = System.currentTimeMillis(),
