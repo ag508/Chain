@@ -41,6 +41,7 @@ fun ChatDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val messages by viewModel.messages.collectAsState()
+    val viewModelUserId by viewModel.currentUserId.collectAsState()
 
     LaunchedEffect(chatId) {
         viewModel.loadChat(chatId)
@@ -70,7 +71,7 @@ fun ChatDetailScreen(
             ChatDetailContent(
                 chat = state.chat,
                 messages = messages,
-                currentUserId = currentUserId,
+                currentUserId = viewModelUserId,
                 onBackClick = onBackClick,
                 onSendMessage = viewModel::sendMessage,
                 onVoiceCallClick = onVoiceCallClick,
