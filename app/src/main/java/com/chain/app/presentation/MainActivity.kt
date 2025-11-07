@@ -52,12 +52,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ChainTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    ChainApp()
-                }
+                // Remove Surface to allow screens to control their own backgrounds edge-to-edge
+                ChainApp()
             }
         }
     }
