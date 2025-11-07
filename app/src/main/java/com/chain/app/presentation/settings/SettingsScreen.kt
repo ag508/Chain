@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chain.app.presentation.theme.*
 
-@Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
     onAccountSettingsClick: () -> Unit = {},
@@ -31,8 +30,7 @@ fun SettingsScreen(
 ) {
     val settings by viewModel.settings.collectAsState()
 
-    // Dialog states
-    var showThemeDialog by remember { mutableStateOf(false) }
+    // Dialog state
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val bgBrush = Brush.linearGradient(
@@ -177,20 +175,6 @@ fun SettingsScreen(
                     )
                 }
 
-                // Appearance section
-                SettingsSection(title = "Appearance") {
-                    SettingsItem(
-                        icon = Icons.Default.Palette,
-                        title = "Theme",
-                        subtitle = when (settings.themeMode) {
-                            "light" -> "Light"
-                            "dark" -> "Dark"
-                            else -> "System default"
-                        },
-                        onClick = { showThemeDialog = true }
-                    )
-                }
-
                 // Chats section
                 SettingsSection(title = "Chats") {
                     Column {
@@ -322,18 +306,6 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // Theme selector dialog
-        if (showThemeDialog) {
-            ThemeDialog(
-                currentTheme = settings.themeMode,
-                onDismiss = { showThemeDialog = false },
-                onThemeSelected = { theme ->
-                    viewModel.setThemeMode(theme)
-                    showThemeDialog = false
-                }
-            )
-        }
-
         // Logout confirmation dialog
         if (showLogoutDialog) {
             LogoutDialog(
@@ -347,7 +319,6 @@ fun SettingsScreen(
     }
 }
 
-@Composable
 private fun SettingsSection(
     title: String,
     modifier: Modifier = Modifier,
@@ -371,7 +342,6 @@ private fun SettingsSection(
     }
 }
 
-@Composable
 private fun SettingsItem(
     icon: ImageVector,
     title: String,
@@ -415,7 +385,6 @@ private fun SettingsItem(
     }
 }
 
-@Composable
 private fun SettingsSwitchItem(
     icon: ImageVector,
     title: String,
@@ -463,84 +432,8 @@ private fun SettingsSwitchItem(
     }
 }
 
-@Composable
-private fun ThemeDialog(
-    currentTheme: String,
-    onDismiss: () -> Unit,
-    onThemeSelected: (String) -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Choose Theme",
-                style = MaterialTheme.typography.titleLarge,
-                color = GlassText
-            )
-        },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ThemeOption(
-                    title = "System Default",
-                    isSelected = currentTheme == "system",
-                    onClick = { onThemeSelected("system") }
-                )
-                ThemeOption(
-                    title = "Light",
-                    isSelected = currentTheme == "light",
-                    onClick = { onThemeSelected("light") }
-                )
-                ThemeOption(
-                    title = "Dark",
-                    isSelected = currentTheme == "dark",
-                    onClick = { onThemeSelected("dark") }
-                )
-            }
-        },
-        confirmButton = {},
-        containerColor = GlassSurface,
-        textContentColor = GlassText
-    )
-}
 
-@Composable
-private fun ThemeOption(
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .background(
-                if (isSelected) GlassAccent.copy(alpha = 0.2f)
-                else androidx.compose.ui.graphics.Color.Transparent
-            )
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (isSelected) GlassAccent else GlassText
-        )
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "Selected",
-                tint = GlassAccent,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
 
-@Composable
 private fun LogoutDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit

@@ -13,7 +13,6 @@ import javax.inject.Inject
 data class AppSettings(
     val biometricEnabled: Boolean = false,
     val notificationsEnabled: Boolean = true,
-    val themeMode: String = "system", // "light", "dark", "system"
     val soundEnabled: Boolean = true,
     val vibrationEnabled: Boolean = true,
     val readReceipts: Boolean = true,
@@ -37,21 +36,18 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val biometric = userPreferences.isBiometricEnabled()
             userPreferences.notificationsEnabled.collect { notifs ->
-                userPreferences.themeMode.collect { theme ->
-                    userPreferences.soundEnabled.collect { sound ->
-                        userPreferences.vibrationEnabled.collect { vibration ->
-                            userPreferences.readReceipts.collect { readReceipts ->
-                                userPreferences.onlineStatus.collect { onlineStatus ->
-                                    _settings.value = AppSettings(
-                                        biometricEnabled = biometric,
-                                        notificationsEnabled = notifs,
-                                        themeMode = theme,
-                                        soundEnabled = sound,
-                                        vibrationEnabled = vibration,
-                                        readReceipts = readReceipts,
-                                        onlineStatus = onlineStatus
-                                    )
-                                }
+                userPreferences.soundEnabled.collect { sound ->
+                    userPreferences.vibrationEnabled.collect { vibration ->
+                        userPreferences.readReceipts.collect { readReceipts ->
+                            userPreferences.onlineStatus.collect { onlineStatus ->
+                                _settings.value = AppSettings(
+                                    biometricEnabled = biometric,
+                                    notificationsEnabled = notifs,
+                                    soundEnabled = sound,
+                                    vibrationEnabled = vibration,
+                                    readReceipts = readReceipts,
+                                    onlineStatus = onlineStatus
+                                )
                             }
                         }
                     }
@@ -71,13 +67,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.setNotificationsEnabled(enabled)
             _settings.value = _settings.value.copy(notificationsEnabled = enabled)
-        }
-    }
-
-    fun setThemeMode(mode: String) {
-        viewModelScope.launch {
-            userPreferences.setThemeMode(mode)
-            _settings.value = _settings.value.copy(themeMode = mode)
         }
     }
 
