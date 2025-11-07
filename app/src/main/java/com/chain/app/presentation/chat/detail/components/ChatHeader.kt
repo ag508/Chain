@@ -41,6 +41,8 @@ fun ChatHeader(
     isTyping: Boolean = false,
     lastSeen: Long? = null,
     participantCount: Int? = null,
+    isBlocked: Boolean = false,
+    isMuted: Boolean = false,
     onViewProfile: () -> Unit = {},
     onMute: () -> Unit = {},
     onBlock: () -> Unit = {},
@@ -288,6 +290,8 @@ fun ChatHeader(
                                 expanded = showMenu,
                                 onDismiss = { showMenu = false },
                                 chatType = chatType,
+                                isBlocked = isBlocked,
+                                isMuted = isMuted,
                                 onViewProfile = {
                                     showMenu = false
                                     onViewProfile()
@@ -326,6 +330,8 @@ private fun ChatHeaderMenu(
     expanded: Boolean,
     onDismiss: () -> Unit,
     chatType: ChatType,
+    isBlocked: Boolean,
+    isMuted: Boolean,
     onViewProfile: () -> Unit,
     onSearchInChat: () -> Unit,
     onMute: () -> Unit,
@@ -433,7 +439,7 @@ private fun ChatHeaderMenu(
             color = GlassText.copy(alpha = 0.12f)
         )
 
-        // Mute
+        // Mute/Unmute
         DropdownMenuItem(
             text = {
                 Row(
@@ -441,13 +447,13 @@ private fun ChatHeaderMenu(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.NotificationsOff,
+                        imageVector = if (isMuted) Icons.Default.Notifications else Icons.Default.NotificationsOff,
                         contentDescription = null,
                         tint = GlassText,
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Mute",
+                        text = if (isMuted) "Unmute" else "Mute",
                         style = MaterialTheme.typography.bodyMedium,
                         color = GlassText
                     )
@@ -459,7 +465,7 @@ private fun ChatHeaderMenu(
             }
         )
 
-        // Block (only for direct chats)
+        // Block/Unblock (only for direct chats)
         if (chatType == ChatType.DIRECT) {
             Divider(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
@@ -473,13 +479,13 @@ private fun ChatHeaderMenu(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Block,
+                            imageVector = if (isBlocked) Icons.Default.CheckCircle else Icons.Default.Block,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Block",
+                            text = if (isBlocked) "Unblock" else "Block",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error
                         )

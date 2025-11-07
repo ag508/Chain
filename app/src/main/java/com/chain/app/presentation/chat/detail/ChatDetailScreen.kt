@@ -269,6 +269,8 @@ private fun ChatDetailContent(
                     isTyping = isTyping,
                     lastSeen = lastSeen,
                     participantCount = if (chat.type == ChatType.GROUP) chat.participants.size else null,
+                    isBlocked = isBlocked,
+                    isMuted = isMuted,
                     onViewProfile = {
                         otherUserId?.let { userId ->
                             onViewProfileClick(userId)
