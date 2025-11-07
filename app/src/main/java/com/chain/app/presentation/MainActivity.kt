@@ -214,6 +214,9 @@ fun ChainApp(
                 },
                 onVideoCallClick = {
                     navController.navigate(NavRoutes.VideoCall.createRoute(chatId, isIncoming = false))
+                },
+                onViewProfileClick = { userId ->
+                    navController.navigate(NavRoutes.UserProfile.createRoute(userId))
                 }
             )
         }
@@ -266,6 +269,35 @@ fun ChainApp(
         composable(NavRoutes.Profile.route) {
             com.chain.app.presentation.profile.ProfileScreen(
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // User profile screen (for viewing other users)
+        composable(
+            route = NavRoutes.UserProfile.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+
+            com.chain.app.presentation.profile.UserProfileScreen(
+                userId = userId,
+                onBackClick = { navController.popBackStack() },
+                onSendMessageClick = {
+                    // TODO: Navigate to or create chat with this user
+                    navController.popBackStack()
+                },
+                onVoiceCallClick = {
+                    navController.navigate(NavRoutes.VoiceCall.createRoute(userId, isIncoming = false))
+                },
+                onVideoCallClick = {
+                    navController.navigate(NavRoutes.VideoCall.createRoute(userId, isIncoming = false))
+                },
+                onBlockClick = {
+                    // TODO: Implement block user functionality
+                    navController.popBackStack()
+                }
             )
         }
 

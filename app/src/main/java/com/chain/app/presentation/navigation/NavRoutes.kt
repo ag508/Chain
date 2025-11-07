@@ -23,6 +23,9 @@ sealed class NavRoutes(val route: String) {
     }
     object Settings : NavRoutes("settings")
     object Profile : NavRoutes("profile")
+    object UserProfile : NavRoutes("user_profile/{userId}") {
+        fun createRoute(userId: String) = "user_profile/$userId"
+    }
 
     // Contacts and Groups
     object ContactSearch : NavRoutes("contact_search")
