@@ -46,6 +46,8 @@ fun ChatDetailScreen(
     val isOnline by viewModel.isOnline.collectAsState()
     val isTyping by viewModel.isTyping.collectAsState()
     val lastSeen by viewModel.lastSeen.collectAsState()
+    val isBlocked by viewModel.isBlocked.collectAsState()
+    val isMuted by viewModel.isMuted.collectAsState()
 
     LaunchedEffect(chatId) {
         viewModel.loadChat(chatId)
@@ -79,11 +81,15 @@ fun ChatDetailScreen(
                 isOnline = isOnline,
                 isTyping = isTyping,
                 lastSeen = lastSeen,
+                isBlocked = isBlocked,
+                isMuted = isMuted,
                 onBackClick = onBackClick,
                 onSendMessage = viewModel::sendMessage,
                 onVoiceCallClick = onVoiceCallClick,
                 onVideoCallClick = onVideoCallClick,
                 onViewProfileClick = onViewProfileClick,
+                onToggleBlock = viewModel::toggleBlockUser,
+                onToggleMute = viewModel::toggleMuteChat,
                 onSendImage = viewModel::sendImageMessage,
                 onSendVideo = viewModel::sendVideoMessage,
                 onSendDocument = viewModel::sendDocumentMessage,
@@ -103,11 +109,15 @@ private fun ChatDetailContent(
     isOnline: Boolean,
     isTyping: Boolean,
     lastSeen: Long?,
+    isBlocked: Boolean,
+    isMuted: Boolean,
     onBackClick: () -> Unit,
     onSendMessage: (String) -> Unit,
     onVoiceCallClick: () -> Unit,
     onVideoCallClick: () -> Unit,
     onViewProfileClick: (String) -> Unit,
+    onToggleBlock: () -> Unit,
+    onToggleMute: () -> Unit,
     onSendImage: (android.net.Uri, String) -> Unit,
     onSendVideo: (android.net.Uri, String, Long) -> Unit,
     onSendDocument: (android.net.Uri, String) -> Unit,
@@ -401,20 +411,24 @@ private fun ChatDetailContent(
             }
         }
 
-        // Block user dialog
+        // Block/Unblock user dialog
         if (showBlockDialog) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { showBlockDialog = false },
                 title = {
                     Text(
-                        text = "Block ${chat.name}?",
+                        text = if (isBlocked) "Unblock ${chat.name}?" else "Block ${chat.name}?",
                         style = MaterialTheme.typography.titleMedium,
                         color = GlassText
                     )
                 },
                 text = {
                     Text(
-                        text = "Blocked contacts won't be able to send you messages or call you.",
+                        text = if (isBlocked) {
+                            "${chat.name} will be able to send you messages and call you again."
+                        } else {
+                            "Blocked contacts won't be able to send you messages or call you."
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = GlassText.copy(alpha = 0.8f)
                     )
@@ -422,11 +436,16 @@ private fun ChatDetailContent(
                 confirmButton = {
                     TextButton(
                         onClick = {
+                            onToggleBlock()
                             showBlockDialog = false
-                            Toast.makeText(context, "${chat.name} blocked", Toast.LENGTH_SHORT).show()
+                            val message = if (isBlocked) "${chat.name} unblocked" else "${chat.name} blocked"
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                         }
                     ) {
-                        Text("Block", color = MaterialTheme.colorScheme.error)
+                        Text(
+                            text = if (isBlocked) "Unblock" else "Block",
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
                 },
                 dismissButton = {
@@ -452,14 +471,35 @@ private fun ChatDetailContent(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "For how long?",
+                            text = if (isMuted) "Mute options:" else "For how long?",
                             style = MaterialTheme.typography.bodyMedium,
                             color = GlassText.copy(alpha = 0.8f)
                         )
 
+                        // Show "Off" option if currently muted
+                        if (isMuted) {
+                            TextButton(
+                                onClick = {
+                                    onToggleMute()
+                                    showMuteDialog = false
+                                    Toast.makeText(context, "Notifications unmuted", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Off",
+                                    color = GlassAccent,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+
                         listOf("15 minutes", "1 hour", "8 hours", "1 week", "Always").forEach { duration ->
                             TextButton(
                                 onClick = {
+                                    if (!isMuted) {
+                                        onToggleMute()
+                                    }
                                     showMuteDialog = false
                                     Toast.makeText(context, "Muted for $duration", Toast.LENGTH_SHORT).show()
                                 },

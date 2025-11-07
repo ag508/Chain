@@ -27,7 +27,8 @@ class ChatDetailViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val messageRepository: MessageRepository,
     private val userPreferences: UserPreferences,
-    private val userRepository: com.chain.app.domain.repository.UserRepository
+    private val userRepository: com.chain.app.domain.repository.UserRepository,
+    private val chatRepository: com.chain.app.domain.repository.ChatRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ChatDetailUiState>(ChatDetailUiState.Loading)
@@ -47,6 +48,12 @@ class ChatDetailViewModel @Inject constructor(
 
     private val _lastSeen = MutableStateFlow<Long?>(null)
     val lastSeen: StateFlow<Long?> = _lastSeen.asStateFlow()
+
+    private val _isBlocked = MutableStateFlow(false)
+    val isBlocked: StateFlow<Boolean> = _isBlocked.asStateFlow()
+
+    private val _isMuted = MutableStateFlow(false)
+    val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
 
     private var currentChatId: String = ""
     private var otherUserId: String? = null
@@ -71,13 +78,16 @@ class ChatDetailViewModel @Inject constructor(
                 getChatByIdUseCase(chatId).collect { chat ->
                     _uiState.value = ChatDetailUiState.Success(chat)
 
+                    // Update muted state
+                    _isMuted.value = chat.isMuted
+
                     // For direct chats, get the other user ID and observe their status
                     if (chat.type == com.chain.app.domain.model.ChatType.DIRECT) {
                         val currentUser = _currentUserId.value
                         otherUserId = chat.participants.firstOrNull { it != currentUser }
 
                         otherUserId?.let { userId ->
-                            // Observe the other user's status
+                            // Observe the other user's status and blocked state
                             observeUserStatus(userId)
                         }
                     }
@@ -117,6 +127,7 @@ class ChatDetailViewModel @Inject constructor(
                     user?.let {
                         _isOnline.value = it.status == com.chain.app.domain.model.UserStatus.ONLINE
                         _lastSeen.value = it.lastSeen.time
+                        _isBlocked.value = it.isBlocked
                     }
                 }
             } catch (e: Exception) {
@@ -319,6 +330,60 @@ class ChatDetailViewModel @Inject constructor(
                 messageRepository.sendMessage(message)
             } catch (e: Exception) {
                 Timber.e(e, "Failed to send contact message")
+            }
+        }
+    }
+
+    fun toggleBlockUser() {
+        val userId = otherUserId ?: return
+
+        viewModelScope.launch {
+            try {
+                val shouldBlock = !_isBlocked.value
+                if (shouldBlock) {
+                    userRepository.blockUser(userId).fold(
+                        onSuccess = {
+                            _isBlocked.value = true
+                            Timber.d("User $userId blocked successfully")
+                        },
+                        onFailure = { error ->
+                            Timber.e(error, "Failed to block user")
+                        }
+                    )
+                } else {
+                    userRepository.unblockUser(userId).fold(
+                        onSuccess = {
+                            _isBlocked.value = false
+                            Timber.d("User $userId unblocked successfully")
+                        },
+                        onFailure = { error ->
+                            Timber.e(error, "Failed to unblock user")
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to toggle block status")
+            }
+        }
+    }
+
+    fun toggleMuteChat() {
+        if (currentChatId.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val shouldMute = !_isMuted.value
+                chatRepository.setMuted(currentChatId, shouldMute).fold(
+                    onSuccess = {
+                        _isMuted.value = shouldMute
+                        Timber.d("Chat muted status updated to $shouldMute")
+                    },
+                    onFailure = { error ->
+                        Timber.e(error, "Failed to update muted status")
+                    }
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to toggle mute status")
             }
         }
     }

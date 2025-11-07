@@ -15,7 +15,8 @@ data class User(
     val publicKey: String? = null,
     val status: UserStatus = UserStatus.OFFLINE,
     val lastSeen: Date = Date(),
-    val devices: List<Device> = emptyList()
+    val devices: List<Device> = emptyList(),
+    val isBlocked: Boolean = false
 )
 
 /**
