@@ -25,10 +25,15 @@ fun SettingsScreen(
     onAccountSettingsClick: () -> Unit = {},
     onPrivacySettingsClick: () -> Unit = {},
     onNotificationSettingsClick: () -> Unit = {},
+    onLogout: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
+
+    // Dialog states
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     val bgBrush = Brush.linearGradient(
         colors = listOf(GlassGradientStart, GlassGradientEnd)
@@ -182,7 +187,7 @@ fun SettingsScreen(
                             "dark" -> "Dark"
                             else -> "System default"
                         },
-                        onClick = { /* TODO: Show theme selector */ }
+                        onClick = { showThemeDialog = true }
                     )
                 }
 
@@ -283,9 +288,61 @@ fun SettingsScreen(
                         )
                     }
                 }
+
+                // Logout button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .glass()
+                        .clickable { showLogoutDialog = true }
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Logout,
+                            contentDescription = "Logout",
+                            tint = ChainError,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "Logout",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = ChainError,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // Theme selector dialog
+        if (showThemeDialog) {
+            ThemeDialog(
+                currentTheme = settings.themeMode,
+                onDismiss = { showThemeDialog = false },
+                onThemeSelected = { theme ->
+                    viewModel.setThemeMode(theme)
+                    showThemeDialog = false
+                }
+            )
+        }
+
+        // Logout confirmation dialog
+        if (showLogoutDialog) {
+            LogoutDialog(
+                onDismiss = { showLogoutDialog = false },
+                onConfirm = {
+                    showLogoutDialog = false
+                    onLogout()
+                }
+            )
         }
     }
 }
@@ -404,4 +461,135 @@ private fun SettingsSwitchItem(
             )
         )
     }
+}
+
+@Composable
+private fun ThemeDialog(
+    currentTheme: String,
+    onDismiss: () -> Unit,
+    onThemeSelected: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Choose Theme",
+                style = MaterialTheme.typography.titleLarge,
+                color = GlassText
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ThemeOption(
+                    title = "System Default",
+                    isSelected = currentTheme == "system",
+                    onClick = { onThemeSelected("system") }
+                )
+                ThemeOption(
+                    title = "Light",
+                    isSelected = currentTheme == "light",
+                    onClick = { onThemeSelected("light") }
+                )
+                ThemeOption(
+                    title = "Dark",
+                    isSelected = currentTheme == "dark",
+                    onClick = { onThemeSelected("dark") }
+                )
+            }
+        },
+        confirmButton = {},
+        containerColor = GlassSurface,
+        textContentColor = GlassText
+    )
+}
+
+@Composable
+private fun ThemeOption(
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .background(
+                if (isSelected) GlassAccent.copy(alpha = 0.2f)
+                else androidx.compose.ui.graphics.Color.Transparent
+            )
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (isSelected) GlassAccent else GlassText
+        )
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = GlassAccent,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun LogoutDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Logout,
+                contentDescription = null,
+                tint = ChainError,
+                modifier = Modifier.size(48.dp)
+            )
+        },
+        title = {
+            Text(
+                text = "Logout",
+                style = MaterialTheme.typography.titleLarge,
+                color = GlassText
+            )
+        },
+        text = {
+            Text(
+                text = "Are you sure you want to logout? You'll need to re-authenticate to access your account.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = GlassTextSecondary
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = ChainError
+                )
+            ) {
+                Text("Logout")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = GlassText
+                )
+            ) {
+                Text("Cancel")
+            }
+        },
+        containerColor = GlassSurface,
+        textContentColor = GlassText
+    )
 }

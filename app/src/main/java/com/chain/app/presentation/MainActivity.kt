@@ -278,7 +278,13 @@ fun ChainApp(
                 onBackClick = { navController.popBackStack() },
                 onAccountSettingsClick = { /* TODO: Navigate to account settings */ },
                 onPrivacySettingsClick = { /* TODO: Navigate to privacy settings */ },
-                onNotificationSettingsClick = { /* TODO: Navigate to notification settings */ }
+                onNotificationSettingsClick = { /* TODO: Navigate to notification settings */ },
+                onLogout = {
+                    // Navigate to welcome screen and clear back stack
+                    navController.navigate(NavRoutes.Welcome.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
