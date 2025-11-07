@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun OtpScreen(
     phoneNumber: String,
+    email: String,
     onBackClick: () -> Unit,
     onVerified: (String) -> Unit,
     viewModel: OtpViewModel = hiltViewModel()
@@ -116,7 +117,7 @@ fun OtpScreen(
 
             // Auth subtitle: 15sp
             Text(
-                text = "Enter the 6-digit code we sent to\n$phoneNumber",
+                text = "Email sent to\n$email",
                 style = MaterialTheme.typography.bodyMedium,
                 color = GlassTextSecondary,
                 textAlign = TextAlign.Center

@@ -1,20 +1,30 @@
 package com.chain.app.presentation.auth.profile
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.chain.app.presentation.components.ChainButton
 import com.chain.app.presentation.components.ChainSecondaryButton
 import com.chain.app.presentation.components.ChainTextField
@@ -30,6 +40,13 @@ fun ProfileSetupScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scroll = rememberScrollState()
+
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        viewModel.onProfileImageSelected(uri)
+    }
 
     LaunchedEffect(Unit) {
         println("DEBUG ProfileScreen: Initializing with userId=$userId, phoneNumber=$phoneNumber, email=$email")
@@ -63,26 +80,48 @@ fun ProfileSetupScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(bottom = 40.dp)
         ) {
-            // Auth icon: 80x80dp with 20dp border radius, glass effect
+            // Profile photo picker (optional)
             Box(
                 modifier = Modifier
-                    .size(80.dp)
-                    .glassAuthIcon(),
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(GlassSurface)
+                    .border(2.dp, GlassBorder, CircleShape)
+                    .clickable { imagePickerLauncher.launch("image/*") },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(36.dp),
-                    tint = GlassText
-                )
+                if (state.profileImageUri != null) {
+                    AsyncImage(
+                        model = state.profileImageUri,
+                        contentDescription = "Profile photo",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AddAPhoto,
+                            contentDescription = "Add photo",
+                            modifier = Modifier.size(36.dp),
+                            tint = GlassTextSecondary
+                        )
+                        Text(
+                            text = "Optional",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = GlassTextSecondary
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(24.dp))
 
             // Auth title: 28sp bold
             Text(
-                text = "Display Name",
+                text = "Set Up Profile",
                 style = MaterialTheme.typography.displaySmall,
                 color = GlassText
             )
@@ -91,7 +130,7 @@ fun ProfileSetupScreen(
 
             // Auth subtitle: 15sp
             Text(
-                text = "Choose a name that your contacts will see",
+                text = "Choose a name and photo (optional)",
                 style = MaterialTheme.typography.bodyMedium,
                 color = GlassTextSecondary,
                 textAlign = TextAlign.Center
@@ -107,7 +146,7 @@ fun ProfileSetupScreen(
             ChainTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChanged,
-                placeholder = "Satoshi Nakamoto",
+                placeholder = "Display Name",
                 errorMessage = state.nameError
             )
 
@@ -119,16 +158,18 @@ fun ProfileSetupScreen(
                 isLoading = state.isLoading,
                 isAccent = true
             )
+
+            // Skip button (only shown when name is filled)
+            if (state.name.isNotBlank()) {
+                ChainSecondaryButton(
+                    text = "Skip Photo for Now",
+                    onClick = viewModel::onContinueClick,
+                    enabled = !state.isLoading
+                )
+            }
         }
 
         Spacer(Modifier.weight(1f))
-
-        // Skip button
-        ChainSecondaryButton(
-            text = "Skip for Now",
-            onClick = viewModel::onContinueClick,
-            enabled = !state.isLoading
-        )
 
         // Error snackbar
         if (state.error != null) {
