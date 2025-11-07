@@ -75,6 +75,14 @@ class MessageRepositoryImpl @Inject constructor(
                 message.content.toByteArray()
             }
 
+            // Sign the message payload with private key
+            val signature = try {
+                encryptionRepository.signMessage(payloadBytes).getOrThrow()
+            } catch (e: Exception) {
+                Timber.w("Failed to sign message, sending without signature: ${e.message}")
+                ByteArray(0)
+            }
+
             // Create P2P message
             val p2pMessage = P2PMessage(
                 id = message.id,
@@ -83,7 +91,7 @@ class MessageRepositoryImpl @Inject constructor(
                 encryptedPayload = payloadBytes,
                 timestamp = message.timestamp.time,
                 type = P2PMessageType.CHAT_MESSAGE,
-                signature = ByteArray(0) // TODO: Sign with private key
+                signature = signature
             )
 
             // Send via P2P
@@ -109,6 +117,26 @@ class MessageRepositoryImpl @Inject constructor(
         try {
             when (p2pMessage.type) {
                 P2PMessageType.CHAT_MESSAGE -> {
+                    // Verify message signature if present
+                    if (p2pMessage.signature.isNotEmpty()) {
+                        val isValid = try {
+                            encryptionRepository.verifySignature(
+                                payload = p2pMessage.encryptedPayload,
+                                signature = p2pMessage.signature,
+                                senderId = p2pMessage.from
+                            ).getOrElse { false }
+                        } catch (e: Exception) {
+                            Timber.w("Signature verification failed: ${e.message}")
+                            false
+                        }
+
+                        if (!isValid) {
+                            Timber.w("Invalid message signature from ${p2pMessage.from}, rejecting message")
+                            return // Reject message with invalid signature
+                        }
+                        Timber.d("Message signature verified for ${p2pMessage.from}")
+                    }
+
                     // Try to decrypt the message, fall back to plaintext if decryption fails
                     val decryptedContent = try {
                         // Try to decrypt as encrypted message

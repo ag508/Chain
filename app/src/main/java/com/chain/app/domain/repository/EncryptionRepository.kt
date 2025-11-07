@@ -56,4 +56,14 @@ interface EncryptionRepository {
      * Decrypt group message.
      */
     suspend fun decryptGroupMessage(ciphertext: EncryptedMessage, groupId: String, senderId: String): Result<String>
+
+    /**
+     * Sign a message payload with private key.
+     */
+    suspend fun signMessage(payload: ByteArray): Result<ByteArray>
+
+    /**
+     * Verify message signature.
+     */
+    suspend fun verifySignature(payload: ByteArray, signature: ByteArray, senderId: String): Result<Boolean>
 }

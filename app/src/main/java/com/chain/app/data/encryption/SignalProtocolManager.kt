@@ -206,4 +206,44 @@ class SignalProtocolManager @Inject constructor(
             Result.failure(e)
         }
     }
+
+    /**
+     * Sign a message payload with the device's private key.
+     */
+    suspend fun signMessage(payload: ByteArray): Result<ByteArray> {
+        return try {
+            val identityKeyPair = signalProtocolStore.identityKeyPair
+            val signature = org.signal.libsignal.protocol.ecc.Curve.calculateSignature(
+                identityKeyPair.privateKey,
+                payload
+            )
+            Result.success(signature)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Verify a message signature using the sender's public key.
+     */
+    suspend fun verifySignature(payload: ByteArray, signature: ByteArray, senderId: String): Result<Boolean> {
+        return try {
+            val signalAddress = SignalProtocolAddress(senderId, 1)
+            val senderIdentityKey = signalProtocolStore.getIdentity(signalAddress)
+
+            if (senderIdentityKey == null) {
+                // No identity key stored for sender - cannot verify
+                return Result.success(false)
+            }
+
+            val isValid = org.signal.libsignal.protocol.ecc.Curve.verifySignature(
+                senderIdentityKey.publicKey,
+                payload,
+                signature
+            )
+            Result.success(isValid)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
