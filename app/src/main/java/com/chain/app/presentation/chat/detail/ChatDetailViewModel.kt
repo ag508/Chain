@@ -146,7 +146,7 @@ class ChatDetailViewModel @Inject constructor(
         return viewModelScope.launch {
             try {
                 // Load initial user state immediately to avoid showing incorrect block status
-                val initialUser = userRepository.getUserById(userId).getOrNull()
+                val initialUser = userRepository.getUser(userId).getOrNull()
                 initialUser?.let {
                     _isOnline.value = it.status == com.chain.app.domain.model.UserStatus.ONLINE
                     _lastSeen.value = it.lastSeen.time
