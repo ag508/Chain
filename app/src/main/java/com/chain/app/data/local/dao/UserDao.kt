@@ -15,6 +15,12 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE id = :userId")
     fun observeUser(userId: String): Flow<UserEntity?>
 
+    @Query("SELECT * FROM users WHERE phoneNumber = :phoneNumber LIMIT 1")
+    suspend fun getUserByPhoneNumber(phoneNumber: String): UserEntity?
+
+    @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
+    suspend fun getUserByEmail(email: String): UserEntity?
+
     @Query("SELECT * FROM users WHERE isContact = 1")
     fun getContacts(): Flow<List<UserEntity>>
 
@@ -24,11 +30,14 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE displayName LIKE '%' || :query || '%' OR id LIKE '%' || :query || '%'")
     fun searchUsers(query: String): Flow<List<UserEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertUser(user: UserEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUsers(users: List<UserEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertUser(user: UserEntity)
 
     @Update
     suspend fun updateUser(user: UserEntity)

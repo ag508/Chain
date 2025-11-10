@@ -9,6 +9,7 @@ import com.chain.app.data.local.entity.*
 
 /**
  * Main Room database for Chain app with SQLCipher encryption.
+ * Version 6: Added unique constraints on phoneNumber and email in UserEntity.
  */
 @Database(
     entities = [
@@ -20,7 +21,7 @@ import com.chain.app.data.local.entity.*
         CallEntity::class,
         ContactEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(StringListConverter::class)
