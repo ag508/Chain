@@ -308,12 +308,102 @@ fun ChainApp(
                 onAccountSettingsClick = { /* TODO: Navigate to account settings */ },
                 onPrivacySettingsClick = { /* TODO: Navigate to privacy settings */ },
                 onNotificationSettingsClick = { /* TODO: Navigate to notification settings */ },
+                onBlockedContactsClick = {
+                    navController.navigate(NavRoutes.BlockedContacts.route)
+                },
+                onAutoDownloadMediaClick = {
+                    navController.navigate(NavRoutes.AutoDownloadMedia.route)
+                },
+                onChatBackupClick = {
+                    navController.navigate(NavRoutes.ChatBackup.route)
+                },
+                onNetworkUsageClick = {
+                    navController.navigate(NavRoutes.NetworkUsage.route)
+                },
+                onWallpaperClick = {
+                    navController.navigate(NavRoutes.Wallpaper.route)
+                },
+                onFAQClick = {
+                    navController.navigate(NavRoutes.FAQ.route)
+                },
+                onSupportClick = {
+                    navController.navigate(NavRoutes.Support.route)
+                },
+                onTermsClick = {
+                    navController.navigate(NavRoutes.Terms.route)
+                },
+                onPrivacyPolicyClick = {
+                    navController.navigate(NavRoutes.Privacy.route)
+                },
                 onLogout = {
                     // Navigate to welcome screen and clear back stack
                     navController.navigate(NavRoutes.Welcome.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        // Blocked Contacts screen
+        composable(NavRoutes.BlockedContacts.route) {
+            com.chain.app.presentation.settings.blocked.BlockedContactsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Auto-Download Media screen
+        composable(NavRoutes.AutoDownloadMedia.route) {
+            com.chain.app.presentation.settings.media.AutoDownloadMediaScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Chat Backup screen
+        composable(NavRoutes.ChatBackup.route) {
+            com.chain.app.presentation.settings.backup.ChatBackupScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Network Usage screen
+        composable(NavRoutes.NetworkUsage.route) {
+            com.chain.app.presentation.settings.network.NetworkUsageScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Wallpaper screen
+        composable(NavRoutes.Wallpaper.route) {
+            com.chain.app.presentation.settings.wallpaper.WallpaperSelectorScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // FAQ screen
+        composable(NavRoutes.FAQ.route) {
+            com.chain.app.presentation.settings.info.FAQScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Support screen
+        composable(NavRoutes.Support.route) {
+            com.chain.app.presentation.settings.info.SupportScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Terms of Service screen
+        composable(NavRoutes.Terms.route) {
+            com.chain.app.presentation.settings.info.TermsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Privacy Policy screen
+        composable(NavRoutes.Privacy.route) {
+            com.chain.app.presentation.settings.info.PrivacyScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
 
