@@ -45,6 +45,9 @@ interface UserDao {
     @Query("UPDATE users SET isBlocked = :isBlocked WHERE id = :userId")
     suspend fun setBlocked(userId: String, isBlocked: Boolean)
 
+    @Query("SELECT * FROM users WHERE isBlocked = 1 ORDER BY displayName ASC")
+    fun getBlockedUsers(): Flow<List<UserEntity>>
+
     @Delete
     suspend fun deleteUser(user: UserEntity)
 

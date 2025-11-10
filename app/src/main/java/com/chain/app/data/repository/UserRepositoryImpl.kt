@@ -159,6 +159,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getBlockedUsers(): Flow<List<com.chain.app.domain.model.User>> {
+        return userDao.getBlockedUsers().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     override fun observeUserStatus(userId: String): Flow<UserStatus> {
         return userDao.observeUser(userId).map { entity ->
             entity?.let { UserStatus.valueOf(it.status) } ?: UserStatus.OFFLINE
