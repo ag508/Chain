@@ -160,8 +160,8 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override fun getBlockedUsers(): Flow<List<com.chain.app.domain.model.User>> {
-        return userDao.getBlockedUsers().map { entities ->
-            entities.map { it.toDomain() }
+        return userDao.getBlockedUsers().map { entities: List<UserEntity> ->
+            entities.map { entity: UserEntity -> entity.toDomain() }
         }
     }
 
