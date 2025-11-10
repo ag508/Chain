@@ -166,7 +166,7 @@ private fun ExpandableFAQCard(faq: FAQItem) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .glassCard()
+            .glassCard(shape = RoundedCornerShape(16.dp))
             .clickable { isExpanded = !isExpanded },
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent

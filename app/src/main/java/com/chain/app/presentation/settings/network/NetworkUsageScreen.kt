@@ -1,5 +1,6 @@
 package com.chain.app.presentation.settings.network
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -201,7 +202,7 @@ private fun TotalUsageCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .glassCard(),
+            .glassCard(shape = RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
         ),
@@ -333,7 +334,7 @@ private fun UsageBreakdownSection(networkUsage: NetworkUsage) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .glassCard(),
+                .glassCard(shape = RoundedCornerShape(16.dp)),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
             ),
