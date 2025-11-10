@@ -55,6 +55,17 @@ class ChatDetailViewModel @Inject constructor(
     private val _isMuted = MutableStateFlow(false)
     val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
 
+    // Message selection state
+    private val _selectedMessages = MutableStateFlow<Set<String>>(emptySet())
+    val selectedMessages: StateFlow<Set<String>> = _selectedMessages.asStateFlow()
+
+    private val _isSelectionMode = MutableStateFlow(false)
+    val isSelectionMode: StateFlow<Boolean> = _isSelectionMode.asStateFlow()
+
+    // Reply state
+    private val _replyingToMessage = MutableStateFlow<Message?>(null)
+    val replyingToMessage: StateFlow<Message?> = _replyingToMessage.asStateFlow()
+
     private var currentChatId: String = ""
     private var otherUserId: String? = null
     private var userStatusObservingJob: kotlinx.coroutines.Job? = null
@@ -390,6 +401,116 @@ class ChatDetailViewModel @Inject constructor(
                 )
             } catch (e: Exception) {
                 Timber.e(e, "Failed to toggle mute status")
+            }
+        }
+    }
+
+    // Message selection methods
+    fun toggleMessageSelection(messageId: String) {
+        val currentSelection = _selectedMessages.value.toMutableSet()
+        if (currentSelection.contains(messageId)) {
+            currentSelection.remove(messageId)
+        } else {
+            currentSelection.add(messageId)
+        }
+        _selectedMessages.value = currentSelection
+        _isSelectionMode.value = currentSelection.isNotEmpty()
+    }
+
+    fun selectAllMessages() {
+        _selectedMessages.value = _messages.value.map { it.id }.toSet()
+        _isSelectionMode.value = true
+    }
+
+    fun clearSelection() {
+        _selectedMessages.value = emptySet()
+        _isSelectionMode.value = false
+    }
+
+    fun deleteSelectedMessages() {
+        viewModelScope.launch {
+            try {
+                val messageIds = _selectedMessages.value.toList()
+                messageRepository.deleteMessages(messageIds).fold(
+                    onSuccess = {
+                        clearSelection()
+                        Timber.d("Deleted ${messageIds.size} messages")
+                    },
+                    onFailure = { error ->
+                        Timber.e(error, "Failed to delete messages")
+                    }
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to delete messages")
+            }
+        }
+    }
+
+    // Reaction methods
+    fun addReaction(messageId: String, emoji: String) {
+        viewModelScope.launch {
+            try {
+                messageRepository.addReaction(messageId, emoji).fold(
+                    onSuccess = {
+                        Timber.d("Reaction $emoji added to message $messageId")
+                    },
+                    onFailure = { error ->
+                        Timber.e(error, "Failed to add reaction")
+                    }
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to add reaction")
+            }
+        }
+    }
+
+    fun removeReaction(messageId: String, emoji: String) {
+        viewModelScope.launch {
+            try {
+                messageRepository.removeReaction(messageId, emoji).fold(
+                    onSuccess = {
+                        Timber.d("Reaction $emoji removed from message $messageId")
+                    },
+                    onFailure = { error ->
+                        Timber.e(error, "Failed to remove reaction")
+                    }
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to remove reaction")
+            }
+        }
+    }
+
+    // Reply methods
+    fun setReplyingToMessage(message: Message?) {
+        _replyingToMessage.value = message
+    }
+
+    fun cancelReply() {
+        _replyingToMessage.value = null
+    }
+
+    fun sendReply(content: String) {
+        val replyTo = _replyingToMessage.value?.id ?: return
+        val userId = _currentUserId.value
+        if (content.isBlank() || currentChatId.isEmpty() || userId.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val message = Message(
+                    id = java.util.UUID.randomUUID().toString(),
+                    chatId = currentChatId,
+                    senderId = userId,
+                    content = content,
+                    type = MessageType.TEXT,
+                    timestamp = java.util.Date(),
+                    status = MessageStatus.SENDING,
+                    replyTo = replyTo
+                )
+                messageRepository.sendMessage(message)
+                _replyingToMessage.value = null
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to send reply")
             }
         }
     }
