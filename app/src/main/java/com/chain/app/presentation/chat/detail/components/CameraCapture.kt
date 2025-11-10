@@ -5,7 +5,10 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import java.io.File
@@ -22,7 +25,7 @@ fun rememberCameraCapture(
 ): CameraCaptureState {
     val context = LocalContext.current
 
-    var currentPhotoUri: Uri? by remember { androidx.compose.runtime.mutableStateOf(null) }
+    var currentPhotoUri: Uri? by remember { mutableStateOf(null) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -94,7 +97,7 @@ fun rememberVideoCapture(
 ): VideoCaptureState {
     val context = LocalContext.current
 
-    var currentVideoUri: Uri? by remember { androidx.compose.runtime.mutableStateOf(null) }
+    var currentVideoUri: Uri? by remember { mutableStateOf(null) }
 
     val videoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CaptureVideo()
