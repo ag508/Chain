@@ -52,6 +52,7 @@ fun ChatDetailScreen(
     val selectedMessages by viewModel.selectedMessages.collectAsState()
     val isSelectionMode by viewModel.isSelectionMode.collectAsState()
     val replyingToMessage by viewModel.replyingToMessage.collectAsState()
+    val availableChats by viewModel.availableChats.collectAsState()
 
     LaunchedEffect(chatId) {
         viewModel.loadChat(chatId)
@@ -90,6 +91,7 @@ fun ChatDetailScreen(
                 selectedMessages = selectedMessages,
                 isSelectionMode = isSelectionMode,
                 replyingToMessage = replyingToMessage,
+                availableChats = availableChats,
                 onBackClick = onBackClick,
                 onSendMessage = viewModel::sendMessage,
                 onVoiceCallClick = onVoiceCallClick,
@@ -107,6 +109,7 @@ fun ChatDetailScreen(
                 onClearSelection = viewModel::clearSelection,
                 onSelectAll = viewModel::selectAllMessages,
                 onDeleteSelected = viewModel::deleteSelectedMessages,
+                onForwardMessages = viewModel::forwardMessages,
                 onAddReaction = viewModel::addReaction,
                 onSetReplyingTo = viewModel::setReplyingToMessage,
                 onCancelReply = viewModel::cancelReply,
@@ -130,6 +133,7 @@ private fun ChatDetailContent(
     selectedMessages: Set<String>,
     isSelectionMode: Boolean,
     replyingToMessage: com.chain.app.domain.model.Message?,
+    availableChats: List<com.chain.app.domain.model.Chat>,
     onBackClick: () -> Unit,
     onSendMessage: (String) -> Unit,
     onVoiceCallClick: () -> Unit,
@@ -147,6 +151,7 @@ private fun ChatDetailContent(
     onClearSelection: () -> Unit,
     onSelectAll: () -> Unit,
     onDeleteSelected: () -> Unit,
+    onForwardMessages: (List<String>, List<String>) -> Unit,
     onAddReaction: (String, String) -> Unit,
     onSetReplyingTo: (com.chain.app.domain.model.Message?) -> Unit,
     onCancelReply: () -> Unit,
@@ -164,6 +169,7 @@ private fun ChatDetailContent(
     var showMessageActionsSheet by remember { mutableStateOf<com.chain.app.domain.model.Message?>(null) }
     var showQuickReactionPicker by remember { mutableStateOf<com.chain.app.domain.model.Message?>(null) }
     var showMessageInfo by remember { mutableStateOf<com.chain.app.domain.model.Message?>(null) }
+    var showForwardDialog by remember { mutableStateOf(false) }
 
     // Filter messages based on search query
     val filteredMessages = remember(messages, searchQuery) {
@@ -317,8 +323,7 @@ private fun ChatDetailContent(
                     onClearSelection = onClearSelection,
                     onDelete = onDeleteSelected,
                     onForward = {
-                        // TODO: Implement forward functionality
-                        Toast.makeText(context, "Forward coming soon!", Toast.LENGTH_SHORT).show()
+                        showForwardDialog = true
                     },
                     onCopy = {
                         // Copy selected messages to clipboard
@@ -715,8 +720,10 @@ private fun ChatDetailContent(
                         showMessageActionsSheet = null
                     },
                     onForward = {
-                        Toast.makeText(context, "Forward: Select chat to forward to", Toast.LENGTH_SHORT).show()
+                        // Select the message and show forward dialog
+                        onToggleMessageSelection(message.id)
                         showMessageActionsSheet = null
+                        showForwardDialog = true
                     },
                     onCopy = {
                         val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
@@ -768,6 +775,35 @@ private fun ChatDetailContent(
             MessageInfoDialog(
                 message = message,
                 onDismiss = { showMessageInfo = null }
+            )
+        }
+
+        // Forward contacts dialog
+        if (showForwardDialog) {
+            val contactItems = remember(availableChats, chat.id) {
+                availableChats
+                    .filter { it.id != chat.id } // Don't show current chat
+                    .map { forwardChat ->
+                        ContactItem(
+                            id = forwardChat.id,
+                            name = forwardChat.name,
+                            lastMessage = forwardChat.lastMessage?.content
+                        )
+                    }
+            }
+
+            ForwardContactsDialog(
+                contacts = contactItems,
+                onDismiss = { showForwardDialog = false },
+                onForwardToContacts = { targetChatIds ->
+                    onForwardMessages(selectedMessages.toList(), targetChatIds)
+                    showForwardDialog = false
+                    Toast.makeText(
+                        context,
+                        "Forwarded to ${targetChatIds.size} chat(s)",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             )
         }
     }

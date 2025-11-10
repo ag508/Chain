@@ -157,6 +157,30 @@ fun MessageBubble(
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                // Forwarded indicator
+                val isForwarded = message.metadata?.get("forwarded") as? Boolean ?: false
+                if (isForwarded) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Forward,
+                            contentDescription = "Forwarded",
+                            tint = GlassTextSecondary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Forwarded",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = GlassTextSecondary,
+                            fontSize = 10.sp,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        )
+                    }
+                }
+
                 // Reply preview (if replying to a message)
                 message.replyTo?.let { replyToId ->
                     val repliedMessage = allMessages.find { it.id == replyToId }
