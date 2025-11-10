@@ -66,6 +66,14 @@ class ChatDetailViewModel @Inject constructor(
     private val _replyingToMessage = MutableStateFlow<Message?>(null)
     val replyingToMessage: StateFlow<Message?> = _replyingToMessage.asStateFlow()
 
+    // Available chats for forwarding
+    val availableChats: StateFlow<List<Chat>> = chatRepository.getChats()
+        .stateIn(
+            scope = viewModelScope,
+            started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     private var currentChatId: String = ""
     private var otherUserId: String? = null
     private var userStatusObservingJob: kotlinx.coroutines.Job? = null
@@ -511,6 +519,44 @@ class ChatDetailViewModel @Inject constructor(
                 _replyingToMessage.value = null
             } catch (e: Exception) {
                 Timber.e(e, "Failed to send reply")
+            }
+        }
+    }
+
+    // Forward methods
+    fun forwardMessages(messageIds: List<String>, targetChatIds: List<String>) {
+        viewModelScope.launch {
+            try {
+                val userId = _currentUserId.value
+                if (userId.isEmpty()) return@launch
+
+                val messagesToForward = _messages.value.filter { messageIds.contains(it.id) }
+
+                targetChatIds.forEach { targetChatId ->
+                    messagesToForward.forEach { originalMessage ->
+                        val forwardedMessage = Message(
+                            id = java.util.UUID.randomUUID().toString(),
+                            chatId = targetChatId,
+                            senderId = userId,
+                            content = originalMessage.content,
+                            type = originalMessage.type,
+                            timestamp = java.util.Date(),
+                            status = MessageStatus.SENDING,
+                            metadata = (originalMessage.metadata ?: emptyMap()).toMutableMap().apply {
+                                put("forwarded", true)
+                                put("originalMessageId", originalMessage.id)
+                                put("originalChatId", originalMessage.chatId)
+                            }
+                        )
+                        messageRepository.sendMessage(forwardedMessage)
+                    }
+                }
+
+                // Clear selection after forwarding
+                clearSelection()
+                Timber.d("Forwarded ${messagesToForward.size} messages to ${targetChatIds.size} chats")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to forward messages")
             }
         }
     }
