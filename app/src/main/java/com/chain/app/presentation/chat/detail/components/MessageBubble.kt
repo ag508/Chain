@@ -1,12 +1,17 @@
 package com.chain.app.presentation.chat.detail.components
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -19,11 +24,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.chain.app.domain.model.Message
 import com.chain.app.domain.model.MessageStatus
 import com.chain.app.domain.model.MessageType
 import com.chain.app.presentation.theme.*
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -249,18 +258,21 @@ private fun ImageMessageContent(
     caption: String?,
     modifier: Modifier = Modifier
 ) {
+    var showFullImage by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Image loaded from URI
+        // Image loaded from URI - clickable to enlarge
         AsyncImage(
             model = imageUri,
             contentDescription = "Image message",
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 300.dp)
-                .clip(RoundedCornerShape(12.dp)),
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { showFullImage = true },
             contentScale = ContentScale.Crop
         )
 
@@ -274,6 +286,14 @@ private fun ImageMessageContent(
                 )
             }
         }
+    }
+
+    // Full-screen image viewer dialog
+    if (showFullImage) {
+        ImageViewerDialog(
+            imageUri = imageUri,
+            onDismiss = { showFullImage = false }
+        )
     }
 }
 
@@ -371,11 +391,18 @@ private fun DocumentMessageContent(
     fileSize: Long,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(GlassAccent.copy(alpha = 0.1f))
+            .clickable(enabled = documentUri != null) {
+                documentUri?.let { uri ->
+                    openDocument(context, uri)
+                }
+            }
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -446,5 +473,73 @@ private fun formatMessageTime(timestamp: Long): String {
     } else {
         // Other days - show date and time
         SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date(timestamp))
+    }
+}
+
+/**
+ * Full-screen image viewer dialog
+ */
+@Composable
+private fun ImageViewerDialog(
+    imageUri: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .clickable { onDismiss() },
+            contentAlignment = Alignment.Center
+        ) {
+            // Close button
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            // Full-size image
+            AsyncImage(
+                model = imageUri,
+                contentDescription = "Full size image",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit
+            )
+        }
+    }
+}
+
+/**
+ * Open document with appropriate app
+ */
+private fun openDocument(context: Context, uriString: String) {
+    try {
+        val uri = android.net.Uri.parse(uriString)
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, context.contentResolver.getType(uri))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        // Check if there's an app that can handle this
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            Toast.makeText(context, "No app available to open this file", Toast.LENGTH_SHORT).show()
+        }
+    } catch (e: Exception) {
+        Toast.makeText(context, "Failed to open document: ${e.message}", Toast.LENGTH_SHORT).show()
     }
 }
