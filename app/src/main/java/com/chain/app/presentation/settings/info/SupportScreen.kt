@@ -250,7 +250,7 @@ private fun ContactMethodCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .glassCard()
+            .glassCard(shape = RoundedCornerShape(16.dp))
             .clickable { /* Handle click */ },
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
