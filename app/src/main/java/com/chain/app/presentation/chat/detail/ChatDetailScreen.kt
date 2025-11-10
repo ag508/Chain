@@ -24,6 +24,7 @@ import com.chain.app.domain.model.ChatType
 import com.chain.app.presentation.chat.detail.components.*
 import com.chain.app.presentation.theme.*
 import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * Chat detail screen showing conversation with a contact or group
@@ -152,18 +153,23 @@ private fun ChatDetailContent(
 
     // Media pickers - must be declared before permission launchers that use them
     val mediaPicker = rememberMediaPicker { uri ->
+        // Copy content URI to permanent storage
+        val permanentUri = copyUriToInternalStorage(context, uri)
+
         // Determine if it's an image or video based on URI
         val mimeType = context.contentResolver.getType(uri)
         if (mimeType?.startsWith("video") == true) {
-            onSendVideo(uri, "", 0)
+            onSendVideo(permanentUri, "", 0)
         } else {
-            onSendImage(uri, "")
+            onSendImage(permanentUri, "")
         }
     }
 
     val documentPicker = rememberDocumentPicker { uri ->
-        val fileName = uri.lastPathSegment ?: "document"
-        onSendDocument(uri, fileName)
+        // Copy content URI to permanent storage
+        val permanentUri = copyUriToInternalStorage(context, uri)
+        val fileName = getFileName(context, uri) ?: "document"
+        onSendDocument(permanentUri, fileName)
     }
 
     val cameraCapture = rememberCameraCapture { uri ->
@@ -714,4 +720,93 @@ private fun getContactData(
     }
 
     return null
+}
+
+/**
+ * Copy content URI to app's internal storage for permanent access
+ * This is necessary because content:// URIs from gallery lose permissions when app restarts
+ */
+private fun copyUriToInternalStorage(context: android.content.Context, uri: android.net.Uri): android.net.Uri {
+    try {
+        // If it's already a file:// URI (like from camera capture), return as-is
+        if (uri.scheme == "file") {
+            return uri
+        }
+
+        // Create a permanent storage directory
+        val storageDir = File(context.filesDir, "media")
+        if (!storageDir.exists()) {
+            storageDir.mkdirs()
+        }
+
+        // Generate unique filename
+        val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
+        val extension = getFileExtension(context, uri)
+        val fileName = "CHAIN_${timeStamp}.$extension"
+
+        // Create destination file
+        val destFile = File(storageDir, fileName)
+
+        // Copy content
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            destFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        // Return file URI via FileProvider
+        return androidx.core.content.FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            destFile
+        )
+    } catch (e: Exception) {
+        android.widget.Toast.makeText(context, "Failed to save media: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        return uri // Return original URI as fallback
+    }
+}
+
+/**
+ * Get file extension from content URI
+ */
+private fun getFileExtension(context: android.content.Context, uri: android.net.Uri): String {
+    val mimeType = context.contentResolver.getType(uri)
+    return when {
+        mimeType?.startsWith("image/") == true -> {
+            when {
+                mimeType.contains("png") -> "png"
+                mimeType.contains("gif") -> "gif"
+                mimeType.contains("webp") -> "webp"
+                else -> "jpg"
+            }
+        }
+        mimeType?.startsWith("video/") == true -> "mp4"
+        mimeType?.contains("pdf") == true -> "pdf"
+        else -> {
+            // Try to get extension from URI path
+            uri.lastPathSegment?.substringAfterLast('.', "dat") ?: "dat"
+        }
+    }
+}
+
+/**
+ * Get filename from content URI
+ */
+private fun getFileName(context: android.content.Context, uri: android.net.Uri): String? {
+    var result: String? = null
+    if (uri.scheme == "content") {
+        val cursor = context.contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (nameIndex >= 0) {
+                    result = it.getString(nameIndex)
+                }
+            }
+        }
+    }
+    if (result == null) {
+        result = uri.lastPathSegment
+    }
+    return result
 }
