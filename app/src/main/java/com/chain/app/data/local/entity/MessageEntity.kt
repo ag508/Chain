@@ -41,33 +41,49 @@ data class MessageFts(
 /**
  * Convert MessageEntity to domain Message model.
  */
-fun MessageEntity.toDomain(): Message = Message(
-    id = id,
-    chatId = chatId,
-    senderId = senderId,
-    content = content,
-    type = MessageType.valueOf(type),
-    timestamp = Date(timestamp),
-    status = MessageStatus.valueOf(status),
-    replyTo = replyTo,
-    reactions = emptyList(), // Would be loaded separately
-    isEncrypted = isEncrypted,
-    disappearAfter = disappearAfter
-)
+fun MessageEntity.toDomain(): Message {
+    // Reconstruct metadata from localFilePath for media messages
+    val metadata = if (localFilePath != null) {
+        mapOf("uri" to localFilePath)
+    } else {
+        null
+    }
+
+    return Message(
+        id = id,
+        chatId = chatId,
+        senderId = senderId,
+        content = content,
+        type = MessageType.valueOf(type),
+        timestamp = Date(timestamp),
+        status = MessageStatus.valueOf(status),
+        replyTo = replyTo,
+        reactions = emptyList(), // Would be loaded separately
+        isEncrypted = isEncrypted,
+        disappearAfter = disappearAfter,
+        metadata = metadata
+    )
+}
 
 /**
  * Convert domain Message to MessageEntity.
  */
-fun Message.toEntity(localFilePath: String? = null): MessageEntity = MessageEntity(
-    id = id,
-    chatId = chatId,
-    senderId = senderId,
-    content = content,
-    type = type.name,
-    timestamp = timestamp.time,
-    status = status.name,
-    replyTo = replyTo,
-    isEncrypted = isEncrypted,
-    disappearAfter = disappearAfter,
-    localFilePath = localFilePath
-)
+fun Message.toEntity(localFilePath: String? = null): MessageEntity {
+    // Extract URI from metadata for media messages
+    val uriFromMetadata = metadata?.get("uri") as? String
+    val finalLocalFilePath = localFilePath ?: uriFromMetadata
+
+    return MessageEntity(
+        id = id,
+        chatId = chatId,
+        senderId = senderId,
+        content = content,
+        type = type.name,
+        timestamp = timestamp.time,
+        status = status.name,
+        replyTo = replyTo,
+        isEncrypted = isEncrypted,
+        disappearAfter = disappearAfter,
+        localFilePath = finalLocalFilePath
+    )
+}
