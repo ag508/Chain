@@ -136,6 +136,7 @@ fun SingleMessageActionsSheet(
     onDelete: () -> Unit,
     onStar: () -> Unit,
     onReact: (String) -> Unit,
+    onInfo: () -> Unit = {},
     isSentByMe: Boolean = false,
     modifier: Modifier = Modifier
 ) {
@@ -229,9 +230,107 @@ fun SingleMessageActionsSheet(
             icon = Icons.Default.Info,
             text = "Message Info",
             onClick = {
-                // TODO: Show message info
+                onInfo()
                 onDismiss()
             }
+        )
+    }
+}
+
+/**
+ * Message info dialog showing message details
+ */
+@Composable
+fun MessageInfoDialog(
+    message: com.chain.app.domain.model.Message,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Message Info",
+                style = MaterialTheme.typography.titleLarge,
+                color = GlassText
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                InfoRow(label = "Type", value = message.type.name)
+                InfoRow(
+                    label = "Sent",
+                    value = java.text.SimpleDateFormat(
+                        "MMM dd, yyyy HH:mm:ss",
+                        java.util.Locale.getDefault()
+                    ).format(message.timestamp)
+                )
+                InfoRow(label = "Status", value = message.status.name)
+                InfoRow(label = "From", value = message.senderId)
+
+                if (message.reactions.isNotEmpty()) {
+                    InfoRow(
+                        label = "Reactions",
+                        value = message.reactions.groupBy { it.emoji }
+                            .map { "${it.key} ${it.value.size}" }
+                            .joinToString(", ")
+                    )
+                }
+
+                if (message.isEncrypted) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = ChainSecureGreen,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "End-to-end encrypted",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ChainSecureGreen
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", color = GlassAccent)
+            }
+        },
+        containerColor = GlassGradientStart.copy(alpha = 0.95f),
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun InfoRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = GlassTextSecondary,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = GlassText,
+            modifier = Modifier.weight(2f)
         )
     }
 }
