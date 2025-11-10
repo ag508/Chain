@@ -21,9 +21,6 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE isContact = 1")
     suspend fun getContactsList(): List<UserEntity>
 
-    @Query("SELECT * FROM users WHERE isBlocked = 1")
-    fun getBlockedUsers(): Flow<List<UserEntity>>
-
     @Query("SELECT * FROM users WHERE displayName LIKE '%' || :query || '%' OR id LIKE '%' || :query || '%'")
     fun searchUsers(query: String): Flow<List<UserEntity>>
 
