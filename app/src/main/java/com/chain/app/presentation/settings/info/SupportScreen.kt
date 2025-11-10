@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,7 +51,11 @@ fun SupportScreen(
         containerColor = Color.Transparent,
         modifier = Modifier
             .fillMaxSize()
-            .gradientBackground()
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(GlassGradientStart, GlassGradientEnd)
+                )
+            )
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -64,7 +69,7 @@ fun SupportScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassCard(),
+                    .glassCard(shape = RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.Transparent
                 ),
@@ -120,7 +125,7 @@ fun SupportScreen(
             )
 
             ContactMethodCard(
-                icon = Icons.Default.Twitter,
+                icon = Icons.Default.Share,
                 title = "Twitter",
                 description = "@ChainApp",
                 subtitle = "Follow us for updates"
@@ -152,7 +157,7 @@ fun SupportScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassCard(),
+                    .glassCard(shape = RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.Transparent
                 ),
@@ -198,7 +203,7 @@ fun SupportScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassCard(),
+                    .glassCard(shape = RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.Transparent
                 ),

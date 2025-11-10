@@ -36,7 +36,7 @@ class BlockedContactsViewModel @Inject constructor(
                         BlockedUser(
                             id = user.id,
                             name = user.displayName,
-                            blockedDate = formatDate(user.blockedAt ?: Date())
+                            blockedDate = formatDate(Date()) // Using current date as placeholder
                         )
                     }
                     _blockedUsers.value = blockedUsersList
