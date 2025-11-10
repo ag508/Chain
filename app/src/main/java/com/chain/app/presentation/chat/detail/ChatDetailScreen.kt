@@ -93,6 +93,7 @@ fun ChatDetailScreen(
                 onSendImage = viewModel::sendImageMessage,
                 onSendVideo = viewModel::sendVideoMessage,
                 onSendDocument = viewModel::sendDocumentMessage,
+                onSendAudio = viewModel::sendAudioMessage,
                 onSendLocation = viewModel::sendLocationMessage,
                 onSendContact = viewModel::sendContactMessage,
                 modifier = modifier
@@ -121,6 +122,7 @@ private fun ChatDetailContent(
     onSendImage: (android.net.Uri, String) -> Unit,
     onSendVideo: (android.net.Uri, String, Long) -> Unit,
     onSendDocument: (android.net.Uri, String) -> Unit,
+    onSendAudio: (android.net.Uri, Long) -> Unit,
     onSendLocation: (Double, Double, String) -> Unit,
     onSendContact: (String, String, String?) -> Unit,
     modifier: Modifier = Modifier
@@ -214,11 +216,7 @@ private fun ChatDetailContent(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasMicrophonePermission = isGranted
-        if (isGranted) {
-            // Permission granted, start recording
-            isRecordingVoice = true
-            // TODO: Start voice recording
-        }
+        // VoiceRecordButton will handle recording after permission is granted
     }
 
     // Location permission launcher
