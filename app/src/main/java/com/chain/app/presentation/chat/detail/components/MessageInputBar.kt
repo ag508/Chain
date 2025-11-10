@@ -36,9 +36,9 @@ fun MessageInputBar(
     onSendMessage: () -> Unit,
     onEmojiClick: () -> Unit,
     onAttachmentClick: () -> Unit,
-    onVoiceRecordStart: () -> Unit,
-    onVoiceRecordStop: () -> Unit,
-    isRecordingVoice: Boolean = false,
+    onSendAudio: (android.net.Uri, Long) -> Unit,
+    hasMicrophonePermission: Boolean,
+    onRequestMicrophonePermission: () -> Unit,
     replyingTo: String? = null,
     onCancelReply: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -140,16 +140,12 @@ fun MessageInputBar(
                 }
             }
 
-            AnimatedVisibility(
-                visible = !hasText,
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut()
-            ) {
+            if (!hasText) {
                 // Voice record button
                 VoiceRecordButton(
-                    isRecording = isRecordingVoice,
-                    onStart = onVoiceRecordStart,
-                    onStop = onVoiceRecordStop
+                    onRecordingComplete = onSendAudio,
+                    hasPermission = hasMicrophonePermission,
+                    onRequestPermission = onRequestMicrophonePermission
                 )
             }
         }
@@ -216,69 +212,6 @@ private fun ReplyBanner(
         }
     }
 }
-
-@Composable
-private fun VoiceRecordButton(
-    isRecording: Boolean,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // Pulsing animation for recording state
-    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 1f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(800),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
-        ),
-        label = "alpha"
-    )
-
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(800),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
-        ),
-        label = "scale"
-    )
-
-    Box(
-        modifier = modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(
-                if (isRecording) {
-                    MaterialTheme.colorScheme.error.copy(alpha = pulseAlpha)
-                } else {
-                    GlassAccent.copy(alpha = 0.5f)
-                }
-            )
-            .clickable { if (isRecording) onStop() else onStart() }
-            .then(
-                if (isRecording) {
-                    Modifier.graphicsLayer {
-                        scaleX = pulseScale
-                        scaleY = pulseScale
-                    }
-                } else {
-                    Modifier
-                }
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-            contentDescription = if (isRecording) "Stop recording" else "Record voice",
-            tint = if (isRecording) Color.White else GlassText,
-            modifier = Modifier.size(24.dp)
-        )
-    }
-}
-
 /**
  * Attachment menu showing different attachment types
  */

@@ -22,12 +22,16 @@ fun rememberCameraCapture(
 ): CameraCaptureState {
     val context = LocalContext.current
 
+    var currentPhotoUri: Uri? by remember { androidx.compose.runtime.mutableStateOf(null) }
+
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            // Photo was taken successfully
-            // The URI passed to takePicture() contains the photo
+            // Photo was taken successfully, call callback with the URI
+            currentPhotoUri?.let { uri ->
+                onPhotoTaken(uri)
+            }
         }
     }
 
@@ -35,7 +39,7 @@ fun rememberCameraCapture(
         CameraCaptureState(
             context = context,
             cameraLauncher = cameraLauncher,
-            onPhotoTaken = onPhotoTaken
+            onUriCreated = { uri -> currentPhotoUri = uri }
         )
     }
 }
@@ -46,16 +50,13 @@ fun rememberCameraCapture(
 class CameraCaptureState(
     private val context: Context,
     private val cameraLauncher: androidx.activity.result.ActivityResultLauncher<Uri>,
-    private val onPhotoTaken: (Uri) -> Unit
+    private val onUriCreated: (Uri) -> Unit
 ) {
-    private var currentPhotoUri: Uri? = null
-
     /**
      * Launch camera to take a photo
      */
     fun takePhoto() {
         val photoUri = createImageUri()
-        currentPhotoUri = photoUri
         cameraLauncher.launch(photoUri)
     }
 
@@ -78,9 +79,8 @@ class CameraCaptureState(
             "${context.packageName}.fileprovider",
             imageFile
         ).also { uri ->
-            // Store the URI so we can use it after capture
-            currentPhotoUri = uri
-            onPhotoTaken(uri)
+            // Store the URI so the callback can use it after capture
+            onUriCreated(uri)
         }
     }
 }
@@ -94,11 +94,16 @@ fun rememberVideoCapture(
 ): VideoCaptureState {
     val context = LocalContext.current
 
+    var currentVideoUri: Uri? by remember { androidx.compose.runtime.mutableStateOf(null) }
+
     val videoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CaptureVideo()
     ) { success ->
         if (success) {
-            // Video was recorded successfully
+            // Video was recorded successfully, call callback with the URI
+            currentVideoUri?.let { uri ->
+                onVideoRecorded(uri)
+            }
         }
     }
 
@@ -106,7 +111,7 @@ fun rememberVideoCapture(
         VideoCaptureState(
             context = context,
             videoLauncher = videoLauncher,
-            onVideoRecorded = onVideoRecorded
+            onUriCreated = { uri -> currentVideoUri = uri }
         )
     }
 }
@@ -117,16 +122,13 @@ fun rememberVideoCapture(
 class VideoCaptureState(
     private val context: Context,
     private val videoLauncher: androidx.activity.result.ActivityResultLauncher<Uri>,
-    private val onVideoRecorded: (Uri) -> Unit
+    private val onUriCreated: (Uri) -> Unit
 ) {
-    private var currentVideoUri: Uri? = null
-
     /**
      * Launch camera to record a video
      */
     fun recordVideo() {
         val videoUri = createVideoUri()
-        currentVideoUri = videoUri
         videoLauncher.launch(videoUri)
     }
 
@@ -149,8 +151,8 @@ class VideoCaptureState(
             "${context.packageName}.fileprovider",
             videoFile
         ).also { uri ->
-            currentVideoUri = uri
-            onVideoRecorded(uri)
+            // Store the URI so the callback can use it after capture
+            onUriCreated(uri)
         }
     }
 }

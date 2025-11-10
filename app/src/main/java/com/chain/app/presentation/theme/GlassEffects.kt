@@ -101,8 +101,8 @@ fun Modifier.glassTextField(shape: Shape): Modifier = composed {
 fun Modifier.glassDialog(shape: Shape): Modifier = composed {
     glass(
         shape = shape,
-        blurRadius = 20.dp,
-        alpha = 0.20f,
+        blurRadius = 0.dp,
+        alpha = 1.0f,
         borderAlpha = 0.30f,
         elevation = 12.dp
     )
