@@ -163,6 +163,7 @@ private fun ChatDetailContent(
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showMessageActionsSheet by remember { mutableStateOf<com.chain.app.domain.model.Message?>(null) }
     var showQuickReactionPicker by remember { mutableStateOf<com.chain.app.domain.model.Message?>(null) }
+    var showMessageInfo by remember { mutableStateOf<com.chain.app.domain.model.Message?>(null) }
 
     // Filter messages based on search query
     val filteredMessages = remember(messages, searchQuery) {
@@ -409,6 +410,7 @@ private fun ChatDetailContent(
                             message = message,
                             isSentByMe = message.senderId == currentUserId,
                             showSender = chat.type == ChatType.GROUP,
+                            allMessages = messages,
                             onLongPress = {
                                 if (isSelectionMode) {
                                     onToggleMessageSelection(message.id)
@@ -466,7 +468,7 @@ private fun ChatDetailContent(
                     onRequestMicrophonePermission = {
                         microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     },
-                    replyingTo = replyingToMessage?.id,
+                    replyingTo = replyingToMessage,
                     onCancelReply = onCancelReply
                 )
             }
@@ -713,7 +715,7 @@ private fun ChatDetailContent(
                         showMessageActionsSheet = null
                     },
                     onForward = {
-                        Toast.makeText(context, "Forward coming soon!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Forward: Select chat to forward to", Toast.LENGTH_SHORT).show()
                         showMessageActionsSheet = null
                     },
                     onCopy = {
@@ -734,6 +736,9 @@ private fun ChatDetailContent(
                     },
                     onReact = { emoji ->
                         onAddReaction(message.id, emoji)
+                    },
+                    onInfo = {
+                        showMessageInfo = message
                     },
                     isSentByMe = message.senderId == currentUserId
                 )
@@ -756,6 +761,14 @@ private fun ChatDetailContent(
                     onDismiss = { showQuickReactionPicker = null }
                 )
             }
+        }
+
+        // Message info dialog
+        showMessageInfo?.let { message ->
+            MessageInfoDialog(
+                message = message,
+                onDismiss = { showMessageInfo = null }
+            )
         }
     }
 }

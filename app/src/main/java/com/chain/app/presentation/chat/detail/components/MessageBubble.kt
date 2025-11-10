@@ -51,6 +51,7 @@ fun MessageBubble(
     message: Message,
     isSentByMe: Boolean,
     showSender: Boolean = false,
+    allMessages: List<Message> = emptyList(),
     onLongPress: () -> Unit = {},
     onDoubleTap: () -> Unit = {},
     onReply: () -> Unit = {},
@@ -92,15 +93,15 @@ fun MessageBubble(
         Box(
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
-            // Reply icon (shown during swipe)
+            // Reply icon (shown during swipe - always on left for right swipe)
             if (offsetX.value > 10f) {
                 Icon(
                     imageVector = Icons.Default.Reply,
                     contentDescription = "Reply",
                     tint = if (offsetX.value >= triggerThreshold) GlassAccent else GlassTextSecondary,
                     modifier = Modifier
-                        .align(if (isSentByMe) Alignment.CenterEnd else Alignment.CenterStart)
-                        .padding(horizontal = 8.dp)
+                        .align(Alignment.CenterStart)
+                        .padding(start = 4.dp)
                         .size(24.dp)
                         .graphicsLayer {
                             alpha = (offsetX.value / triggerThreshold).coerceIn(0f, 1f)
@@ -111,7 +112,7 @@ fun MessageBubble(
             // Message content
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .wrapContentWidth()
                     .graphicsLayer {
                         translationX = offsetX.value
                     }
@@ -157,11 +158,14 @@ fun MessageBubble(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // Reply preview (if replying to a message)
-                message.replyTo?.let {
-                    ReplyPreviewInBubble(
-                        replyTo = it, // TODO: Get actual message being replied to
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                message.replyTo?.let { replyToId ->
+                    val repliedMessage = allMessages.find { it.id == replyToId }
+                    repliedMessage?.let {
+                        ReplyPreviewInBubble(
+                            repliedMessage = it,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
 
                 // Message content based on type
@@ -243,7 +247,7 @@ fun MessageBubble(
 
 @Composable
 private fun ReplyPreviewInBubble(
-    replyTo: String, // TODO: Should be Message type
+    repliedMessage: Message,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -256,7 +260,7 @@ private fun ReplyPreviewInBubble(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                text = "Reply to", // TODO: Show sender name
+                text = "Reply to ${repliedMessage.senderId}",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
@@ -264,7 +268,17 @@ private fun ReplyPreviewInBubble(
                 fontSize = 10.sp
             )
             Text(
-                text = "Message preview...", // TODO: Show actual message content
+                text = when (repliedMessage.type) {
+                    MessageType.TEXT -> repliedMessage.content
+                    MessageType.IMAGE -> "📷 Photo"
+                    MessageType.VIDEO -> "🎥 Video"
+                    MessageType.AUDIO -> "🎵 Audio"
+                    MessageType.DOCUMENT -> "📄 ${repliedMessage.content}"
+                    MessageType.LOCATION -> "📍 Location"
+                    MessageType.CONTACT -> "👤 Contact"
+                    MessageType.POLL -> "📊 Poll"
+                    MessageType.SYSTEM -> repliedMessage.content
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 maxLines = 2

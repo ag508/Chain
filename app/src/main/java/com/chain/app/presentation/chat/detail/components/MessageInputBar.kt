@@ -39,7 +39,7 @@ fun MessageInputBar(
     onSendAudio: (android.net.Uri, Long) -> Unit,
     hasMicrophonePermission: Boolean,
     onRequestMicrophonePermission: () -> Unit,
-    replyingTo: String? = null,
+    replyingTo: com.chain.app.domain.model.Message? = null,
     onCancelReply: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -154,7 +154,7 @@ fun MessageInputBar(
 
 @Composable
 private fun ReplyBanner(
-    replyTo: String, // TODO: Should be Message type
+    replyTo: com.chain.app.domain.model.Message,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -184,14 +184,24 @@ private fun ReplyBanner(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "Replying to", // TODO: Show sender name
+                        text = "Replying to ${replyTo.senderId}",
                         style = MaterialTheme.typography.labelSmall,
                         color = GlassAccent
                     )
                 }
 
                 Text(
-                    text = "Message preview...", // TODO: Show actual message content
+                    text = when (replyTo.type) {
+                        com.chain.app.domain.model.MessageType.TEXT -> replyTo.content
+                        com.chain.app.domain.model.MessageType.IMAGE -> "📷 Photo"
+                        com.chain.app.domain.model.MessageType.VIDEO -> "🎥 Video"
+                        com.chain.app.domain.model.MessageType.AUDIO -> "🎵 Audio"
+                        com.chain.app.domain.model.MessageType.DOCUMENT -> "📄 ${replyTo.content}"
+                        com.chain.app.domain.model.MessageType.LOCATION -> "📍 Location"
+                        com.chain.app.domain.model.MessageType.CONTACT -> "👤 Contact"
+                        com.chain.app.domain.model.MessageType.POLL -> "📊 Poll"
+                        com.chain.app.domain.model.MessageType.SYSTEM -> replyTo.content
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = GlassTextSecondary,
                     maxLines = 2
