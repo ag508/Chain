@@ -40,7 +40,7 @@ fun Modifier.glass(
     val backgroundColor = if (isLight) {
         Color.White.copy(alpha = alpha)
     } else {
-        Color.Black.copy(alpha = alpha + 0.1f)
+        Color.Black.copy(alpha = (alpha + 0.1f).coerceAtMost(1.0f))
     }
 
     val borderColor = if (isLight) {
