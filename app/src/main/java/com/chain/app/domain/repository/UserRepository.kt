@@ -68,6 +68,11 @@ interface UserRepository {
     suspend fun unblockUser(userId: String): Result<Unit>
 
     /**
+     * Get list of blocked users.
+     */
+    fun getBlockedUsers(): Flow<List<User>>
+
+    /**
      * Observe user status changes.
      */
     fun observeUserStatus(userId: String): Flow<UserStatus>
