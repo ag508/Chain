@@ -45,4 +45,15 @@ sealed class NavRoutes(val route: String) {
         fun createRoute(peerId: String, isIncoming: Boolean = false) =
             "video_call/$peerId?isIncoming=$isIncoming"
     }
+
+    // Settings screens
+    object BlockedContacts : NavRoutes("blocked_contacts")
+    object AutoDownloadMedia : NavRoutes("auto_download_media")
+    object ChatBackup : NavRoutes("chat_backup")
+    object NetworkUsage : NavRoutes("network_usage")
+    object Wallpaper : NavRoutes("wallpaper")
+    object FAQ : NavRoutes("faq")
+    object Support : NavRoutes("support")
+    object Terms : NavRoutes("terms")
+    object Privacy : NavRoutes("privacy")
 }

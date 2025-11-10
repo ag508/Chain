@@ -25,6 +25,15 @@ fun SettingsScreen(
     onAccountSettingsClick: () -> Unit = {},
     onPrivacySettingsClick: () -> Unit = {},
     onNotificationSettingsClick: () -> Unit = {},
+    onBlockedContactsClick: () -> Unit = {},
+    onAutoDownloadMediaClick: () -> Unit = {},
+    onChatBackupClick: () -> Unit = {},
+    onNetworkUsageClick: () -> Unit = {},
+    onWallpaperClick: () -> Unit = {},
+    onFAQClick: () -> Unit = {},
+    onSupportClick: () -> Unit = {},
+    onTermsClick: () -> Unit = {},
+    onPrivacyPolicyClick: () -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
@@ -125,7 +134,7 @@ fun SettingsScreen(
                             icon = Icons.Default.Block,
                             title = "Blocked Contacts",
                             subtitle = "0 blocked",
-                            onClick = { /* TODO: Navigate to blocked contacts */ }
+                            onClick = onBlockedContactsClick
                         )
                     }
                 }
@@ -183,7 +192,7 @@ fun SettingsScreen(
                             icon = Icons.Default.Backup,
                             title = "Chat Backup",
                             subtitle = "Backup and restore your chats",
-                            onClick = { /* TODO: Navigate to backup settings */ }
+                            onClick = onChatBackupClick
                         )
                         Divider(
                             color = GlassBorder.copy(alpha = 0.3f),
@@ -193,7 +202,7 @@ fun SettingsScreen(
                             icon = Icons.Default.Wallpaper,
                             title = "Wallpaper",
                             subtitle = "Change chat background",
-                            onClick = { /* TODO: Navigate to wallpaper selector */ }
+                            onClick = onWallpaperClick
                         )
                     }
                 }
@@ -205,7 +214,7 @@ fun SettingsScreen(
                             icon = Icons.Default.NetworkCheck,
                             title = "Network Usage",
                             subtitle = "View data usage statistics",
-                            onClick = { /* TODO: Navigate to network usage */ }
+                            onClick = onNetworkUsageClick
                         )
                         Divider(
                             color = GlassBorder.copy(alpha = 0.3f),
@@ -215,7 +224,7 @@ fun SettingsScreen(
                             icon = Icons.Default.Download,
                             title = "Auto-Download Media",
                             subtitle = "Configure automatic media downloads",
-                            onClick = { /* TODO: Navigate to auto-download settings */ }
+                            onClick = onAutoDownloadMediaClick
                         )
                     }
                 }
@@ -227,7 +236,7 @@ fun SettingsScreen(
                             icon = Icons.Default.Help,
                             title = "FAQ",
                             subtitle = "Frequently asked questions",
-                            onClick = { /* TODO: Navigate to FAQ */ }
+                            onClick = onFAQClick
                         )
                         Divider(
                             color = GlassBorder.copy(alpha = 0.3f),
@@ -237,7 +246,7 @@ fun SettingsScreen(
                             icon = Icons.Default.ContactSupport,
                             title = "Contact Support",
                             subtitle = "Get help from our team",
-                            onClick = { /* TODO: Navigate to support */ }
+                            onClick = onSupportClick
                         )
                     }
                 }
@@ -259,7 +268,7 @@ fun SettingsScreen(
                             icon = Icons.Default.Description,
                             title = "Terms of Service",
                             subtitle = "Read our terms",
-                            onClick = { /* TODO: Open terms */ }
+                            onClick = onTermsClick
                         )
                         Divider(
                             color = GlassBorder.copy(alpha = 0.3f),
@@ -269,7 +278,7 @@ fun SettingsScreen(
                             icon = Icons.Default.PrivacyTip,
                             title = "Privacy Policy",
                             subtitle = "Read our privacy policy",
-                            onClick = { /* TODO: Open privacy policy */ }
+                            onClick = onPrivacyPolicyClick
                         )
                     }
                 }
