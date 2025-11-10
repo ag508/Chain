@@ -127,7 +127,6 @@ private fun ChatDetailContent(
 ) {
     var messageText by remember { mutableStateOf(TextFieldValue("")) }
     var replyingToMessage by remember { mutableStateOf<String?>(null) }
-    var isRecordingVoice by remember { mutableStateOf(false) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
@@ -375,19 +374,13 @@ private fun ChatDetailContent(
                     onAttachmentClick = {
                         showAttachmentMenu = true
                     },
-                    onVoiceRecordStart = {
-                        if (hasMicrophonePermission) {
-                            isRecordingVoice = true
-                            // TODO: Start voice recording
-                        } else {
-                            microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                        }
+                    onSendAudio = { uri, duration ->
+                        onSendAudio(uri, duration)
                     },
-                    onVoiceRecordStop = {
-                        isRecordingVoice = false
-                        // TODO: Stop and send voice recording
+                    hasMicrophonePermission = hasMicrophonePermission,
+                    onRequestMicrophonePermission = {
+                        microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     },
-                    isRecordingVoice = isRecordingVoice,
                     replyingTo = replyingToMessage,
                     onCancelReply = { replyingToMessage = null }
                 )
