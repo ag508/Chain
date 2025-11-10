@@ -93,6 +93,7 @@ fun ChatDetailScreen(
                 onSendImage = viewModel::sendImageMessage,
                 onSendVideo = viewModel::sendVideoMessage,
                 onSendDocument = viewModel::sendDocumentMessage,
+                onSendAudio = viewModel::sendAudioMessage,
                 onSendLocation = viewModel::sendLocationMessage,
                 onSendContact = viewModel::sendContactMessage,
                 modifier = modifier
@@ -121,6 +122,7 @@ private fun ChatDetailContent(
     onSendImage: (android.net.Uri, String) -> Unit,
     onSendVideo: (android.net.Uri, String, Long) -> Unit,
     onSendDocument: (android.net.Uri, String) -> Unit,
+    onSendAudio: (android.net.Uri, Long) -> Unit,
     onSendLocation: (Double, Double, String) -> Unit,
     onSendContact: (String, String, String?) -> Unit,
     modifier: Modifier = Modifier
@@ -214,11 +216,7 @@ private fun ChatDetailContent(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasMicrophonePermission = isGranted
-        if (isGranted) {
-            // Permission granted, start recording
-            isRecordingVoice = true
-            // TODO: Start voice recording
-        }
+        // VoiceRecordButton will handle recording after permission is granted
     }
 
     // Location permission launcher
@@ -630,7 +628,7 @@ private fun getCurrentLocationAndShare(
 
                     onSendLocation(latitude, longitude, address)
                     Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Geocoder failed, send with coordinates only
                     onSendLocation(latitude, longitude, "Location: $latitude, $longitude")
                     Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
@@ -641,7 +639,7 @@ private fun getCurrentLocationAndShare(
         }.addOnFailureListener { exception ->
             Toast.makeText(context, "Failed to get location: ${exception.message}", Toast.LENGTH_SHORT).show()
         }
-    } catch (e: SecurityException) {
+    } catch (_: SecurityException) {
         Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
     }
 }
@@ -711,7 +709,7 @@ private fun getContactData(
                 }
             }
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         Toast.makeText(context, "Failed to read contact", Toast.LENGTH_SHORT).show()
     }
 
