@@ -49,6 +49,9 @@ fun ChatDetailScreen(
     val lastSeen by viewModel.lastSeen.collectAsState()
     val isBlocked by viewModel.isBlocked.collectAsState()
     val isMuted by viewModel.isMuted.collectAsState()
+    val selectedMessages by viewModel.selectedMessages.collectAsState()
+    val isSelectionMode by viewModel.isSelectionMode.collectAsState()
+    val replyingToMessage by viewModel.replyingToMessage.collectAsState()
 
     LaunchedEffect(chatId) {
         viewModel.loadChat(chatId)
@@ -84,6 +87,9 @@ fun ChatDetailScreen(
                 lastSeen = lastSeen,
                 isBlocked = isBlocked,
                 isMuted = isMuted,
+                selectedMessages = selectedMessages,
+                isSelectionMode = isSelectionMode,
+                replyingToMessage = replyingToMessage,
                 onBackClick = onBackClick,
                 onSendMessage = viewModel::sendMessage,
                 onVoiceCallClick = onVoiceCallClick,
@@ -97,6 +103,14 @@ fun ChatDetailScreen(
                 onSendAudio = viewModel::sendAudioMessage,
                 onSendLocation = viewModel::sendLocationMessage,
                 onSendContact = viewModel::sendContactMessage,
+                onToggleMessageSelection = viewModel::toggleMessageSelection,
+                onClearSelection = viewModel::clearSelection,
+                onSelectAll = viewModel::selectAllMessages,
+                onDeleteSelected = viewModel::deleteSelectedMessages,
+                onAddReaction = viewModel::addReaction,
+                onSetReplyingTo = viewModel::setReplyingToMessage,
+                onCancelReply = viewModel::cancelReply,
+                onSendReply = viewModel::sendReply,
                 modifier = modifier
             )
         }
@@ -113,6 +127,9 @@ private fun ChatDetailContent(
     lastSeen: Long?,
     isBlocked: Boolean,
     isMuted: Boolean,
+    selectedMessages: Set<String>,
+    isSelectionMode: Boolean,
+    replyingToMessage: com.chain.app.domain.model.Message?,
     onBackClick: () -> Unit,
     onSendMessage: (String) -> Unit,
     onVoiceCallClick: () -> Unit,
@@ -126,16 +143,26 @@ private fun ChatDetailContent(
     onSendAudio: (android.net.Uri, Long) -> Unit,
     onSendLocation: (Double, Double, String) -> Unit,
     onSendContact: (String, String, String?) -> Unit,
+    onToggleMessageSelection: (String) -> Unit,
+    onClearSelection: () -> Unit,
+    onSelectAll: () -> Unit,
+    onDeleteSelected: () -> Unit,
+    onAddReaction: (String, String) -> Unit,
+    onSetReplyingTo: (com.chain.app.domain.model.Message?) -> Unit,
+    onCancelReply: () -> Unit,
+    onSendReply: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var messageText by remember { mutableStateOf(TextFieldValue("")) }
-    var replyingToMessage by remember { mutableStateOf<String?>(null) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
     var showBlockDialog by remember { mutableStateOf(false) }
     var showMuteDialog by remember { mutableStateOf(false) }
     var showDisappearingMessagesDialog by remember { mutableStateOf(false) }
+    var showEmojiPicker by remember { mutableStateOf(false) }
+    var showMessageActionsSheet by remember { mutableStateOf<com.chain.app.domain.model.Message?>(null) }
+    var showQuickReactionPicker by remember { mutableStateOf<com.chain.app.domain.model.Message?>(null) }
 
     // Filter messages based on search query
     val filteredMessages = remember(messages, searchQuery) {
@@ -282,12 +309,38 @@ private fun ChatDetailContent(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
+            // Message actions bar (shown in selection mode)
+            if (isSelectionMode) {
+                MessageActionsBar(
+                    selectedCount = selectedMessages.size,
+                    onClearSelection = onClearSelection,
+                    onDelete = onDeleteSelected,
+                    onForward = {
+                        // TODO: Implement forward functionality
+                        Toast.makeText(context, "Forward coming soon!", Toast.LENGTH_SHORT).show()
+                    },
+                    onCopy = {
+                        // Copy selected messages to clipboard
+                        val textToCopy = messages
+                            .filter { selectedMessages.contains(it.id) }
+                            .joinToString("\n") { it.content }
+                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        val clip = android.content.ClipData.newPlainText("messages", textToCopy)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                        onClearSelection()
+                    },
+                    onSelectAll = onSelectAll
+                )
+            }
+
             // Chat header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 8.dp)
-            ) {
+            if (!isSelectionMode) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 8.dp)
+                ) {
                 ChatHeader(
                     chatName = chat.name,
                     chatType = chat.type,
@@ -322,6 +375,7 @@ private fun ChatDetailContent(
                     onBlock = { showBlockDialog = true },
                     onDisappearingMessages = { showDisappearingMessagesDialog = true }
                 )
+                }
             }
 
             // Messages list
@@ -335,17 +389,41 @@ private fun ChatDetailContent(
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
                 items(filteredMessages, key = { it.id }) { message ->
-                    MessageBubble(
-                        message = message,
-                        isSentByMe = message.senderId == currentUserId,
-                        showSender = chat.type == ChatType.GROUP,
-                        onLongPress = {
-                            // TODO: Show message actions menu
-                        },
-                        onDoubleTap = {
-                            // TODO: Add reaction
-                        }
-                    )
+                    val isSelected = selectedMessages.contains(message.id)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (isSelected) {
+                                    Modifier.background(GlassAccent.copy(alpha = 0.1f))
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .clickable(enabled = isSelectionMode) {
+                                onToggleMessageSelection(message.id)
+                            }
+                    ) {
+                        MessageBubble(
+                            message = message,
+                            isSentByMe = message.senderId == currentUserId,
+                            showSender = chat.type == ChatType.GROUP,
+                            onLongPress = {
+                                if (isSelectionMode) {
+                                    onToggleMessageSelection(message.id)
+                                } else {
+                                    showMessageActionsSheet = message
+                                }
+                            },
+                            onDoubleTap = {
+                                showQuickReactionPicker = message
+                            },
+                            onReply = {
+                                onSetReplyingTo(message)
+                            }
+                        )
+                    }
                 }
             }
 
@@ -360,9 +438,12 @@ private fun ChatDetailContent(
                     onTextChange = { messageText = it },
                     onSendMessage = {
                         if (messageText.text.isNotBlank()) {
-                            onSendMessage(messageText.text.trim())
+                            if (replyingToMessage != null) {
+                                onSendReply(messageText.text.trim())
+                            } else {
+                                onSendMessage(messageText.text.trim())
+                            }
                             messageText = TextFieldValue("")
-                            replyingToMessage = null
 
                             // Auto-scroll to bottom after sending
                             coroutineScope.launch {
@@ -373,7 +454,7 @@ private fun ChatDetailContent(
                         }
                     },
                     onEmojiClick = {
-                        // TODO: Show emoji picker
+                        showEmojiPicker = true
                     },
                     onAttachmentClick = {
                         showAttachmentMenu = true
@@ -385,8 +466,8 @@ private fun ChatDetailContent(
                     onRequestMicrophonePermission = {
                         microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     },
-                    replyingTo = replyingToMessage,
-                    onCancelReply = { replyingToMessage = null }
+                    replyingTo = replyingToMessage?.id,
+                    onCancelReply = onCancelReply
                 )
             }
         }
@@ -595,6 +676,86 @@ private fun ChatDetailContent(
                 },
                 containerColor = GlassGradientStart.copy(alpha = 0.95f)
             )
+        }
+
+        // Emoji picker modal
+        if (showEmojiPicker) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+                    .clickable { showEmojiPicker = false },
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                EmojiPicker(
+                    onEmojiSelected = { emoji ->
+                        messageText = TextFieldValue(messageText.text + emoji)
+                        showEmojiPicker = false
+                    },
+                    onDismiss = { showEmojiPicker = false }
+                )
+            }
+        }
+
+        // Single message actions sheet
+        showMessageActionsSheet?.let { message ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+                    .clickable { showMessageActionsSheet = null },
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                SingleMessageActionsSheet(
+                    onDismiss = { showMessageActionsSheet = null },
+                    onReply = {
+                        onSetReplyingTo(message)
+                        showMessageActionsSheet = null
+                    },
+                    onForward = {
+                        Toast.makeText(context, "Forward coming soon!", Toast.LENGTH_SHORT).show()
+                        showMessageActionsSheet = null
+                    },
+                    onCopy = {
+                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        val clip = android.content.ClipData.newPlainText("message", message.content)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                        showMessageActionsSheet = null
+                    },
+                    onDelete = {
+                        onToggleMessageSelection(message.id)
+                        onDeleteSelected()
+                        showMessageActionsSheet = null
+                    },
+                    onStar = {
+                        Toast.makeText(context, "Star coming soon!", Toast.LENGTH_SHORT).show()
+                        showMessageActionsSheet = null
+                    },
+                    onReact = { emoji ->
+                        onAddReaction(message.id, emoji)
+                    },
+                    isSentByMe = message.senderId == currentUserId
+                )
+            }
+        }
+
+        // Quick reaction picker (on double-tap)
+        showQuickReactionPicker?.let { message ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { showQuickReactionPicker = null },
+                contentAlignment = Alignment.Center
+            ) {
+                QuickReactionPicker(
+                    onReactionSelected = { emoji ->
+                        onAddReaction(message.id, emoji)
+                        showQuickReactionPicker = null
+                    },
+                    onDismiss = { showQuickReactionPicker = null }
+                )
+            }
         }
     }
 }

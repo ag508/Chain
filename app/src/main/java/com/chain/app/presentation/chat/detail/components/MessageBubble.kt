@@ -3,8 +3,11 @@ package com.chain.app.presentation.chat.detail.components
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -35,10 +39,12 @@ import com.chain.app.presentation.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 /**
  * Message bubble component for displaying chat messages
- * Supports sent/received styling, timestamps, status, and reactions
+ * Supports sent/received styling, timestamps, status, reactions, and swipe-to-reply
  */
 @Composable
 fun MessageBubble(
@@ -47,6 +53,7 @@ fun MessageBubble(
     showSender: Boolean = false,
     onLongPress: () -> Unit = {},
     onDoubleTap: () -> Unit = {},
+    onReply: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val bubbleColor = if (isSentByMe) {
@@ -56,6 +63,12 @@ fun MessageBubble(
     }
 
     val alignment = if (isSentByMe) Alignment.End else Alignment.Start
+
+    // Swipe-to-reply state
+    val offsetX = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val maxSwipeDistance = 100f
+    val triggerThreshold = 60f
 
     Column(
         modifier = modifier
@@ -75,27 +88,71 @@ fun MessageBubble(
             )
         }
 
-        // Message content
+        // Swipeable message container with reply icon
         Box(
-            modifier = Modifier
-                .widthIn(max = 280.dp)
-                .clip(
-                    RoundedCornerShape(
-                        topStart = if (isSentByMe) 16.dp else 4.dp,
-                        topEnd = if (isSentByMe) 4.dp else 16.dp,
-                        bottomStart = 16.dp,
-                        bottomEnd = 16.dp
-                    )
-                )
-                .background(bubbleColor)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = { onLongPress() },
-                        onDoubleTap = { onDoubleTap() }
-                    )
-                }
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+            modifier = Modifier.widthIn(max = 280.dp)
         ) {
+            // Reply icon (shown during swipe)
+            if (offsetX.value > 10f) {
+                Icon(
+                    imageVector = Icons.Default.Reply,
+                    contentDescription = "Reply",
+                    tint = if (offsetX.value >= triggerThreshold) GlassAccent else GlassTextSecondary,
+                    modifier = Modifier
+                        .align(if (isSentByMe) Alignment.CenterEnd else Alignment.CenterStart)
+                        .padding(horizontal = 8.dp)
+                        .size(24.dp)
+                        .graphicsLayer {
+                            alpha = (offsetX.value / triggerThreshold).coerceIn(0f, 1f)
+                        }
+                )
+            }
+
+            // Message content
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        translationX = offsetX.value
+                    }
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = if (isSentByMe) 16.dp else 4.dp,
+                            topEnd = if (isSentByMe) 4.dp else 16.dp,
+                            bottomStart = 16.dp,
+                            bottomEnd = 16.dp
+                        )
+                    )
+                    .background(bubbleColor)
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures(
+                            onDragEnd = {
+                                scope.launch {
+                                    if (offsetX.value >= triggerThreshold) {
+                                        onReply()
+                                    }
+                                    offsetX.animateTo(
+                                        targetValue = 0f,
+                                        animationSpec = tween(durationMillis = 200)
+                                    )
+                                }
+                            },
+                            onHorizontalDrag = { _, dragAmount ->
+                                scope.launch {
+                                    val newOffset = (offsetX.value + dragAmount).coerceIn(0f, maxSwipeDistance)
+                                    offsetX.snapTo(newOffset)
+                                }
+                            }
+                        )
+                    }
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onLongPress = { onLongPress() },
+                            onDoubleTap = { onDoubleTap() }
+                        )
+                    }
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -171,6 +228,7 @@ fun MessageBubble(
                     }
                 }
             }
+        }
         }
 
         // Reactions (if any)
