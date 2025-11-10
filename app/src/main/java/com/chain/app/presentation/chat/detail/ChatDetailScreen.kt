@@ -628,7 +628,7 @@ private fun getCurrentLocationAndShare(
 
                     onSendLocation(latitude, longitude, address)
                     Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Geocoder failed, send with coordinates only
                     onSendLocation(latitude, longitude, "Location: $latitude, $longitude")
                     Toast.makeText(context, "Location sent!", Toast.LENGTH_SHORT).show()
@@ -639,7 +639,7 @@ private fun getCurrentLocationAndShare(
         }.addOnFailureListener { exception ->
             Toast.makeText(context, "Failed to get location: ${exception.message}", Toast.LENGTH_SHORT).show()
         }
-    } catch (e: SecurityException) {
+    } catch (_: SecurityException) {
         Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
     }
 }
@@ -709,7 +709,7 @@ private fun getContactData(
                 }
             }
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         Toast.makeText(context, "Failed to read contact", Toast.LENGTH_SHORT).show()
     }
 
