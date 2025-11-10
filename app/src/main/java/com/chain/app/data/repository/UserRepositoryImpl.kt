@@ -1,6 +1,7 @@
 package com.chain.app.data.repository
 
 import com.chain.app.data.local.dao.UserDao
+import com.chain.app.data.local.entity.UserEntity
 import com.chain.app.data.local.entity.toDomain
 import com.chain.app.data.local.entity.toEntity
 import com.chain.app.data.preferences.UserPreferences
