@@ -47,6 +47,7 @@ sealed class NavRoutes(val route: String) {
     }
 
     // Settings screens
+    object AccountSettings : NavRoutes("account_settings")
     object BlockedContacts : NavRoutes("blocked_contacts")
     object AutoDownloadMedia : NavRoutes("auto_download_media")
     object ChatBackup : NavRoutes("chat_backup")

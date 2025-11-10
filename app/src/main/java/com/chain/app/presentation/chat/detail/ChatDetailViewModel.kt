@@ -145,6 +145,16 @@ class ChatDetailViewModel @Inject constructor(
     private fun observeUserStatus(userId: String): kotlinx.coroutines.Job {
         return viewModelScope.launch {
             try {
+                // Load initial user state immediately to avoid showing incorrect block status
+                val initialUser = userRepository.getUserById(userId).getOrNull()
+                initialUser?.let {
+                    _isOnline.value = it.status == com.chain.app.domain.model.UserStatus.ONLINE
+                    _lastSeen.value = it.lastSeen.time
+                    _isBlocked.value = it.isBlocked
+                    Timber.d("User $userId initial state loaded: online=${_isOnline.value}, blocked=${_isBlocked.value}")
+                }
+
+                // Then observe for changes
                 userRepository.observeUser(userId)
                     .distinctUntilChanged()
                     .collect { user ->

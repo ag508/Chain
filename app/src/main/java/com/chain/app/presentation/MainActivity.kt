@@ -305,7 +305,9 @@ fun ChainApp(
         composable(NavRoutes.Settings.route) {
             com.chain.app.presentation.settings.SettingsScreen(
                 onBackClick = { navController.popBackStack() },
-                onAccountSettingsClick = { /* TODO: Navigate to account settings */ },
+                onAccountSettingsClick = {
+                    navController.navigate(NavRoutes.AccountSettings.route)
+                },
                 onPrivacySettingsClick = { /* TODO: Navigate to privacy settings */ },
                 onNotificationSettingsClick = { /* TODO: Navigate to notification settings */ },
                 onBlockedContactsClick = {
@@ -341,6 +343,15 @@ fun ChainApp(
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        // Account Settings screen
+        composable(NavRoutes.AccountSettings.route) {
+            com.chain.app.presentation.settings.account.AccountSettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onPrivacyClick = { /* TODO: Navigate to privacy settings */ },
+                onSecurityClick = { /* TODO: Navigate to security settings */ }
             )
         }
 
