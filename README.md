@@ -1,6 +1,10 @@
 # Chain - Decentralized Messaging Platform
 
-Chain is a revolutionary decentralized messaging platform that eliminates the need for central servers by leveraging blockchain technology and peer-to-peer communication. The platform provides all the features users expect from modern messaging apps while ensuring complete privacy, censorship resistance, and user data ownership.
+<div align="center">
+  <img src="Chain_App_Icon.png" alt="Chain Logo" width="300"/>
+
+ <p><strong>Chain is a revolutionary decentralized messaging platform that eliminates the need for central servers by leveraging blockchain technology and peer-to-peer communication. The platform provides all the features users expect from modern messaging apps while ensuring complete privacy, censorship resistance, and user data ownership.</strong></p>
+ </div>
 
 ## Overview
 
