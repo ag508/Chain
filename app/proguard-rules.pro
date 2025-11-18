@@ -63,6 +63,10 @@
 -keep class org.bouncycastle.** { *; }
 -dontwarn org.bouncycastle.**
 
+# Reactor (Project Reactor) - BlockHound is a dev/test library, not needed in release
+-dontwarn reactor.blockhound.**
+-dontwarn reactor.tools.**
+
 # Remove logging in release builds
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
