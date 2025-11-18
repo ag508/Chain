@@ -386,10 +386,6 @@ private fun ChatList(chats: List<Chat>, onChatClick: (Chat) -> Unit) {
 
 @Composable
 private fun EmptyChatPlaceholder(viewModel: ChatListViewModel) {
-    var isLoading by remember { mutableStateOf(false) }
-    var successMessage by remember { mutableStateOf<String?>(null) }
-    var errorMsg by remember { mutableStateOf<String?>(null) }
-
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -398,60 +394,6 @@ private fun EmptyChatPlaceholder(viewModel: ChatListViewModel) {
             Text("No chats yet", style = MaterialTheme.typography.headlineSmall, color = GlassText)
             Spacer(Modifier.height(8.dp))
             Text("Start a conversation using the + button", style = MaterialTheme.typography.bodyMedium, color = GlassTextSecondary)
-
-            Spacer(Modifier.height(16.dp))
-
-            // Debug button to load sample data
-            Button(
-                onClick = {
-                    isLoading = true
-                    viewModel.seedSampleData(
-                        onSuccess = {
-                            isLoading = false
-                            successMessage = "Sample data loaded!"
-                        },
-                        onError = { error ->
-                            isLoading = false
-                            errorMsg = error
-                        }
-                    )
-                },
-                enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = GlassAccent),
-                modifier = Modifier
-                    .padding(horizontal = 32.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = GlassBg,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(Modifier.width(8.dp))
-                }
-                Text(
-                    text = if (isLoading) "Loading..." else "Load Sample Chats",
-                    color = GlassBg
-                )
-            }
-
-            // Show success message
-            successMessage?.let { message ->
-                LaunchedEffect(message) {
-                    kotlinx.coroutines.delay(2000)
-                    successMessage = null
-                }
-                Text(message, color = GlassAccent, style = MaterialTheme.typography.bodySmall)
-            }
-
-            // Show error message
-            errorMsg?.let { message ->
-                LaunchedEffect(message) {
-                    kotlinx.coroutines.delay(3000)
-                    errorMsg = null
-                }
-                Text(message, color = ChainError, style = MaterialTheme.typography.bodySmall)
-            }
         }
     }
 }

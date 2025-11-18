@@ -1,6 +1,7 @@
 package com.chain.app.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.chain.app.domain.model.User
 import com.chain.app.domain.model.UserStatus
@@ -8,8 +9,15 @@ import java.util.Date
 
 /**
  * Room entity for User.
+ * Unique constraints ensure no duplicate phone numbers or emails.
  */
-@Entity(tableName = "users")
+@Entity(
+    tableName = "users",
+    indices = [
+        Index(value = ["phoneNumber"], unique = true),
+        Index(value = ["email"], unique = true)
+    ]
+)
 data class UserEntity(
     @PrimaryKey
     val id: String,

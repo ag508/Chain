@@ -107,6 +107,24 @@ class AuthRepositoryImpl @Inject constructor(
         avatar: String?
     ): Result<User> {
         return try {
+            // Check if phone number already exists
+            val existingUserByPhone = userDao.getUserByPhoneNumber(phoneNumber)
+            if (existingUserByPhone != null) {
+                return Result.failure(
+                    Exception("An account with this phone number already exists. Please use a different phone number or log in to your existing account.")
+                )
+            }
+
+            // Check if email already exists (only if email is provided)
+            if (!email.isNullOrBlank()) {
+                val existingUserByEmail = userDao.getUserByEmail(email)
+                if (existingUserByEmail != null) {
+                    return Result.failure(
+                        Exception("An account with this email already exists. Please use a different email or log in to your existing account.")
+                    )
+                }
+            }
+
             // Create user entity
             val userEntity = UserEntity(
                 id = userId,
@@ -120,7 +138,7 @@ class AuthRepositoryImpl @Inject constructor(
                 createdAt = System.currentTimeMillis()
             )
 
-            // Save to database
+            // Save to database - will throw exception if constraint violated
             userDao.insertUser(userEntity)
 
             // Save user ID to preferences
@@ -143,6 +161,11 @@ class AuthRepositoryImpl @Inject constructor(
             )
 
             Result.success(user)
+        } catch (e: android.database.sqlite.SQLiteConstraintException) {
+            // Handle database constraint violation
+            Result.failure(
+                Exception("This account already exists. Please use a different phone number or email.")
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }

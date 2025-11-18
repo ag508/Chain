@@ -42,6 +42,34 @@ android {
         }
     }
 
+    // Signing configuration
+    signingConfigs {
+        // Debug signing (uses default Android debug keystore)
+        getByName("debug") {
+            // Android Studio automatically uses ~/.android/debug.keystore
+            // No configuration needed for debug builds
+        }
+
+        // Release signing (requires keystore.properties file)
+        create("release") {
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                val keystoreProperties = java.util.Properties()
+                keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            } else {
+                // Fallback to debug keystore if release keystore not configured
+                // This allows building without release signing for development
+                logger.warn("WARNING: keystore.properties not found. Using debug signing for release builds.")
+                logger.warn("For production releases, create keystore.properties with your release keystore details.")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -50,6 +78,15 @@ android {
                 "proguard-rules.pro"
             )
 
+            // Use release signing config if available
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                // Use debug signing as fallback
+                signingConfig = signingConfigs.getByName("debug")
+            }
+
             // Enable 16 KB page alignment for release builds
             ndk {
                 debugSymbolLevel = "FULL"
@@ -57,6 +94,7 @@ android {
         }
         debug {
             isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
 
             // Enable 16 KB page alignment for debug builds
             ndk {
