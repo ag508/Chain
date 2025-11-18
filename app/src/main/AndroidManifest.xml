@@ -91,7 +91,7 @@
             android:foregroundServiceType="phoneCall" />
         -->
 
-        <!-- Message Sync Worker -->
+        <!-- Disable default WorkManager initialization (using default configuration) -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
@@ -99,7 +99,8 @@
             tools:node="merge">
             <meta-data
                 android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup" />
+                android:value="androidx.startup"
+                tools:node="remove" />
         </provider>
 
         <!-- FileProvider for sharing files (camera photos, etc.) -->
