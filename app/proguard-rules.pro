@@ -1,5 +1,41 @@
 # Add project specific ProGuard rules here.
 
+# =============================================================================
+# CRASH PREVENTION RULES
+# =============================================================================
+
+# Keep all classes referenced in AndroidManifest.xml
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider
+
+# Keep all View constructors for inflation
+-keepclassmembers class * extends android.view.View {
+    public <init>(android.content.Context);
+    public <init>(android.content.Context, android.util.AttributeSet);
+    public <init>(android.content.Context, android.util.AttributeSet, int);
+}
+
+# Keep Jetpack Compose classes
+-keep class androidx.compose.** { *; }
+-keep class kotlin.Metadata { *; }
+-keepclassmembers class androidx.compose.** {
+    *;
+}
+
+# Keep all navigation args classes
+-keep class * extends androidx.navigation.Navigator
+-keep class * extends androidx.navigation.NavArgs
+-keepclassmembers class * {
+    @androidx.navigation.* <methods>;
+}
+
+# =============================================================================
+# DEPENDENCY-SPECIFIC RULES
+# =============================================================================
+
 # Keep Signal Protocol classes
 -keep class org.signal.** { *; }
 -dontwarn org.signal.**
@@ -16,6 +52,7 @@
 -keep class dagger.hilt.** { *; }
 -keep class javax.inject.** { *; }
 -keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
+-keep @dagger.hilt.android.lifecycle.HiltViewModel class * { *; }
 
 # Keep Room database classes
 -keep class * extends androidx.room.RoomDatabase

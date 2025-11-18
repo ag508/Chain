@@ -95,6 +95,36 @@ android {
                 debugSymbolLevel = "FULL"
             }
         }
+
+        // Beta build variant: debuggable release build for testing signed APKs
+        create("beta") {
+            initWith(getByName("release"))
+
+            // Make it debuggable so you can see crash logs
+            isDebuggable = true
+
+            // Keep minification to test R8 behavior
+            isMinifyEnabled = true
+
+            // Use release ProGuard rules
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+
+            // Sign with debug key for easy testing
+            signingConfig = signingConfigs.getByName("debug")
+
+            // Add beta suffix to package name to install alongside debug
+            applicationIdSuffix = ".beta"
+            versionNameSuffix = "-beta"
+
+            // Enable 16 KB page alignment
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
+        }
+
         debug {
             isDebuggable = true
             signingConfig = signingConfigs.getByName("debug")
